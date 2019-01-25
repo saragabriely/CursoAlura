@@ -6,16 +6,17 @@ using System.Threading.Tasks;
 
 namespace ByteBank.Funcionarios
 {
-    public class Diretor
+    public class Diretor : Funcionario
     {
-        public string Nome      { get; set; }
-        public string CPF       { get; set; }
-        public double Salario   { get; set; }
-       
-        public double GetBonificacao()
+        // override: diz que o método está sobrepondo um comportamento
+        public override double GetBonificacao()
         {
-            return Salario;
-        }
+            //  return Salario + ( Salario * 0.10 );
+            return Salario + base.GetBonificacao();
+            // está somando a bonificação do diretor (salario) com 
+            // a bonificação de funcionario implementada na classe original (salario * 0.10)
 
+            // 'base': busca a implementação original do método
+        }
     }
 }

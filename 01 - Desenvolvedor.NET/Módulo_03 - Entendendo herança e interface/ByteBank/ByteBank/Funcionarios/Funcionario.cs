@@ -8,27 +8,20 @@ namespace ByteBank.Funcionarios
 {
     public class Funcionario
     {
-        // Tipo = 0 -> Funcionario com cargo não definido
-        // Tipo = 1 -> Diretor
-        // Tipo = 2 -> Designer
-        // Tipo = N -> ...
-        private int _tipo;
-        
+        public static int TotalDeFuncionarios { get; private set; }
+
         public string Nome      { get; set; }
         public string CPF       { get; set; }
         public double Salario   { get; set; }
         
-        public Funcionario(int tipo)
+        public Funcionario()
         {
-            _tipo = tipo;
+            TotalDeFuncionarios++;
         }
 
-        public double GetBonificacao()
+        // Virtual: permite que o método seja sobreescrito
+        public virtual double GetBonificacao()
         {
-            if(_tipo == 1)   // Diretor
-            {
-                return Salario;
-            }
             return Salario * 0.10;
         }
 
