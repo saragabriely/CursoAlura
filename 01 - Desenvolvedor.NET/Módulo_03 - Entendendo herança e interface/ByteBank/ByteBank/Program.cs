@@ -14,17 +14,19 @@ namespace ByteBank
             GerenciadorBonificacao gerenciador = new GerenciadorBonificacao();
 
             // Carlos
-            Funcionario Carlos = new Funcionario();
+            Funcionario Carlos = new Funcionario(2000, "546.879.157-20");
 
             Carlos.Nome    = "Carlos";
-            Carlos.CPF     = "546.879.157-20";
-            Carlos.Salario = 2000;
+           // Carlos.CPF     = ;
+           // Carlos.Salario = 2000;
+            Carlos.AumentarSalario();
 
             gerenciador.Registrar(Carlos);
 
-            Console.WriteLine("Nome:        " + Carlos.Nome);
-            Console.WriteLine("Bonificação: R$ " + Carlos.GetBonificacao());
-            
+            Console.WriteLine("Nome:         " + Carlos.Nome);
+            Console.WriteLine("Bonificação:  R$ " + Carlos.GetBonificacao());
+            Console.WriteLine("Novo salário: R$ " + Carlos.Salario);
+
             Console.WriteLine();
 
             Console.WriteLine("Total de funcionários: " + Funcionario.TotalDeFuncionarios);
@@ -35,15 +37,17 @@ namespace ByteBank
             // Funcionario Pedro = new Diretor();
 
             // Roberta
-            Diretor roberta = new Diretor();
+            Diretor roberta = new Diretor(5000, "454.658.148-3");
             roberta.Nome    = "Roberta";
-            roberta.CPF     = "454.658.148-3";
-            roberta.Salario = 5000;
+          //  roberta.CPF     = ;
+          //  roberta.Salario = 5000;
+            roberta.AumentarSalario();
             
             gerenciador.Registrar(roberta);
 
-            Console.WriteLine("Nome:        " + roberta.Nome);
-            Console.WriteLine("Bonificação: R$ " + roberta.GetBonificacao());
+            Console.WriteLine("Nome:         " + roberta.Nome);
+            Console.WriteLine("Bonificação:  R$ " + roberta.GetBonificacao());
+            Console.WriteLine("Novo salário: R$ " + roberta.Salario);
 
             Console.WriteLine();
             

@@ -8,6 +8,14 @@ namespace ByteBank.Funcionarios
 {
     public class Diretor : Funcionario
     {
+        // Ao chamar o construtor de um tipo derivado, será chamado primeiro
+        // o construtor da classe base (no caso Funcionario)
+        public Diretor(double salario, string cpf) : base(salario, cpf)
+        {
+            Console.WriteLine("Criando DIRETOR");
+            Console.WriteLine();
+        }
+
         // override: diz que o método está sobrepondo um comportamento
         public override double GetBonificacao()
         {
@@ -18,5 +26,11 @@ namespace ByteBank.Funcionarios
 
             // 'base': busca a implementação original do método
         }
+
+        public override void AumentarSalario()
+        {
+            Salario *= 1.15;
+        }
+
     }
 }
