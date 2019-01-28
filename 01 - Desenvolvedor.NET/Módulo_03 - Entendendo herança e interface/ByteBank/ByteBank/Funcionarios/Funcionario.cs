@@ -12,9 +12,11 @@ namespace ByteBank.Funcionarios
 
         public string Nome     { get; set; }
         public string CPF      { get; private set; }
-        public double Salario  { get; protected set; } 
+        public double Salario  { get; protected set; }
         // Protected: salario não é publico - é acessado somente pela classe e seus derivados
-        
+
+      //  public string Senha    { get; set; }
+
         public Funcionario(double salario, string cpf)
         {
             Console.WriteLine("Criando FUNCIONÁRIO");
@@ -25,6 +27,11 @@ namespace ByteBank.Funcionarios
             TotalDeFuncionarios++;
         }
 
+     /*   public bool Autenticar(string senha)
+        {
+            return Senha == senha;
+        } */
+ 
         public abstract void AumentarSalario(); // esse método deve ser sobreescrito pelas classes derivadas
         /* public virtual void AumentarSalario()
            {

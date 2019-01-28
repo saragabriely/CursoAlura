@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ByteBank.Sistemas;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ByteBank.Funcionarios
 {
-    public class Diretor : Funcionario
+    public class Diretor :  FuncionarioAutenticavel //Funcionario, Autenticavel  // primeiro é colocada a herança da classe e depois a interface
     {
         // Ao chamar o construtor de um tipo derivado, será chamado primeiro
         // o construtor da classe base (no caso Funcionario)
@@ -34,6 +35,30 @@ namespace ByteBank.Funcionarios
         {
             Salario *= 1.15;
         }
+
+        /*
+         EXEMPLO
+
+        public abstract class Casa
+        {
+            public abstract void AbrirPorta();
+        }
+
+        public interface Carro
+        {
+            void AbrirPorta();
+        }
+         
+        public class Exemplo : Casa, Carro  // herança, interface
+        {
+            public override void AbrirPorta()
+            {
+                
+            }
+        }
+         
+         
+         */
 
     }
 }
