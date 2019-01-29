@@ -102,9 +102,9 @@ namespace ByteBank
         {
             GerenciadorBonificacao gerenciadorBonificacao = new GerenciadorBonificacao();
 
-          //  Funcionario carlos = new Funcionario(2000, "456.456.456-88");
-          //  carlos.GetBonificacao();
-          //  Não é possível criar uma instância de classe abstrata
+          // Funcionario carlos = new Funcionario(2000, "456.456.456-88");
+          // carlos.GetBonificacao();
+          // Não é possível criar uma instância de classe abstrata
 
             Designer pedro = new Designer("833.222.048-39"); // ou Funcionario pedro = new Designer("833.222.048-39");
             pedro.Nome = "Pedro";
