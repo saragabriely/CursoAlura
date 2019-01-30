@@ -6,10 +6,14 @@ namespace ByteBank
     {
         public Cliente Titular { get; set; }
 
+        public static double TaxaOperacao { get; private set; }
+
+        // Propriedade estática: característica da classe e não de cada objeto criado 
+        // a partir dessa classe
         public static int TotalDeContasCriadas { get; private set; }
-
-
+        
         private int _agencia;
+
         public int Agencia
         {
             get
@@ -22,15 +26,15 @@ namespace ByteBank
                 {
                     return;
                 }
-
                 _agencia = value;
             }
         }
-        public int Numero { get; set; }
+
+        public  int    Numero { get; set; }
 
         private double _saldo = 100;
 
-        public double Saldo
+        public  double Saldo
         {
             get
             {
@@ -51,7 +55,10 @@ namespace ByteBank
         public ContaCorrente(int agencia, int numero)
         {
             Agencia = agencia;
-            Numero = numero;
+            Numero  = numero;
+
+            // Quanto mais contas, menor será a taxa de operação
+            TaxaOperacao = 30 / TotalDeContasCriadas;
 
             TotalDeContasCriadas++;
         }
@@ -65,6 +72,7 @@ namespace ByteBank
             }
 
             _saldo -= valor;
+
             return true;
         }
 
@@ -82,7 +90,9 @@ namespace ByteBank
             }
 
             _saldo -= valor;
+
             contaDestino.Depositar(valor);
+
             return true;
         }
     }
