@@ -1,5 +1,7 @@
 ﻿// using _05_ByteBank;
 
+using System;
+
 namespace ByteBank
 {
     public class ContaCorrente
@@ -12,15 +14,17 @@ namespace ByteBank
         // a partir dessa classe
         public static int TotalDeContasCriadas { get; private set; }
         
-        private int _agencia;
+       // private int _agencia;
 
-        public int Agencia
+        public  int Agencia { get; } // propriedade privada / somente leitura
+        // o campo privado '_agencia' não tem mais utilidade
+        /*
         {
             get
             {
                 return _agencia;
             }
-            set
+            private set
             {
                 if (value <= 0)
                 {
@@ -28,9 +32,16 @@ namespace ByteBank
                 }
                 _agencia = value;
             }
-        }
+        } */
 
-        public  int    Numero { get; set; }
+
+        // O campo READONLY só pode ser atribuido dentro do construtor da classe
+
+        // Ao colocar somente GET, o campo é visto como privado e somente leitura
+
+       // public  int    Numero { get; set; }
+
+        public  int    Numero { get; }
 
         private double _saldo = 100;
 
@@ -52,15 +63,45 @@ namespace ByteBank
         }
 
 
-        public ContaCorrente(int agencia, int numero)
+        public ContaCorrente(int numeroAgencia, int numeroConta)
         {
-            Agencia = agencia;
-            Numero  = numero;
+            if(numeroAgencia <= 0)
+            {
+                throw new ArgumentException(
+                    "O argumento 'agencia' deve ser maior que 0 (zero)", 
+                    nameof(numeroAgencia)); // numeroAgencia = nome do argumento que deu erro
+            }
+
+            if (numeroConta <= 0)
+            {
+                throw new ArgumentException(
+                    "O argumento 'número' deve ser maior que 0 (zero)", 
+                    nameof(numeroConta));
+            }
+
+            #region Comentários
+            /*
+            if (agencia <= 0 || numero <= 0)
+            {
+                // ArgumentException: exceção de argumento
+
+                //Exception excecao = new Exception("Agencia e/ou numero da conta é zero!");
+
+                ArgumentException excecao = new ArgumentException("Agencia e/ou numero da conta é zero!");
+
+                // Lançar exceção
+                //throw new Exception();
+                throw excecao;
+            } */
+            #endregion
+
+            Agencia = numeroAgencia;
+            Numero  = numeroConta;
 
             // Quanto mais contas, menor será a taxa de operação
             TaxaOperacao = 30 / TotalDeContasCriadas;
 
-            TotalDeContasCriadas++;
+            TotalDeContasCriadas++; // Contador de contas criadas
         }
 
 

@@ -10,6 +10,30 @@ namespace ByteBank
     {
         static void Main(string[] args)
         {
+
+            try
+            {
+                ContaCorrente conta = new ContaCorrente(0, 0);
+            }
+            catch(ArgumentException ex) // tratando exeções de argumento
+            {
+                Console.WriteLine("Ocorreu uma exceção do tipo ArgumentException!");
+                Console.WriteLine("Argumento com problema: " + ex.ParamName);
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            /*
+             ContaCorrente conta = new ContaCorrente(5656, 562336);
+             conta.Agencia = 5252; // dará erro, pois os SETTERS são privados / leitura apenas
+             */
+
+            #region Try/catch 01
+
+            /*
             try
             {
                 Metodo();
@@ -23,7 +47,8 @@ namespace ByteBank
             {
                 Console.WriteLine("Aconteceu um erro!");
                 Console.WriteLine(e.Message);
-            }
+            } */
+            #endregion
 
             // TODA EXCEÇÃO DERIVA DA CLASSE 'Exception'
 
