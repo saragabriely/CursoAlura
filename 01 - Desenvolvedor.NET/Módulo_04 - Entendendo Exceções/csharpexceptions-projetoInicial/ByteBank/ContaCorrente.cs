@@ -6,13 +6,17 @@ namespace ByteBank
 {
     public class ContaCorrente
     {
-        public Cliente Titular { get; set; }
+        public Cliente       Titular                             { get; set; }
 
-        public static double TaxaOperacao { get; private set; }
+        public int           ContadorSaquesNaoPermitidos         { get; private set; }
+
+        public int           ContadorTransferenciasNaoPermitidas { get; private set; }
+
+        public static double TaxaOperacao                        { get; private set; }
 
         // Propriedade estática: característica da classe e não de cada objeto criado 
         // a partir dessa classe
-        public static int TotalDeContasCriadas { get; private set; }
+        public static int    TotalDeContasCriadas                { get; private set; }
         
        // private int _agencia;
 
@@ -97,15 +101,41 @@ namespace ByteBank
 
             Agencia = numeroAgencia;
             Numero  = numeroConta;
+            
+            TotalDeContasCriadas++; // Contador de contas criadas
 
             // Quanto mais contas, menor será a taxa de operação
             TaxaOperacao = 30 / TotalDeContasCriadas;
-
-            TotalDeContasCriadas++; // Contador de contas criadas
         }
 
 
-        public bool Sacar(double valor)
+        public void Sacar(double valor)
+        {
+            if(valor < 0)
+            {
+                throw new ArgumentException("Valor inválido para o saque.", nameof(valor));
+            }
+
+            if (_saldo < valor)
+            {
+                //  throw new 
+                //      SaldoInsuficienteException("Saldo insuficiente para o saque no valor de R$ " + valor);
+
+                ContadorSaquesNaoPermitidos++;
+
+                throw new
+                    SaldoInsuficienteException(Saldo, valor);
+
+                /*  A máquina virtual do VS (CLR) é quem preenche o StackTrace.   */
+            }
+
+            _saldo -= valor;
+        }
+
+        #region Sacar - 01
+
+        /*
+          public bool Sacar(double valor)
         {
             if (_saldo < valor)
             {
@@ -116,25 +146,43 @@ namespace ByteBank
 
             return true;
         }
+             */
+
+        #endregion
 
         public void Depositar(double valor)
         {
             _saldo += valor;
         }
 
-
-        public bool Transferir(double valor, ContaCorrente contaDestino)
+        // bool
+        public void Transferir(double valor, ContaCorrente contaDestino)
         {
-            if (_saldo < valor)
+            if (valor < 0)
             {
-                return false;
+                throw new ArgumentException("Valor inválido para a transferência.", nameof(valor));
             }
 
-            _saldo -= valor;
+           // Sacar(valor);
+                   
+            try
+            {
+                Sacar(valor);
+            }
+            catch (SaldoInsuficienteException ex)
+            {
+                ContadorTransferenciasNaoPermitidas++;
+
+                throw new OperacaoFinanceiraException("Operação não realizada.", ex); // passa a exceção adiante
+
+            } 
+
+            /* if (_saldo < valor)  {  return false;   }
+               _saldo -= valor;                             */
 
             contaDestino.Depositar(valor);
 
-            return true;
+           // return true;
         }
     }
 }

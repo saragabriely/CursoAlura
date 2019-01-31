@@ -10,26 +10,80 @@ namespace ByteBank
     {
         static void Main(string[] args)
         {
-
             try
             {
-                ContaCorrente conta = new ContaCorrente(0, 0);
+                ContaCorrente conta1 = new ContaCorrente(4564, 789684);
+                ContaCorrente conta2 = new ContaCorrente(7891, 456794);
+
+                conta1.Transferir(10000, conta2);
             }
-            catch(ArgumentException ex) // tratando exeções de argumento
+            catch (OperacaoFinanceiraException e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
+
+                Console.WriteLine(); // Pula linha
+                Console.WriteLine("Informações da INNER EXCEPTION (exceção interna): ");
+                Console.WriteLine(); // Pula linha
+                Console.WriteLine(e.InnerException.Message);
+                Console.WriteLine(); // Pula linha
+                Console.WriteLine(e.InnerException.StackTrace);
+
+            }
+
+            #region Try/Catch 02
+            /*
+            try
+            {
+                // ContaCorrente conta = new ContaCorrente(0, 0);
+
+                ContaCorrente conta  = new ContaCorrente(456, 4578420);
+                ContaCorrente conta2 = new ContaCorrente(456, 4578420);
+
+                //conta2.Transferir(-10, conta);
+
+                conta2.Transferir(1000, conta);
+
+                conta.Depositar(50);
+
+                Console.WriteLine("Saldo - R$ " + conta.Saldo);
+
+                conta.Sacar(500);
+
+                Console.WriteLine("Saldo - R$ " + conta.Saldo);
+                
+            }
+            catch (ArgumentException ex) // tratando exeções de argumento
             {
                 Console.WriteLine("Ocorreu uma exceção do tipo ArgumentException!");
                 Console.WriteLine("Argumento com problema: " + ex.ParamName);
                 Console.WriteLine(ex.Message);
             }
+            catch (SaldoInsuficienteException ex)
+            {
+                Console.WriteLine("Saldo: R$ " + ex.Saldo);
+                Console.WriteLine("Saldo: R$ " + ex.ValorSaque);
+
+                Console.WriteLine(); // pula linha
+
+                Console.WriteLine(ex.StackTrace);
+
+                Console.WriteLine(); // pula linha
+
+                Console.WriteLine("Exceção do tipo SaldoInsuficienteException!");
+                Console.WriteLine(ex.Message);
+            }
             catch (Exception ex) 
             {
                 Console.WriteLine(ex.Message);
-            }
+            } 
+            */
 
             /*
              ContaCorrente conta = new ContaCorrente(5656, 562336);
              conta.Agencia = 5252; // dará erro, pois os SETTERS são privados / leitura apenas
              */
+            #endregion
 
             #region Try/catch 01
 
