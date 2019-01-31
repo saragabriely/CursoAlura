@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,24 +13,14 @@ namespace ByteBank
         {
             try
             {
-                ContaCorrente conta1 = new ContaCorrente(4564, 789684);
-                ContaCorrente conta2 = new ContaCorrente(7891, 456794);
-
-                conta1.Transferir(10000, conta2);
+                CarregarContas();
             }
-            catch (OperacaoFinanceiraException e)
+            catch (Exception)
             {
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e.StackTrace);
-
-                Console.WriteLine(); // Pula linha
-                Console.WriteLine("Informações da INNER EXCEPTION (exceção interna): ");
-                Console.WriteLine(); // Pula linha
-                Console.WriteLine(e.InnerException.Message);
-                Console.WriteLine(); // Pula linha
-                Console.WriteLine(e.InnerException.StackTrace);
-
+                Console.WriteLine("CATCH no método MAIN");
             }
+
+            #region Try/Catch 01 e 02
 
             #region Try/Catch 02
             /*
@@ -121,7 +112,90 @@ namespace ByteBank
             } */
             #endregion
 
+            #endregion
+
             Console.ReadLine();
+        }
+
+        private static void CarregarContas()
+        {
+            // Tenha sido lançada uma exceção ou não, deverá ser liberado o recurso FECHAR
+           
+            using (LeitorDeArquivos leitor = new LeitorDeArquivos("teste.txt"))
+            {
+                // IDisposable - Interface
+
+                leitor.LerProximaLinha();
+            }
+
+            // O compilador transforma o bloco 'using' no TRY e no FINALLY
+ 
+
+            //--------------------------------------------------------------
+            /*
+            LeitorDeArquivos leitor = null;
+
+            try
+            {
+                leitor = new LeitorDeArquivos("contas1.txt");
+
+                leitor.LerProximaLinha();
+                leitor.LerProximaLinha();
+                leitor.LerProximaLinha();
+
+              //  leitor.Fechar();
+            }
+            catch (IOException)
+            {
+                // Erros possíveis (IOException):
+                // * HD com problema;
+                // * Ou arquivo corrompido.
+
+                // leitor.Fechar();
+
+                Console.WriteLine(); // Pula linha
+                Console.WriteLine("Exceção do tipo IOException capturada e tratada.");
+            }
+            finally
+            {
+                // FINALLY - É executado independente do que ocorreu (sucesso ou não)
+
+              //  Console.WriteLine("Executando o FINALLY");
+
+                if (leitor != null)
+                {
+                    leitor.Fechar();
+                }
+
+                // É possível colocar apenas um TRY e um FINALLY, sem o CATCH, e a
+                // aplicação será executada normalmente
+            }
+            */
+
+        }
+
+        private static void TestaInnerExpection()
+        {
+            try
+            {
+                ContaCorrente conta1 = new ContaCorrente(4564, 789684);
+                ContaCorrente conta2 = new ContaCorrente(7891, 456794);
+
+                conta1.Transferir(10000, conta2);
+            }
+            catch (OperacaoFinanceiraException e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
+
+                Console.WriteLine(); // Pula linha
+                Console.WriteLine("Informações da INNER EXCEPTION (exceção interna): ");
+                Console.WriteLine(); // Pula linha
+                Console.WriteLine(e.InnerException.Message);
+                Console.WriteLine(); // Pula linha
+                Console.WriteLine(e.InnerException.StackTrace);
+
+            }
         }
 
         // Teste com a cadeia de chamada:

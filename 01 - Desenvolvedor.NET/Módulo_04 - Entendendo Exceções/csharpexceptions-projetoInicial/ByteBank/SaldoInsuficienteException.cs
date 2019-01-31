@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace ByteBank
 {
-    public class SaldoInsuficienteException : Exception
+    // : Exception
+    
+    public class SaldoInsuficienteException : OperacaoFinanceiraException
     {
         public double Saldo      { get; }
         public double ValorSaque { get; }
@@ -23,6 +25,12 @@ namespace ByteBank
 
         public SaldoInsuficienteException(string mensagem) : base(mensagem) { }
 
+        // É uma boa pratica colocar um construtor com uma InnerException
+        public SaldoInsuficienteException (string mensagem, Exception excecaoInterna)
+            : base(mensagem, excecaoInterna)
+        {
+
+        }
 
     }
 }
