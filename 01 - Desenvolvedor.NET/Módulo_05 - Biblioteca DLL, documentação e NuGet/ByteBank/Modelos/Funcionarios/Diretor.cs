@@ -18,7 +18,8 @@ namespace ByteBank.Funcionarios
         }
 
         // override: diz que o método está sobrepondo um comportamento
-        public override double GetBonificacao()
+        // Anterior: public override double GetBonificacao()
+        internal protected override double GetBonificacao()
         {
             //  return Salario + ( Salario * 0.10 );
             // return Salario + base.GetBonificacao();
@@ -35,6 +36,8 @@ namespace ByteBank.Funcionarios
         {
             Salario *= 1.15;
         }
+
+        #region Exemplo
 
         /*
          EXEMPLO
@@ -55,10 +58,9 @@ namespace ByteBank.Funcionarios
             {
                 
             }
-        }
-         
-         
+        }         
          */
+        #endregion
 
     }
 }

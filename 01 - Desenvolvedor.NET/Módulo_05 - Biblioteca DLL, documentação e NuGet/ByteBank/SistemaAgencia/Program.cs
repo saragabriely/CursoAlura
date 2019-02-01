@@ -15,14 +15,15 @@ namespace SistemaAgencia
         {
             ContaCorrente conta = new ContaCorrente(3765, 323663);
 
-            FuncionarioAutenticavel carlos = null;
+            
 
+            FuncionarioAutenticavel carlos = null;
+            
             // AutenticaHelper autentica; // essa classe é de uso interno da biblioteca
             // Logo, não pode ser acessada diretamente fora da biblioteca
 
             Console.WriteLine("Conta: " + conta.Numero);
             
-
 
             Console.ReadLine();
         }

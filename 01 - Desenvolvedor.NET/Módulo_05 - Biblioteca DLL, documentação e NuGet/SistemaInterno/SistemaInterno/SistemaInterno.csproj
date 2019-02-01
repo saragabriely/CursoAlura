@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{FFE1E633-7362-42AA-B235-282BE65DD2AE}</ProjectGuid>
+    <ProjectGuid>{83230838-2EE7-41E8-8D03-8D73F7C02EED}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>SistemaAgencia</RootNamespace>
-    <AssemblyName>SistemaAgencia</AssemblyName>
+    <RootNamespace>SistemaInterno</RootNamespace>
+    <AssemblyName>SistemaInterno</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -33,6 +33,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Modelos">
+      <HintPath>..\..\..\..\..\..\..\..\..\Bibliotecas\Modelos.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -43,18 +46,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Estagiario.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Modelos\Modelos.csproj">
-      <Project>{84d0a5c9-7777-44c9-9ff9-b0514c2d2236}</Project>
-      <Name>Modelos</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -4,8 +4,16 @@ using System;
 
 namespace ByteBank
 {
+    // Summary -> Documentação de classes, métodos, atributos ... publicos
+
+    /// <summary>
+    /// Define uma Conta Corrente do banco ByteBank
+    /// </summary>
+
     public class ContaCorrente
     {
+        // A documentação é mais indicada para membros PUBLICOS, pois são usados por outras classes
+
         public Cliente       Titular                             { get; set; }
 
         public int           ContadorSaquesNaoPermitidos         { get; private set; }
@@ -16,13 +24,16 @@ namespace ByteBank
 
         public static int    TotalDeContasCriadas                { get; private set; }
 
-        public  int    Agencia { get; } // propriedade privada / somente leitura
-
-        public  int    Numero  { get; }
-
-        private double _saldo = 100;
-         
-        public  double Saldo
+        public  int          Agencia    { get; } // propriedade privada / somente leitura
+                             
+        public  int          Numero     { get; }
+        
+        // Membros privados não terão que receber uma documentação (não aparecerá 
+        // o risquinho verde embaixo, caso não tenha doc.), pois não será visto por
+        // outras classes
+        private double       _saldo = 100;
+                             
+        public  double       Saldo
         {
             get
             {
@@ -39,7 +50,11 @@ namespace ByteBank
             }
         }
 
-
+        /// <summary>
+        /// Cria uma instância de Conta Corrente com os argumentos utilizados
+        /// </summary>
+        /// <param name="numeroAgencia"> Representa o valor da propriedade <see cref="Agencia"/>. E deve possuir um valor maior que 0 (zero).</param>
+        /// <param name="numeroConta"  > Representa o valor da propriedade <see cref="Numero"/>. E deve possuir um valor maior que 0 (zero). </param>
         public ContaCorrente(int numeroAgencia, int numeroConta)
         {
             if(numeroAgencia <= 0)
@@ -80,8 +95,11 @@ namespace ByteBank
             // Quanto mais contas, menor será a taxa de operação
             TaxaOperacao = 30 / TotalDeContasCriadas;
         }
-
-
+        
+        /// <summary>
+        /// Realiza o saque e atualiza o valor da propriedade <see cref="Saldo"/>
+        /// </summary>
+        /// <param name="valor">Representa o valor do saque. Deve ser maior que 0 (zero) e menor que o <see cref="Saldo"/></param>
         public void Sacar(double valor)
         {
             if(valor < 0)
@@ -128,7 +146,7 @@ namespace ByteBank
             _saldo += valor;
         }
 
-        // bool
+        // Anterior: bool
         public void Transferir(double valor, ContaCorrente contaDestino)
         {
             if (valor < 0)
@@ -157,5 +175,6 @@ namespace ByteBank
 
            // return true;
         }
+
     }
 }
