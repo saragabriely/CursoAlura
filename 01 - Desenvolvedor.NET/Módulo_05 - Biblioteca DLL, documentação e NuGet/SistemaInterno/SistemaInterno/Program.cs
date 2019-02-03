@@ -1,4 +1,5 @@
 ﻿using ByteBank;
+using Humanizer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,18 +12,56 @@ namespace SistemaInterno
     {
         static void Main(string[] args)
         {
-            ContaCorrente conta = new ContaCorrente(458, 455789);
+            DateTime dateFimPagamento  = new DateTime(2019, 08, 17);
+
+            DateTime dataCorrente      = DateTime.Now;
+
+            // TimeSpan - Diferença entre datas
+            TimeSpan diferenca = TimeSpan.FromMinutes(60); //dateFimPagamento - dataCorrente;
+
+
+            // string mensagem = "Vencimento em " + GetIntervaloDeTempoLegivel(diferenca);
+
+            string mensagem = "Vencimento em " + 
+                                TimeSpanHumanizeExtensions.Humanize(diferenca);
+
+
+            Console.WriteLine("Data Pagamento: " + dateFimPagamento);
+            Console.WriteLine("Data Atual:     " + dataCorrente);
+            Console.WriteLine(mensagem);
             
-            Console.WriteLine("Saldo: R$ " + conta.Saldo);
-
-            conta.Sacar(-10);
-
-            string nome = "Guilherme";
-
-
-
 
             Console.ReadLine();
         }
+
+        
+        #region static string GetIntervaloDeTempoLegivel(TimeSpan timeSpan)
+        /*
+        static string GetIntervaloDeTempoLegivel(TimeSpan timeSpan)
+        {
+
+            if(timeSpan.Days > 30)
+            {
+                int quantidadeMeses = timeSpan.Days / 30;
+
+                if (quantidadeMeses == 1)
+                {
+                    return "1 mês";
+                }
+                else
+                {
+                    return quantidadeMeses + " meses";
+                }
+            }
+            else if(timeSpan.Days > 7)
+            {
+                int quantidadeSemanas = timeSpan.Days / 7;
+                
+            }
+            return timeSpan.Days + " dias";
+        }
+        */
+        #endregion
+
     }
 }
