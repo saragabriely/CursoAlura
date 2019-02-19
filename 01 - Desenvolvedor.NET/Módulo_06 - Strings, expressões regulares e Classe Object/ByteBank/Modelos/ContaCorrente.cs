@@ -157,7 +157,6 @@ namespace ByteBank
             }
 
            // Sacar(valor);
-                   
             try
             {
                 Sacar(valor);
@@ -168,14 +167,24 @@ namespace ByteBank
 
                 throw new OperacaoFinanceiraException("Operação não realizada.", ex); // passa a exceção adiante
 
-            } 
-
+            }
             /* if (_saldo < valor)  {  return false;   }
                _saldo -= valor;                             */
 
             contaDestino.Depositar(valor);
 
            // return true;
+        }
+
+        public override string ToString()
+        {
+            return $"Numero: {Numero}, Agencia: {Agencia}, Saldo: {Saldo}";
+
+            // return $"Numero: {35624 + 12356 * 2}, Agencia: {Agencia}, Saldo: {Saldo}";
+            // É possível realizar contas no lugar do valor que será exibido
+            
+            // ou
+            //return "Número: " + Numero + ", Agencia: " + Agencia + ", Saldo: " + Saldo;
         }
 
     }

@@ -49,11 +49,30 @@ namespace SistemaAgencia
             
         }
         
-        // moedaOrigem=real&moedaDestino=dolar
-       // public string GetValor(string nomeDoParametro)
-       // {
-        //    int indiceParametro = _argumentos.IndexOf
-        //}
+       // moedaOrigem=real&moedaDestino=dolar
+       public string GetValor(string nomeDoParametro)
+       {
+            nomeDoParametro = nomeDoParametro.ToUpper(); // VALOR 
+
+            string argumentoEmCaixaAlta = _argumentos.ToUpper(); // MOEDAORIGEM=REAL
+
+
+            string termo = nomeDoParametro + "=";
+
+            int indiceTermo = argumentoEmCaixaAlta.IndexOf(termo);
+
+
+            string resultado = _argumentos.Substring(indiceTermo + termo.Length);
+
+            int indiceEComercial = resultado.IndexOf('&');
+
+            if(indiceEComercial == -1)
+            {
+                return resultado;
+            }
+
+            return resultado.Remove(indiceEComercial); // remove parte da string a partir de determinado indice
+       }
 
     }
 }
