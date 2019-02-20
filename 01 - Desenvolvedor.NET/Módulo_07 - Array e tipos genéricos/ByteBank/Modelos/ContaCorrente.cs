@@ -187,5 +187,23 @@ namespace ByteBank
             //return "Número: " + Numero + ", Agencia: " + Agencia + ", Saldo: " + Saldo;
         }
 
+
+        public override bool Equals(object obj)
+        {
+            // Converter a referencia de object para ContaCorrente
+            ContaCorrente outraConta = obj as ContaCorrente; 
+
+            // As - Caso a conversão acima falhe, outraConta será nula 
+
+            if(outraConta == null)
+            {
+                return false;
+            }
+
+            // Comparação -------------------------------------------------
+
+            return Numero == outraConta.Numero && Agencia == outraConta.Agencia;
+        }
+
     }
 }

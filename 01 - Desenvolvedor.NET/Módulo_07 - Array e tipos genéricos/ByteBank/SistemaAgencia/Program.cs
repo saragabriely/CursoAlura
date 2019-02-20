@@ -10,278 +10,210 @@ namespace SistemaAgencia
 {
     class Program
     {
-        // Módulo 06 - Strings, expressões regulares e classe object
+        // Módulo 07 - Arrays
 
         static void Main(string[] args)
         {
-            #region Comentários - Sobrecargas do WriteLine
-            /*
-             Console.WriteLine("Olá, mundo!")
+            Lista<int> idades = new Lista<int>(); // Lista Genérica - Lista<T>
 
-            Olá mundo - É uma string;
-            WRITELINE - É um método público;
-            CONSOLE   - É uma classe pública. 
-            
-             public static void WriteLine(string argumento)
-             {
-                 // Implementação
-             }
+            idades.Adicionar(12);
 
-             public static void WriteLine(int argumento)
-             {
-                 // Implementação
-             }
+            idades.AdicionarVarios(1, 5, 7);
 
-             public static void WriteLine(double argumento)
-             {
-                 // Implementação
-             }
+            int idadeSoma = 0;
 
-             public static void WriteLine(bool argumento)
-             {
-                 // Implementação
-             }
-             */
-            #endregion
-
-            Console.WriteLine("Olá, mundo!");   // String
-            Console.WriteLine(123);             // Int
-            Console.WriteLine(10.5);            // Double
-            Console.WriteLine(true);            // Bool
-
-            // Object é um tipo criado no .NET, que é o 'pai' de todos os objetos/classes
-            // Todas as classes derivam do tipo 'OBJECT'
-
-            ContaCorrente conta  = new ContaCorrente(1236, 5653256);
-            object        conta1 = new ContaCorrente(1236, 5653256);
-
-            string contaToString = conta1.ToString();
-
-            // ToString = Permite ser sobrescrito
-
-            Console.WriteLine("Conta Corrente: " + conta);
-            Console.WriteLine("Conta ToString: " + contaToString);
-
-            // ----------------------------------------------------------
-            // Teste
-
-            Cliente carlos_1 = new Cliente();
-
-            carlos_1.Nome      = "Carlos";
-            carlos_1.CPF       = "458.236.123-03";
-            carlos_1.Profissao = "Designer";
-
-            Cliente carlos_2 = new Cliente();
-
-            carlos_2.Nome      = "Carlos";
-            carlos_2.CPF       = "458.236.123-03";
-            carlos_2.Profissao = "Designer";
-
-            ContaCorrente conta_2 = new ContaCorrente(456, 87654);
-
-            // Nunca será igual, pois são objetos diferentes - armazenados em
-            // diferentes endereços na memória (sem levar em consideração 
-            // o conteúdo de cada objeto)
-            // if (carlos_1 == carlos_2)  ou if (carlos_1.Equals(carlos_2))   
-
-            Console.WriteLine(); // Pula linha 
-
-            if (carlos_1.Equals(carlos_2))    
+            for(int i = 0; i < idades.Tamanho; i++)
             {
-                Console.WriteLine("São iguais!");
-            }
-            else
-            {
-                Console.WriteLine("Sao diferentes!");
+                int idadeAtual = idades[i];
             }
 
+
+
+
+            //-------------------
             Console.ReadLine();
         }
 
-        static void TestaString()
+        #region Testa lista de Objects
+        static void TestaListaDeObject()
         {
-            #region Regex - e trabalhando com texto livre (sem padrão)
+            // Aula 05 - Módulo 07
 
-            // Olá, meu nome é Tal e você pode entrar em contato comigo 
-            // através do número 8457-4456!
+            ListaDeObjects listaDeIdades = new ListaDeObjects();
 
-            // Meu nome é tal, me ligue em 4784-4546.
+            listaDeIdades.Adicionar(10);
+            listaDeIdades.Adicionar(5);
+            listaDeIdades.Adicionar(4);
+            listaDeIdades.AdicionarVarios(16, 23, 60);
 
-            // Padrao - representa a sequencia dos numeros 
-            // string padrao =  "[0123456789][0123456789][0123456789][0123456789][-][0123456789][0123456789][0123456789][0123456789]";
+            for (int i = 0; i < listaDeIdades.Tamanho; i++)
+            {
+                int idade = (int)listaDeIdades[i];
+
+                Console.WriteLine($"Idade no indice {i}: {idade}");
+            }
+        }
+
+        #endregion
+
+        #region TestaListaContaCorrente - Aula 04 - Mód. 07
+        static void TestaListaContaCorrente()
+        {
+            ListaDeContaCorrente lista = new ListaDeContaCorrente();
+
+            // lista.MeuMetodo(numero: 10); // chama o método
+            // para nomear / atribuir um valor ao atributo opcional - numero: 10
             // ou
-            // string padrao =  "[0-9][0-9][0-9][0-9][-][0-9][0-9][0-9][0-9]"; // 0-9 -> Intervalo
-            // ou
-            // string padrao =  "[0-9]{4,5}[-]{0,1}[0-9]{4}"; // {4} - padrão se repete 4 vezes
-            // {4,5} - espera de 4 a 5 digitos/padroes
 
-            string padrao = "[0-9]{4,5}-?[0-9]{4}";
+            lista.MeuMetodo("texto padrao", 10);
+
+            ContaCorrente contaDoGui = new ContaCorrente(546, 21112);
+
+            lista.Adicionar(contaDoGui);
+
+            //   lista.Adicionar(item: new ContaCorrente(745, 456232));
+            //   lista.Adicionar(new ContaCorrente(745, 456232));
+            //   lista.Adicionar(new ContaCorrente(748, 453232));
+            //   lista.Adicionar(new ContaCorrente(789, 230157));
+
+            Console.WriteLine();
+
+            ContaCorrente[] contas = new ContaCorrente[]
+            {
+                contaDoGui,
+                new ContaCorrente(745, 456232),
+                new ContaCorrente(748, 453232),
+                new ContaCorrente(789, 230157)
+            };
+
+            lista.AdicionarVarios(contas);
 
-            // {} - Quantificador! Mostra quantos caracteres serão esperados
+            Console.WriteLine();
 
-            // 45654-5464 ou  456545464
-            
-            string textoDeTeste = "Meu nome é tal, me ligue em 4784-4546";
+            //   lista.EscreverListaNaTela();
+            //   Console.WriteLine();
+            //   lista.Remover(contaDoGui);
+            //   Console.WriteLine();
+            //   Console.WriteLine("Após remover o item: ");
+            //   Console.WriteLine();
+            //   lista.EscreverListaNaTela();
 
-            // Recupera expressões regulares - REGEX
-            // Não tem ligação com indices! Segue apenas o padrão definido.
+            for (int i = 0; i < lista.Tamanho; i++)
+            {
+                // ContaCorrente itemAtual = lista.GetItemNoIndice(i);
+                // ou 
 
-            //Console.WriteLine(Regex.IsMatch(textoDeTeste, padrao)); // Retorna um bool
-            // Retorno inicial: true! O padrão foi encontrado na string de teste
+                // ContaCorrente teste = lista["texto"];
+                // ou
+                ContaCorrente itemAtual = lista[i]; // o 'lista[i]' não seria possível  
+                                                    // caso não tivesse o INDEXADOR declarador na classe
+                                                    // 'ListaDeContaCorrente'
 
-            Match resultado = Regex.Match(textoDeTeste, padrao);
-            // Retorna um objeto que respeita o padrão definido
+                Console.WriteLine(
+                    $"Item na posição {i} = Conta {itemAtual.Agencia}/{itemAtual.Numero}");
+            }
+        }
+        #endregion
 
-            Console.WriteLine(resultado.Value);
+        #region Exemplo - SomarVarios - Aula 03 - Mód. 07
+        static int SomarVarios(params int[] numeros)
+        {
+            int acumulador = 0;
 
-            Console.ReadLine();
+            foreach(int numero in numeros)
+            {
+                acumulador += numero;
+            }
 
-            #endregion
+            return acumulador;
+        }
+        #endregion
 
-            // ------------------------------------------------------------
+        #region Array de Conta Corrente - Aula 02 - Mód. 07
+        static void TestaArrayDeContaCorrente()
+        {
+            ContaCorrente[] contas = new ContaCorrente[]
+            {
+                new ContaCorrente(745, 456232),
+                new ContaCorrente(748, 453232),
+                new ContaCorrente(789, 230157)
+            };
 
-            #region Teste - StartsWith, EndsWith e Contains
+            for (int indice = 0; indice < contas.Length; indice++)
+            {
+                ContaCorrente contaAtual = contas[indice];
 
-            // string urlTeste = "https://google.com/?q=https://www.bytebank.com/cambio";
+                Console.WriteLine($"Conta {indice} - Contas: {contaAtual.Numero}");
 
-            string urlTeste = "https://www.bytebank.com/cambio";
-            string teste3 = "https://www.bytebank.com";
+            }
+        }
+        #endregion
 
-            int indiceByteBank = urlTeste.IndexOf(teste3);
+        #region Array de Int - Aula 01 - Mód. 07
+        static void TestaArrayInt()
+        {
+            // Array de inteiros
+            // Array é um tipo de referência (não é um tipo de valor, como o inteiro)
+            int[] idades = new int[3]; // new int[tamanho]
 
-            // Console.WriteLine(indiceByteBank == 0);
+            idades[0] = 15;
+            idades[1] = 28;
+            idades[2] = 35;
+            //idades[3] = 50;
+            //idades[4] = 28;
+            //idades[5] = 60;
 
-            Console.WriteLine(urlTeste.StartsWith("https://www.bytebank.com")); // Retorna um booleano
-            Console.WriteLine(urlTeste.EndsWith("cambio")); // Retorna um booleano
+            Console.WriteLine($"Tamanho do Array: {idades.Length}");
+            Console.WriteLine(); // pula linha
 
-            Console.WriteLine(urlTeste.Contains("bytebank")); // booleano // case sensitive
+            // int[] idadeNoIndice4 = idades; // Correto
 
-            Console.ReadLine();
+            // int idadeNoIndice4 = idades[4]; // ou indice[2 + 2]
 
-            #endregion
+            // Console.WriteLine(idadeNoIndice4);
 
-            // www.bytebank.com.br/cambio**?`valor=1500`&`moedaOrigem=real`&`moedaDestino=dolar`**
+            // O zero é o valor padrão do inteiro. 
+            // Caso ocorra a tentativa de acessar um indice que não exista,
+            // irá retornar o 0;
 
-            // Teste - Pegar uma parte da string (a partir/depois da interrogação)
+            int acumulador = 0;
 
-            // pagina?argumentos
-            // 012345678
+            for (int indice = 0; indice < idades.Length; indice++)
+            {
+                int idade = idades[indice];
 
-            #region Teste - IsNullOrEmpty
-            // string textoVazio = "";
-            // Console.WriteLine(string.IsNullOrEmpty(textoVazio));
+                Console.WriteLine($"Acessando o Array Idades no indice: {indice}");
+                Console.WriteLine($"Valor de idades[{indice}] = {idade}");
 
-            // string - palavra reservada da linguagem
-            // String (classe) ou string (palavra reservada) - é a mesma coisa
-            #endregion
+                Console.WriteLine();
 
-            //-------------------------------------
+                acumulador += idade;
 
-            string urlParametros = "http://www.bytebank.com/cambio?moedaOrigem=real&moedaDestino=dolar&valor=1500";
+            }
 
-            ExtratorValorDeArgumentosURL extratorDeValores =
-                new ExtratorValorDeArgumentosURL(urlParametros);
+            int media = acumulador / idades.Length;
 
-            string valorDestino = extratorDeValores.GetValor("moedaDestino");
-            string valorOrigem = extratorDeValores.GetValor("moedaOrigem");
+            Console.WriteLine($"Média de idades = {media}");
 
-            Console.WriteLine("Valor de moeda Origem: " + valorOrigem);
 
-            Console.WriteLine("Valor de moeda Destino: " + valorDestino);
+            #region Comentários - OutroArray e ArrayBooleano
 
-            Console.WriteLine(extratorDeValores.GetValor("valor"));
-
-            //  Console.WriteLine(extratorDeValores.GetValor("Valor")); // resultado diferente
-
-            Console.ReadLine();
-
-            //-------------------------------------
-
-            // Teste - ToLower e ToUpper
-
-            string mensagemOrigem = "PALAVRA";
-            string termoBusca = "ra";
-
-            Console.WriteLine(mensagemOrigem.ToUpper());
-
-            Console.WriteLine(mensagemOrigem.ToLower());
-
-            // Testando 'Replace'
-            termoBusca = termoBusca.Replace('r', 'R');
-
-            Console.WriteLine("Termo busca = " + termoBusca);
-
-            termoBusca = termoBusca.Replace('a', 'A');
-
-            Console.WriteLine("Termo busca = " + termoBusca);
-
-            Console.WriteLine(mensagemOrigem.IndexOf(termoBusca));
-        
-            Console.ReadLine();
-
-            //------------
-
-            // Teste - Remoção
-
-            string testeRemocao = "primeiraParte&parteParaRemover";
-
-            int indiceEComercial = testeRemocao.IndexOf('&');
-
-            // Remove - Remove parte da string a partir de um indice
-            Console.WriteLine("Teste remoção: " + testeRemocao.Remove(indiceEComercial));
-
-            Console.ReadLine();
-
-
-            //-------------------------------------
-            string palavra = "moedaOrigem=real&moedaDestino=dolar";
-            string nomeArgumento = "moedaDestino";
-
-            int indice = palavra.IndexOf(nomeArgumento);
-
-            Console.WriteLine(indice);
-
-            // Resposta: 12
-            Console.WriteLine("Tamanho da string (nomeArgumento): " + nomeArgumento.Length);
-
-            // Resposta: moedaOrigem=real&moedaDestino=dolar
-            Console.WriteLine(palavra);
-
-            // Resposta: moedaDestino=dolar
-            Console.WriteLine(palavra.Substring(indice));
-
-            // Resposta: dolar
-            Console.WriteLine(palavra.Substring(indice + nomeArgumento.Length + 1));
-
-            Console.ReadLine();
-
-            // --------------------------
-
-            ExtratorValorDeArgumentosURL extrator =
-                    new ExtratorValorDeArgumentosURL("teste");
-
-            string url = "pagina?moedaOrigem=real&moedaDestino=dolar";
-
-            int indiceInterrogacao = url.IndexOf("?"); // Descobre o indice do "?"
-
-            Console.WriteLine(url); // Antes
-
-            string argumentos = url.Substring(indiceInterrogacao + 1); // url.Substring(7);
-
-            Console.WriteLine("Indice interrogacao: " + indiceInterrogacao); // Depois
-
-            Console.WriteLine(argumentos); // Depois
-
-
+            // int[] outroArray = idades;
+            // Console.WriteLine(outroArray[3]);
 
             /*
-             string temporaria = url + "sufixo";
+            bool[] arrayDeBooleanos = new bool[10];
 
-            url = temporaria;
+            arrayDeBooleanos[0] = true;
+            arrayDeBooleanos[1] = false;
+            arrayDeBooleanos[2] = false;
+            arrayDeBooleanos[3] = true;
+            */
 
-            ou url += "Sufixo";
-             */
+            #endregion
+
         }
+        #endregion
 
     }
 }
