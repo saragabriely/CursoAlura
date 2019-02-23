@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{4C7CFCE6-EE0B-40AA-9D5A-41C8343D424D}</ProjectGuid>
+    <ProjectGuid>{FFE1E633-7362-42AA-B235-282BE65DD2AE}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>ByteBank_</RootNamespace>
-    <AssemblyName>ByteBank_</AssemblyName>
+    <RootNamespace>SistemaAgencia</RootNamespace>
+    <AssemblyName>SistemaAgencia</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -43,11 +43,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Comparadores\ComparadorContaCorrentePorAgencia.cs" />
+    <Compile Include="Estagiario.cs" />
+    <Compile Include="Extensoes\ListExtensoes.cs" />
+    <Compile Include="ExtratorValorDeArgumentosURL.cs" />
+    <Compile Include="Lista.cs" />
+    <Compile Include="ListaDeContaCorrente.cs" />
+    <Compile Include="ListaDeObjects.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Modelos\Modelos.csproj">
+      <Project>{84d0a5c9-7777-44c9-9ff9-b0514c2d2236}</Project>
+      <Name>Modelos</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -12,12 +12,21 @@ namespace SistemaAgencia
 {
     class Program
     {
-        // Módulo 08 
+        // Módulo 09
 
         static void Main(string[] args)
         {
             
             
+            
+
+            //-------------------
+            Console.ReadLine();
+        }
+
+        #region TesteOrderByWhere
+        static void TesteOrderByWhere()
+        {
             var contas = new List<ContaCorrente>()
             {
                 new ContaCorrente(341, 54646),
@@ -41,13 +50,13 @@ namespace SistemaAgencia
                 { listaSemNulos.Add(conta);  }
             } */
 
-           // var contasNaoNulas = contas.Where(conta => conta != null);
+            // var contasNaoNulas = contas.Where(conta => conta != null);
 
             // Lista ordenada // IOrderedEnumerable<ContaCorrente> 
             var contasaOrdenadas =
                         contas.Where(conta => conta != null)
                               .OrderBy(conta => conta.Numero);
-                             
+
             //contas.OrderBy(conta => conta.Numero );
 
             #region Comentário
@@ -66,17 +75,15 @@ namespace SistemaAgencia
             foreach (var conta in contasaOrdenadas)
             {
                 Console.WriteLine($"Conta número {conta.Numero}, ag. {conta.Agencia}");
-             
+
                 /*
                 if (conta != null)
                 { Console.WriteLine($"Conta número {conta.Numero}, ag. {conta.Agencia}");}    
                 */
             }
-            
 
-            //-------------------
-            Console.ReadLine();
         }
+        #endregion
 
         #region TestaSort
         static void TestaSort()
