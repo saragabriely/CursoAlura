@@ -1,0 +1,48 @@
+﻿
+
+
+- Vantagens de trabalhar com Mapeamento Objeto Relacional (ORM)
+
+ . A maior produtividade do desenvolvedor, pois uma vez que ele fica fluente com o ORM 
+ que ele desejar usar, ele ganha muito mais tempo para focar em outras partes da 
+ aplicação e não precisa se dedicar tanto aos detalhes da persistência tradicional 
+ de dados.
+
+  . A maior facilidade de quando refatoramos um código, pois evitamos de ter que fazer 
+  toda a parte de conversão de objetos, montar parâmetros e tudo relacionado a montar uma
+  query SQL padrão na mão.
+
+  . A possibilidade de não se preocupar em ter que escrever SQL, pois o ORM se encarrega 
+  na maior parte disto.
+
+//-----------------------------------------------------------------------
+
+ - Instalar o Entity no projeto - Pois o Entity, diferente do ADO.NET, não vem instalada
+ no projeto assim que é criado.
+ - A extração / instalação de pacotes no VS é feita através do NuGet.
+
+ - Console do NUGET: Digitar algo e selecionar TAB - O console dá exemplos do que pode
+ ser usado
+
+ //----------------------------------------------------------------------
+ 
+ - Na documentação da Microsoft para o EF Core, existe uma página dedicada para os 
+ providers existentes atualmente. Por exemplo, existem providers para o MySQL, Postgres 
+ e DB2. Infelizmente, durante a escrita desse texto, ainda não havia um provider 
+ disponível para o famoso banco de dados Oracle.
+
+ https://docs.microsoft.com/en-us/ef/core/providers/
+
+ - Um desses providers é o InMemory, que é um provider para acessar um banco de dados 
+ que fica na própria memória da aplicação. Na página específica deste provider 
+ (em inglês), a Microsoft informa que o seu principal uso é para testes em classes que 
+ utilizam o EF Core, conforme indicado no texto abaixo:
+
+ - The InMemory provider is useful when you want to test components using something that 
+ approximates connecting to the real database, without the overhead of actual database 
+ operations.
+
+ - Utilize essa página para se manter atualizado em relação a esse assunto!
+
+
+
