@@ -1,5 +1,8 @@
 ﻿
+- Selecionando um código e clicando 'Ctrl + Ponto' - É possível criar um método 
+com o código selecionado.
 
+//-------------------------------------------------------------------
 
 - Vantagens de trabalhar com Mapeamento Objeto Relacional (ORM)
 
@@ -64,14 +67,490 @@
 
   . Instalar o Entity Framework através do gerenciador de pacotes Nugget.
 
+// -----------------------------------------------------------------------
 
+ - Para saber mais: como o CHANGETRACKER funciona
 
+ . Nossas classes não tem nenhuma lógica adicional para facilitar o monitoramento 
+ de mudanças em suas propriedades. Isto é, elas não herdam de nenhuma classe com 
+ esse propósito, e não possuem nenhuma propriedade que registra se foram modificadas 
+ (por exemplo,IsDirty). São classes simples que usam o padrão POCO (Plain Old C# 
+ Objects).
 
+ . Então, como o ChangeTracker sabe que, quando uma propriedade foi alterada, ele 
+ deve fazer um UPDATE no banco?
 
+ . O Entity guarda um snapshot dos valores dos objetos por padrão. Quando aquele 
+ objeto começa a ser monitorado pelo Entity, seja através de métodos que recuperam 
+ objetos do banco via SELECT (por exemplo ToList, First, Find, etc.), seja através 
+ do método Entry que cria uma entrada no ChangeTracker para o objeto passado como 
+ argumento do método.
 
+ . E chama o método DetectChanges ao executar o SaveChanges. O que esse método 
+ faz? DetectChanges verifica diferenças entre os valores atuais das propriedades 
+ da entidade e os valores originais guardados no snapshot quando ela foi anexada 
+ ao contexto.
 
+ . É possível desligar o monitoramento automático de mudanças através de uma 
+ propriedade booleana no ChangeTracker chamada AutoDetectChangesEnabled. Quando 
+ isso é necessário? Quando você tiver uma gravação massiva de objetos através do 
+ SaveChanges, a performance pode sofrer impacto considerável, uma vez que o método
+ DetectChanges será chamado e o ChangeTracker irá percorrer toda a lista de objetos
+ sendo monitorados.
 
+// ----------------------------------------------------------------------
 
+ - Na aula anterior, vimos que quando colocamos o Entity para cuidar das entidades, 
+ ele passa a monitorar o estado desses objetos. Quando buscamos dados no banco, o 
+ estado veio como Unchanged, ao alterarmos alguma informação do dado, ele passou a 
+ ser Modified.
+
+ . O que faremos durante essa parte, não é necessário que você repita. O intuito 
+ é mostrar o SQL que o Entity está gerando e qual a relação desse SQL com o estado 
+ atual dos objetos.
+
+ . Primeiro vamos configurar alguns detalhes na class Program. Dentro do método 
+ Main() vamos adicionar o provedor de serviços GetInfrasctructure<IServiceProvider>(),
+ lembrando de adicionar o namespaces.
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        using (var contexto = new LojaContext())
+        {
+            var serviceProvider = contexto.GetInfrasctructure<IServiceProvider>();
+
+            // ...
+        }
+    }
+}
+
+- Pediremos para o serviceProvider fornecer um serviço específico que cria Loggers.
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        using (var contexto = new LojaContext())
+        {
+            var serviceProvider = contexto.GetInfrasctructure<IServiceProvider>();
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+
+            // ...
+        }
+    }
+}
+
+ . Com o loggerFactory passaremos para o método AddProvider() um Logger específico 
+ que chamaremos de SqlLoggerProvider. O SqlLoggerProvider chama um método chamado 
+ Create().
+
+    static void Main(string[] args)
+    {
+        using (var contexto = new LojaContext())
+        {
+            var serviceProvider = contexto.GetInfrasctructure<IServiceProvider>();
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+            // ...
+        }
+    }
+. Porém a classe SqlLoggerProvider não existe, vamos criá-la.
+
+. Lembrando que todos esses passos não são necessários que sejam feitos, é apenas
+para mostrar como o SQL que o Entity está gerando.
+
+ . Criaremos a classe código SqlLoggerProvider e deixaremos da seguinte maneira:
+
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
+using System;
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    public class SqlLoggerProvider : ILoggerProvider
+    {
+        public static ILoggerProvider Create()
+        {
+            return new SqlLoggerProvider();
+        }
+
+        public ILogger CreateLogger(string categoryName)
+        {
+            if (categoryName == typeof(IRelationalCommandBuilderFactory).FullName)
+            {
+                return new SqlLogger();
+            }
+            return new NullLogger();
+        } 
+        public void Dispose() {  }
+    }
+
+    internal class NullLogger : ILogger
+    {
+        public IDisposable BeginScope<TState>(TState state)
+        {
+            return null;
+        }
+
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            return true;
+        }
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        {
+            //não faz nada
+        }
+    }
+
+    public class SqlLogger : ILogger
+    {
+        public IDisposable BeginScope<TState>(TState state)
+        {
+            return null;
+        }
+
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            return true;
+        }
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        {
+            Console.WriteLine("");
+            Console.WriteLine(formatter(state, exception));
+            Console.WriteLine("");
+        }
+    }
+}
+Executando a aplicação veremos o SQl:
+
+SELECT [p].[Id], [p].[Categoria], [p].[Nome], [p].[Preco] 
+FROM [Produtos] AS [p]
+ . Mostrando também o estado de cada dado. Como o último item da lista estamos 
+ modificando o nome e não salvamos, o seu estado é Modified. O que acontecerá 
+ quando salvarmos essas alterações?
+
+ . Tiraremos os comentários do comando contexto.SaveChanges(), que está depois da 
+ alteração que fizemos no nome do último elemento da lista.
+
+static void Main(string[] args)
+{
+    using(var contexto = LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrasctructure<IServiceProvider>();
+        var loggerFactory   = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+        var produtos = contexto.Produtos.ToList();
+        foreach (var p in produtos)
+        {
+            Console.WriteLine(p);
+        }
+
+        Console.WriteLine("=================");
+        foreach (var e in contexto.ChangeTracker.Entries())
+        {
+            Console.WriteLine(e);
+        }
+
+        var p1 = produtos.Last();
+        p1.Nome = "007 - O Espiao Que Me Amava";
+
+        Console.WriteLine("=================");
+        foreach (var e in contexto.ChangeTracker.Entries())
+        {
+            Console.WriteLine(e);
+        }
+        contexto.SaveChages();
+
+        //Console.WriteLine("=================");
+        //produtos = contexto.Produtos.ToList();
+        //foreach (var p in produtos)
+        //{ Console.WriteLine(p); }
+    }
+}
+. Executando a aplicação novamente vemos que após apresentar o a mensagem dos 
+ estados, foi gerada um SQL para atualizar no banco de dados.
+
+UPDATE [Produtos] SET [Nome] = @p0  WHERE [Id] = @p1;
+
+ . Então, quando chamamos o contexto.SaveChages(), ele olha para cada objeto e 
+ verifica o seu estado. Caso seja um estado que é preciso sincronizar com o banco, 
+ ele executará o SQL. Para o estado "Modified", ele executa o SQL Update.
+
+ . No próximo vídeo veremos quais são os outros estados.
+
+ //------------------------------------------------------------------------------
+
+ . Aprendemos o que acontece com um dado quando é alterado, o que veremos agora é 
+ como o ChangeTracker age ao adicionar um produto.
+
+ . Comentaremos o trecho de código onde alteramos o último produto. Em seguida 
+ adicionaremos o um novo produto, e para colocarmos sobre o controle do Entity 
+ chamaremos o método contexto.Produtos.Add();
+
+static void Main(string[] args)
+{
+    using(var contexto = new LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrasctructure<IServiceProvider>();
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+        var produtos = contexto.Produtos.ToList();
+        foreach (var p in produtos)
+        {
+            Console.WriteLine(p);
+        }
+
+        Console.WriteLine("=================");
+        foreach (var e in contexto.ChangeTracker.Entries())
+        {
+            Console.WriteLine(e);
+        }
+
+        //var p1 = produtos.Last();
+        //p1.Nome = "007 - O Espiao Que Me Amava";
+
+        var novoProduto = new Produto()
+        {
+            Nome = "Desinfetante",
+            Categoria = "Limpeza",
+            Preco = 2.99;
+        };
+        contexto.Produtos.Add(novoProduto);
+
+        Console.WriteLine("=================");
+        foreach (var e in contexto.ChangeTracker.Entries())
+        {
+            Console.WriteLine(e);
+        }
+
+        contexto.SaveChages();
+
+        //Console.WriteLine("=================");
+        //produtos = contexto.Produtos.ToList();
+        //foreach (var p in produtos)
+        //{
+        //    Console.WriteLine(p);
+        //}
+    }
+}
+. Para evitarmos a repetição de código, vamos extrair o laço onde mostramos o estado
+das entidade no ChangeTracker.
+
+private static void ExibeEntries(IEnumerable<EntityEntry> entries)
+{
+    Console.WriteLine("===================");
+    foreach (var e in entries)
+    {
+        Console.WriteLine(e);
+    }
+}
+Além do estado, mostraremos também as informações do produto.
+
+private static void ExibeEntries(IEnumerable<EntityEntry> entries)
+{
+    Console.WriteLine("===================");
+    foreach (var e in entries)
+    {
+        Console.WriteLine(e.Entity.ToString() + " - " + e.State);
+    }
+}
+Na classe Produto dentro do ToString(), colocaremos todas as informações do produto.
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    internal class Produto
+    {
+        // ...
+
+        public override string ToString()
+        {
+            return $"Produto: {this.Id}, {this.Nome}, {this.Categoria}, {this.Preco}";
+        }
+    }
+}
+ . Vamos substituir os laços de repetição por uma chamada do método ExibeEntries(). 
+ A classe Program ficará da seguinte maneira:
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    static void Main(string[] args)
+    {
+        using(var contexto = new LojaContext())
+        {
+            var serviceProvider = contexto.GetInfrasctructure<IServiceProvider>();
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+            var produtos = contexto.Produtos.ToList();
+
+            ExibeEntries(contexto.ChangeTracker.Entries());
+
+            var novoProduto = new Produto
+            {
+                Nome = "Desinfetante",
+                Categoria = "Limpeza",
+                Preco = 2.99;
+            };
+            contexto.Produtos.Add(novoProduto);
+
+            ExibeEntries(contexto.ChangeTracker.Entries());
+
+            contexto.SaveChages();
+
+            ExibeEntries(contexto.ChangeTracker.Entries());
+
+        }
+    }
+
+    private static void ExibeEntries(IEnumerable<EntityEntry> entries)
+    {
+        Console.WriteLine("===================");
+        foreach (var e in contexto.ChangeTracker.Entries())
+        {
+            Console.WriteLine(e.Entity.ToString() + " - " + e.State);
+        }
+    }
+}
+. Após executar a aplicação, veremos os resultados. O primeiro resultado é o 
+comando SQL select. Em seguida foi mostrado todos os dados cadastrados no banco,
+com o estado valor Unchanged.
+
+ . O produto "Desinfetante" que adicionamos, está com o menor valor inteiro no Id 
+ e com o estado Added. Após ser salvo com o SaveChanges(), o resultado é o comando 
+ SQL insert:
+
+INSERT INTO [Produtos] ([Categoria], [Nome], [Preco])
+VALUES (@p0, @p1, @p2);
+
+. Novamente um select será gerado trazendo todos os dados cadastrados no banco. 
+. Agora o produto "Desinfetante" está com o Id gerado pelo banco e o estado Unchanged.
+
+//-------------------------------------------------------------------------
+
+No último vídeo vimos o estado Added onde ele gera o comando SQL insert. Porém ficou faltando saber como enviar o comando SQL delete.
+
+Você já deve estar imaginando que é por meio do método do Entity contexto.Produtos.Remove(). Faremos alguns exemplos para ver como o ChangeTracker irá se comportar ao chamar o método contexto.Produtos.Remove().
+
+Comentaremos o código onde adicionamos um produto ao contexto e onde salvamos as alterações. Em seguida, pegaremos um produto do banco de dados e armazenaremos em uma variável chamada p1, e passamos como argumento para o contexto.Produtos.Remove().
+
+static void Main(String [] args)
+{
+    using(var contexto = LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrasctructure<IServiceProvider>();
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+        var produtos = contexto.Produtos.ToList();
+
+        ExibeEntries(contexto.ChangeTracker.Entries());
+
+        //var novoProduto = new Produto
+        //{
+        //    Nome = "Desinfetante",
+        //    Categoria = "Limpeza",
+        //    Preco = 2.99;
+        //};
+        //contexto.Produtos.Add(novoProduto);
+
+        var p1 = produtos.First();
+        contexto.Produtos.Remove(p1);
+
+        ExibeEntries(contexto.ChangeTracker.Entries());
+
+        //contexto.SaveChages();
+
+        //ExibeEntries(contexto.ChangeTracker.Entries());
+
+    }
+}
+Por enquanto não usaremos o contexto.SaveChanges() para salvar as alterações. Rodaremos a aplicação para ver qual estado o Entity colocou para o primeiro produto da lista.
+
+No resultado, vemos que foi executado o comando SQL SELECT para trazer as informações do banco. Após isso, foram apresentados todos os dados com o estado Unchanged. No código removemos o primeiro produto usando o contexto.Produtos.Remove(), dessa forma, o produto foi apresentado com o estado Deleted.
+
+Tiraremos os comentários do contexto.SaveChanges() e do ExibeEntries() que estão após a remoção.
+
+static void Main(String [] args)
+{
+    using(var contexto = LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrasctructure<IServiceProvider>();
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+        var produtos = contexto.Produtos.ToList();
+
+        ExibeEntries(contexto.ChangeTracker.Entries());
+
+        //var novoProduto = new Produto
+        //{
+        //    Nome = "Desinfetante",
+        //    Categoria = "Limpeza",
+        //    Preco = 2.99;
+        //};
+        //contexto.Produtos.Add(novoProduto);
+
+        var p1 = produtos.First();
+        contexto.Produtos.Remove(p1);
+
+        ExibeEntries(contexto.ChangeTracker.Entries());
+
+        contexto.SaveChages();
+
+        ExibeEntries(contexto.ChangeTracker.Entries());
+
+    }
+}
+Executando a aplicação, notamos que após apresentar os dados e colocar o estado do primeiro dado como Deleted, o Entity executou um comando SQL DELETE.
+
+DELETE FROM [Produtos]
+WHERE [Id] = @p0;
+Ao mostrar novamente os dados, o primeiro produto da lista já não está sendo controlado pelo Entity e foi removido do banco de dados. Mas o que aconteceria se adicionarmos um produto no Entity e removê-lo antes do contexto.SaveChanges()? Ele enviaria um comando SQL mesmo sem ter o produto no banco de dados?
+
+static void Main(String [] args)
+{
+    using(var contexto = LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrasctructure<IServiceProvider>();
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+        var produtos = contexto.Produtos.ToList();
+
+        ExibeEntries(contexto.ChangeTracker.Entries());
+
+        var novoProduto = new Produto
+        {
+            Nome = "Sabão em pó",
+            Categoria = "Limpeza",
+            Preco = 5.99;
+        };
+        contexto.Produtos.Add(novoProduto);
+
+        contexto.Produtos.Remove(novoProduto);
+
+        ExibeEntries(contexto.ChangeTracker.Entries());
+
+        contexto.SaveChages();
+
+        ExibeEntries(contexto.ChangeTracker.Entries());
+
+    }
+}
+Nesse caso, foi executado o comando SQL SELECT para trazer os produtos com o estado Unchanged, porém após adicionar e remover, o produto "Sabão em pó" não apareceu como um produto Added. Isso aconteceu porque após removermos, o Entity retira o produto da sua lista de rastreamento. Com isso, após salvarmos as alterações, não é enviada nenhum comando SQL para o banco.
+
+Mas o que aconteceu com esse produto novoProduto? Podemos ver o seu estado usando o método contexto.Entry() que nos retorna uma variável do tipo EntityEntry. Adicionaremos ao final do método Main():
+
+var entry = contexto.Entry(novoProduto);
+Console.WriteLine("\n\n" + entry.Entity.ToString() + " - " + entry.State);
+Rodando a aplicação podemos ver que o estado desse produto está como Detached. Este estado representa que o objeto não está sendo monitorado.
 
 
 

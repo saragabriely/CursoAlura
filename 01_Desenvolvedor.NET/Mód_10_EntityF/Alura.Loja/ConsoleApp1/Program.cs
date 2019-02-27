@@ -1,4 +1,8 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,35 +29,244 @@ namespace ConsoleApp1
 
         static void Main(string[] args)
         {
-            
             using(var contexto = new LojaContext())
             {
+                // Provedor de serviços
+                var serviceProvider = contexto.GetInfrastructure<IServiceProvider>();
+
+                // Serviço especifico - Irá criar loggers
+                var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+
+                loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+
                 var produtos = contexto.Produtos.ToList();
 
+                // Mostra as entidades que estão dentro do contexto
+                ExibirEntries(contexto.ChangeTracker.Entries());
 
+                Console.WriteLine("----------------------");
+
+                // var p1  = produtos.Last();
+                // p1.Nome = "007 - O Espião Que Me Amava";   // Alteração
+
+                // Adicionando
+                //AdicionandoProduto(contexto);
+
+                // Deletar um produto qualquer que vier no contexto
+                var p1 = produtos.First();
+
+                contexto.Produtos.Remove(p1);
+                
+                // Mostra as entidades que estão dentro do contexto
+                ExibirEntries(contexto.ChangeTracker.Entries());
+
+                contexto.SaveChanges();     // Salva as alterações
+
+                ExibirEntries(contexto.ChangeTracker.Entries());
             }
-
-
 
 
             Console.ReadLine();
         }
 
+        static void AdicionandoProduto(LojaContext contexto)
+        {
+            var novoProduto = new Produto()
+            {
+                Nome = "Desinfetante",
+                Categoria = "Limpeza",
+                Preco = 2.99
+            };
+
+            contexto.Produtos.Add(novoProduto);
+        }
+
+        // Selecionando um código e clicando 'Ctrl + Ponto' - É possível criar um
+        // método com o código selecionado.
+
+        private static void ExibirEntries(IEnumerable<EntityEntry> entries)
+        {
+            Console.WriteLine("----------------------");
+
+            foreach (var e in entries)
+            {
+                //Console.WriteLine(e.State); 
+
+                // O Entry tem uma referencia para o objeto que foi adicionado
+                // no contexto. A referencia fica na propriedade Entity
+
+                Console.WriteLine(e.Entity.ToString() + " - " + e.State);
+            }
+        }
+
+        #region ChangeTracker - 02
+        static void ChangeTracker02()
+        {
+            using (var contexto = new LojaContext())
+            {
+
+                // O código abaixo irá mostrar o SQL que está sendo gerado e a 
+                // relação com o estado de cada objeto.
+
+                // Logando no SQL (necessário  configurar dois objetos)
+
+                // Provedor de serviços
+                var serviceProvider = contexto.GetInfrastructure<IServiceProvider>();
+
+                // Serviço especifico - Irá criar loggers
+                var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+
+                // esse loggerFactory irá solicitar um logger especifico para pegar 
+                // o SQL do Entity e colocar no logger do programa 
+                loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+                #region Resultado - SQL gerado pelo Entity (sem o SaveChanges)
+                /* Resultado - SQL gerado pelo Entity (com o SaveChanges comentado)
+
+                Executed DbCommand (30ms) [Parameters=[], CommandType='Text', 
+                    CommandTimeout='30']
+                
+                SELECT [p].[Id], [p].[Categoria], [p].[Nome], [p].[Preco]
+                FROM [Produtos] AS [p]
+                 */
+                #endregion
+
+                var produtos = contexto.Produtos.ToList();
+
+                foreach (var p in produtos)
+                {
+                    Console.WriteLine(p);
+
+                    #region Método ToString()
+                    // O  console irá chamar o método ToString(), e caso esse método
+                    // não tenha sido implementado na classe de origem,
+                    // o resultado será: 
+                    // ConsoleApp1.Produto
+                    // ConsoleApp1.Produto
+                    #endregion
+                }
+                Console.WriteLine("----------------------");
+
+                // ChangeTracker - Rastreia todas as mudanças que acontecem na 
+                // instancia do contexto. E eem uma lista de todas as entidades
+                // gerenciadas no momento - que é recuperada através do Entries()
+
+                // O 'Entries' possui uma propriedade Estado (State)!
+                // Caso a mudança de estado ocorra, o SaveChanges irá agir.
+                foreach (var e in contexto.ChangeTracker.Entries())
+                {
+                    // Console.WriteLine(e);
+                    Console.WriteLine(e.State); // Unchanged or Modified
+                    // É mostrado o estado de cada registro retornado do BD.
+                }
+
+                Console.WriteLine("----------------------");
+
+                var p1 = produtos.Last();
+                p1.Nome = "007 - O Espião Que Me Amava";   // Alteração
+
+                // contexto.SaveChanges();     // Salva as alterações
+
+                Console.WriteLine("----------------------");
+
+                foreach (var e in contexto.ChangeTracker.Entries())
+                {
+                    Console.WriteLine(e.State);
+                }
+
+                /*
+                Console.WriteLine("----------------------");
+
+                var produtos_ = contexto.Produtos.ToList();
+                foreach (var p in produtos_)
+                {
+                    Console.WriteLine(p);
+                } */
+                
+            }
+        }
+        #endregion
+
+        #region ChangeTracker - Estados Unchanged e Modified
+
+        static void ChangeTrackerTeste()
+        {
+            // O ChangeTracker e os estados Unchanged e Modified
+
+            using (var contexto = new LojaContext())
+            {
+                var produtos = contexto.Produtos.ToList();
+
+                foreach (var p in produtos)
+                {
+                    Console.WriteLine(p);
+
+                    #region Método ToString()
+                    // O  console irá chamar o método ToString(), e caso esse método
+                    // não tenha sido implementado na classe de origem,
+                    // o resultado será: 
+                    // ConsoleApp1.Produto
+                    // ConsoleApp1.Produto
+                    #endregion
+                }
+                Console.WriteLine("----------------------");
+
+                // ChangeTracker - Rastreia todas as mudanças que acontecem na 
+                // instancia do contexto. E eem uma lista de todas as entidades
+                // gerenciadas no momento - que é recuperada através do Entries()
+
+                // O 'Entries' possui uma propriedade Estado (State)!
+                // Caso a mudança de estado ocorra, o SaveChanges irá agir.
+                foreach (var e in contexto.ChangeTracker.Entries())
+                {
+                    // Console.WriteLine(e);
+                    Console.WriteLine(e.State); // Unchanged or Modified
+                    // É mostrado o estado de cada registro retornado do BD.
+                }
+
+                Console.WriteLine("----------------------");
+
+                var p1 = produtos.Last();
+                p1.Nome = "007 - O Espião Que Me Amava";   // Alteração
+
+                // contexto.SaveChanges();     // Salva as alterações
+
+                Console.WriteLine("----------------------");
+
+                foreach (var e in contexto.ChangeTracker.Entries())
+                {
+                    Console.WriteLine(e.State);
+                }
+
+                /*
+                Console.WriteLine("----------------------");
+
+                var produtos_ = contexto.Produtos.ToList();
+                foreach (var p in produtos_)
+                {
+                    Console.WriteLine(p);
+                } */
+            }
+
+        }
+            #endregion
+
         #region Testes Iniciais
-        /*
-         // GravarUsandoAdoNet(); 
-            // GravarUsandoEntity(); 
-            // RecuperarProdutos(); 
-            // ExcluirProdutos(); 
-            // RecuperarProdutos(); 
-            AtualizarProduto();
+            /*
+             // GravarUsandoAdoNet(); 
+                // GravarUsandoEntity(); 
+                // RecuperarProdutos(); 
+                // ExcluirProdutos(); 
+                // RecuperarProdutos(); 
+                AtualizarProduto();
 
-            Console.WriteLine(); // Pula linha
-            Console.WriteLine("Aplicação finalizada ... ");
-             */
+                Console.WriteLine(); // Pula linha
+                Console.WriteLine("Aplicação finalizada ... ");
+                 */
 
-        #region AtualizarProduto()
-        private static void AtualizarProduto()
+            #region AtualizarProduto()
+            private static void AtualizarProduto()
         {
             // Incluir produto (tabela vazia)
             GravarUsandoEntity();

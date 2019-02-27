@@ -3,6 +3,8 @@ using System;
 
 namespace ConsoleApp1
 {
+    // DbContext é a classe base de toda a API do Entity Framework
+
     public class LojaContext : DbContext
     {
          // Essa classe deve permitir a utilização da API do Entity, e para isso 
