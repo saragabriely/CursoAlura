@@ -552,6 +552,257 @@ var entry = contexto.Entry(novoProduto);
 Console.WriteLine("\n\n" + entry.Entity.ToString() + " - " + entry.State);
 Rodando a aplicação podemos ver que o estado desse produto está como Detached. Este estado representa que o objeto não está sendo monitorado.
 
+//--------------------------------------------------------------
+
+. Com o método ToList(), foi feito um SELECT no banco e trouxe todos os 
+ produtos cadastrados,
+     
+. Recapitularemos o que fizemos durante a aula. Quando usamos o método 
+Produtos.ToList(), fizemos um comando SQL SELECT no banco e recebemos os 
+produtos com o estado Unchanged
+
+. Após pegarmos o objeto Unchanged e alterarmos algum atributo, ele passa
+para o estado Modified.
+
+. Depois de usarmos o método SaveChanges(), é executado um comando SQL 
+UPDATE, modificado o estado do produto para Unchanged.
+
+. Quando criamos um produto e adicionamos ao contexto do Entity com o 
+método Produtos.Add(), o estado do produto fica Added.
+
+. Depois de usarmos novamente o método SaveChanges(), é executado um 
+comando SQL INSERT alterando o estado do produto para Unchaged.
+
+. Quando usamos o Produtos.Remove() em um objeto, ele passa para o 
+estado Deleted.
+
+. Quando salvamos as alterações ele passa a ser Detached, que representa 
+um objeto que não é mais rastreado pelo Entity. E claro, o produto também
+é removido do banco de dados.
+
+. Quando adicionamos um produto e ele é removido sem ter sido salvo com
+o SaveChanges(), ele passa de Added para Detached.
+
+
+. quando você cria um objeto com por exemplo new Produto(), este objeto ainda 
+não está sendo monitorado pelo Entity. Ou seja, mesmo que você altere sua propriedades
+ele não estará em estado algum! Se você deseja adicionar um objeto que acabou de 
+ser criado para que ele seja monitorado, você precisa utilizar o método .Add() ,
+e aí assim após você alterar alguma de suas propriedades que ele vai para o 
+estado de Modified.
+
+//--------------------------------
+	RESUMO DOS ESTADOS
+
+	Added
+	. O objeto é novo, foi adicionado ao contexto, e o método SaveChanges ainda 
+	não foi executado. Depois que as mudanças são feitas, o estado do objeto muda 
+	para Unchanged. Objetos no estado Added não têm seus valores rastreados em 
+	sua instância de EntityEntry.
+
+	Deleted
+	. O objeto foi excluído do contexto. Depois que as mudanças foram salvas, seu
+	estado muda para Detached.
+
+	Detached
+	. O objeto existe, mas não está sendo monitorado. Uma entidade fica nesse 
+	estado imediatamente após ter sido criada e antes de ser adicionada ao 
+	contexto. Ela também fica nesse estado depois que foi removida do contexto 
+	através do método Detach ou se é carregada por um método com opção NoTracking.
+	Não existem instâncias de EntityEntry associadas a objetos com esse estado.
+
+	Modified
+	. Uma das propriedades escalares do objeto foi modificada e o método SaveChanges
+	ainda não foi executado. Quando o monitoramento automático de mudanças está 
+	desligado, o estado é alterado para Modified apenas quando o método 
+	DetectChanges é chamado. Quando as mudanças são salvas, o estado do objeto 
+	muda para Unchanged.
+
+	Unchanged
+	. O objeto não foi modificado desde que foi anexado ao contexto ou desde a 
+	última vez que o método SaveChanges foi chamado.
+
+//------------------------------------------------------
+
+A migração é feita em dois passos. O primeiro passo é executarmos o 
+         comando Add-Migration.
+
+    Já o segundo passo pode ser feitas de duas maneiras diferentes, sendo a 
+    primeira gerando um script de linguagem DDL com o comando Script-Migration.
+    Esse cenário é mais utilizado quando existe uma equipe de banco de dados 
+    separada da equipe de desenvolvimento.
+
+    A outra maneira é usarmos o comando Update-Database, onde o Entity pega 
+    a nova versão que foi registrada e executa diretamente no banco de dados.
+    Vamos utilizar essa segunda forma.
+
+    Começaremos executando o comando para adicionar a migração, passando o 
+    nome para ela. Como estamos adicionando uma nova coluna Unidade, daremos 
+    o nome da migração de Unidade. O comando ficará:
+
+    Add-Migration Unidade
+
+    Não obtivemos nenhum resultado relevante no Console, mas olhando o projeto 
+    podemos ver que uma pasta chamada Migrations foi criada, contendo duas 
+    classes.
+
+    A classe que usaremos possui o nome do arquivo com um Timestamp, que é a
+    data e hora que o arquivo foi gerado. O nome do arquivo ainda tem a 
+    separação por underscore e escrito Unidade.
+
+    Abrindo o arquivo que possui o Timestamp, vemos que é a classe Unidade. 
+    A classe Unidade herda de Migration, que nos fornece uma API que fará 
+    essa sincronização. Também possui dois métodos, Up que serve para atualizar
+    para a versão mais nova das tabelas, e o Down que serve para voltar para 
+    uma versão anterior.
+
+    Executaremos o comando para atualizar a tabela, passando o parâmetro 
+    -Verbose para que o Console apresente todas as operações. O comando ficará
+    da seguinte maneira:
+
+    Update-Database -Verbose
+
+    Após executar o comando, receberemos um erro informando que a tabela 
+    Produtos já existe no banco de dados:
+
+    There is already an object named 'Produtos' in the database
+
+    Porém o Entity criou uma tabela chamada __EFMigrationHistory, que é 
+    utilizada para manter o histórico de migrações e o Entity utilizará para 
+    controlar as versões executadas no banco de dados.
+
+//------------------------------------------------------
+
+        #region Corrigindo problemas e aplicando as migrações no banco
+        /*
+         No vídeo anterior vimos como trabalhar com a ferramenta de migração do 
+         Entity. Criamos uma Migration representando a evolução da classe Produto. 
+         Porém quando tentamos executar a migração, recebemos um erro informando 
+         que a tabela já existia.
+
+        Esse problema foi porque colocamos a criação da tabela e a evolução na 
+        mesma execução. Para resolvermos, nós teríamos que separar a criação da 
+        evolução da tabela.
+
+        Começaremos excluindo a tabela __EFMigrationsHistory do banco, e também 
+        a pasta Migrations do projeto. Além disso, voltaremos a classe produto 
+        para a sua forma inicial:
+
+        namespace Alura.Loja.Testes.ConsoleApp
+        {
+            internal class Produto
+            {
+                public int Id { get; internal set; }
+                public string Nome { get; internal set; }
+                public string Categoria { get; internal set; }
+                public double Preco { get; internal set; }
+
+                public override string ToString()
+                {
+                    return $"Produto: {this.Id}, {this.Nome}, {this.Categoria}, 
+                    {this.Preco}";
+                }
+            }
+        }
+        Executaremos o comando:
+
+        PM> Add-Migration Inicial
+
+        Agora que já criamos a Migration inicial, voltaremos a colocar a evolução 
+        da classe, que ficará da seguinte maneira:
+
+        namespace Alura.Loja.Testes.ConsoleApp
+        {
+            internal class Produto
+            {
+                public int Id { get; internal set; }
+                public string Nome { get; internal set; }
+                public string Categoria { get; internal set; }
+                public double PrecoUnitario { get; internal set; }
+                public string Unidade { get; set; };
+
+                public override string ToString()
+                {
+                    return $"Produto {this.Id}, {this.Nome}, {this.Categoria}, 
+                    {this.PrecoUnitario}";
+                }
+            }
+        }
+        Criaremos um nova migração que chamaremos de Unidade. O comando será:
+
+        Add-Migration Unidade
+
+        Acessando a classe de migração Unidade, veremos que ela está bem diferente, 
+        refletindo apenas as informações de evolução da tabela. Dentro do método 
+        Up() temos a instrução de renomear a coluna Preco para PrecoUnitario, e 
+        adicionar uma nova coluna Unidade. Já no método Down, temos a instrução 
+        de deletar a coluna Unidade e renomear PrecoUnitario para Preco.
+
+        Tentando executar o comando Update-Database receberemos o mesmo erro 
+        informando que a tabela já foi criada. A função da tabela 
+        __EFMigrationsHistory é apenas registrar quais migrações foram executadas
+        no banco de dados. Ao acessá-la, veremos que nenhuma migração foi 
+        executada.
+
+        Levando isso em consideração, ao tentarmos efetuar a migração, ele 
+        executará todas as migrações que estão na pasta Migrations, inclusive 
+        a migração Inicial.
+
+        Fingiremos para o banco que a migração Inicial já foi executada. 
+        Entraremos da classe de migração Inicial e comentaremos todo o conteúdo 
+        do método Up(), em seguida executaremos Update-Database Inicial. Isso 
+        executará apenas a migração com o nome Inicial e irá criar uma linha na 
+        tabela de histórico de migração.
+
+        Agora podemos executar tirar os comentários da classe Inicial e executar 
+        o comando Update-Database, dessa vez sem passarmos o nome da classe. 
+        A sincronização foi efetuada com sucesso.
+
+        Acessando o banco de dados, veremos que a coluna Preco foi renomeada para
+        PrecoUnitario e a coluna Unidade foi criada.
+
+//----------------------------------------------------------------------
+
+	Para saber mais: sincronizando o banco com sua própria aplicação
+	PRÓXIMA ATIVIDADE
+
+	. Depois que sua aplicação estiver madura o bastante para ser promovida, surge 
+	a questão: como atualizar o banco de dados daquele ambiente específico? Vimos que
+	em organizações com políticas de acesso mais restritas a ambientes críticos, a 
+	solução é gerar um arquivo com o script das migrações e entregar esse arquivo à 
+	equipe responsável. Essa tarefa é realizada com o comando Script-Migration.
+
+	. Além disso, também é possível fazer que sua própria aplicação cuide da migração 
+	das versões. Ou seja, podemos escrever código em nossa aplicação para que o banco
+	de dados seja sincronizado. Isso é feito através do método de extensão Migrate, 
+	que está acessível na propriedade Database da classe DbContext. Essa propriedade 
+	representa a instância do banco de dados apontado pelo contexto Entity específico
+	de sua aplicação (no nosso exemplo, LojaContext), e expõe métodos que permitem 
+	gerenciar o banco apontado pelo contexto, como por exemplo sua criação, exclusão 
+	e validação de existência.
+
+	. O método Migrate só pode ser usado em bancos de dados relacionais e fica 
+	disponível no pacote Microsoft.EntityFrameworkCore.Relational.
+
+	. Assim, para garantir que todas as migrações estarão aplicadas no banco de dados,
+	podemos escrever:
+
+	using(var contexto = new LojaContext())
+	{
+	  contexto.Database.Migrate();
+	}
+	. Você precisa garantir que esse código seja executado antes de qualquer acesso
+	aos objetos gerenciados pelo contexto. Isso vai depender do tipo de aplicação que 
+	será implementada.
+
+//-------------------------------------------------------------------------
+
+
+
+
+
+
+
 
 
 

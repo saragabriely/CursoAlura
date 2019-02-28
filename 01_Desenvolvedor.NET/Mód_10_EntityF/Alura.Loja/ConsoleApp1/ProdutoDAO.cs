@@ -4,7 +4,8 @@ using System.Data.SqlClient;
 
 namespace ConsoleApp1
 {
-    internal class ProdutoDAO : IDisposable, IProdutoDAO
+    // Classe excluida
+    internal class ProdutoDAO  //: IDisposable, IProdutoDAO
     {
          // Classe que não utiliza o Entity (ANTES DO ENTITY FRAMEWORK).
          
@@ -12,7 +13,7 @@ namespace ConsoleApp1
          // O que é muito dificl hoje em dia.
 
         // Entity - Realiza mapeamento.
-
+        /*
         private SqlConnection conexao;
 
         public ProdutoDAO()
@@ -51,7 +52,7 @@ namespace ConsoleApp1
                 insertCmd.Parameters.Add(paramCategoria);
 
                 // Preço
-                var paramPreco        = new SqlParameter("preco", p.Preco);
+                var paramPreco        = new SqlParameter("preco", p.PrecoUnitario);
                 insertCmd.Parameters.Add(paramPreco);
 
                 insertCmd.ExecuteNonQuery();
@@ -70,7 +71,7 @@ namespace ConsoleApp1
 
                 var paramNome       = new SqlParameter("nome", p.Nome);
                 var paramCategoria  = new SqlParameter("categoria", p.Categoria);
-                var paramPreco      = new SqlParameter("preco", p.Preco);
+                var paramPreco      = new SqlParameter("preco", p.PrecoUnitario);
                 var paramId         = new SqlParameter("id", p.Id);
 
                 updateCmd.Parameters.Add(paramNome);
@@ -120,12 +121,12 @@ namespace ConsoleApp1
                 p.Id        = Convert.ToInt32(resultado["Id"]);
                 p.Nome      = Convert.ToString(resultado["Nome"]);
                 p.Categoria = Convert.ToString(resultado["Categoria"]);
-                p.Preco     = Convert.ToDouble(resultado["Preco"]);
+                p.PrecoUnitario = Convert.ToDouble(resultado["Preco"]);
                 lista.Add(p);
             }
             resultado.Close();
 
             return lista;
-        }
+        } */
     }
 }

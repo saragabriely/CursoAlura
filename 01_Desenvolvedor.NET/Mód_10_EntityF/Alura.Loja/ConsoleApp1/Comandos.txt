@@ -1,0 +1,8 @@
+﻿
+
+. cls - Limpa a console (Console de Gerenciamento de Pacotes);
+
+
+
+
+
