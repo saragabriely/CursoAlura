@@ -176,6 +176,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Compra.cs" />
     <Compile Include="IProdutoDAO.cs" />
     <Compile Include="LojaContext.cs" />
     <Compile Include="Migrations\20190228002010_Inicial.cs" />
@@ -186,11 +187,16 @@
     <Compile Include="Migrations\20190228002220_Unidade.designer.cs">
       <DependentUpon>20190228002220_Unidade.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\20190228011825_Compra.cs" />
+    <Compile Include="Migrations\20190228011825_Compra.designer.cs">
+      <DependentUpon>20190228011825_Compra.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\LojaContextModelSnapshot.cs" />
     <Compile Include="Produto.cs" />
     <Compile Include="ProdutoDAO.cs" />
     <Compile Include="ProdutoDAOEntity.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Program_AulasAnteriores.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqlLoggerProvider.cs" />
   </ItemGroup>
@@ -199,10 +205,11 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Comandos.txt" />
-    <Content Include="Comentarios.txt" />
+    <Content Include="Comentários\Comandos.txt" />
+    <Content Include="Comentários\Comentarios.txt" />
     <Content Include="ddl-produtos.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

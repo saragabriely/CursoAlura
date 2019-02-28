@@ -796,10 +796,264 @@ A migração é feita em dois passos. O primeiro passo é executarmos o
 	será implementada.
 
 //-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+
+	AULA 05
+
+ * 1 - Relacionamento um para muitos
+
+ . Na aula anterior aprendemos como o Entity sincroniza estrutura das classes 
+ entidade, com a estrutura das tabelas no banco de dados. Isso era necessário 
+ porque precisávamos evoluir a aplicação.
+
+ . Para uma loja prosperar, é necessário que os clientes comprem. Nessa aula, 
+ modelaremos o conceito de compra, em uma nova classe e relacionaremos com o 
+ produto. Dessa forma veremos como o Entity trabalhará com relacionamentos.
+
+ . Na classe Program dentro do método Main(), simularemos uma compra de um produto. 
+ Começaremos criando um novo produto e popularemos:
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        //compra de 6 pães franceses
+        var paoFrances = new Produto();
+        paoFrances.Nome = "Pão Francês";
+        paoFrances.PrecoUnitario = 0.40;
+        paoFrances.Unidade = "Unidade";
+        paoFrances.Categoria = "Padaria";
+    }
+}
+. Mas como simularemos uma compra? Instanciaremos a classe Compra, populando os 
+atributos Quantidade, Produto e Preco. O valor de Preco é a multiplicação entre o
+PrecoUnitario do produto e a Quantidade da compra.
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        //compra de 6 pães franceses
+        var paoFrances = new Produto();
+        paoFrances.Nome = "Pão Francês";
+        paoFrances.PrecoUnitario = 0.40;
+        paoFrances.Unidade = "Unidade";
+        paoFrances.Categoria = "Padaria";
+
+        var compra = new Compra();
+        compra.Quantidade = 6;
+        compra.Produto = paoFrances;
+        compra.Preco = paoFrances.PrecoUnitario * compra.Quantidade;
+    }
+}
+ . Como a classe e as propriedades ainda não foram criadas, podemos usar o atalho 
+ "Ctrl + . (ponto)" do Visual Studio, e pedir a criação. Podemos persistir as 
+ informações da compra no banco de dados, porém ainda não possuímos a tabela que
+ representa a classe Compra. Para sincronizar a classe com o banco, usaremos 
+ novamente Migrations.
+
+//-------------------------------------------------------------------------
+
+	* 2 Corrigindo a migração para refletir o relacionamento
+
+ . Antes de criarmos a migração para representar a classe, entraremos na classe 
+ Compra e adicionaremos uma propriedade Id. Essa propriedade irá representar a 
+ chave primária da compra. Também removeremos o construtor da classe, que foi 
+ gerado automaticamente pelo Visual Studio.
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    internal class Compra
+    {
+        public int Id { get; set; }
+        public int Quantidade { get; internal set; }
+        public Produto Produto { get; internal set; }
+        public double Preco { get; internal set; }
+    }
+}
+Abriremos o Console do Gerenciador de Pacotes do NuGet, e digitaremos o comando para adicionarmos a migração:
+
+PM> Add-Migration Compra
+
+Abriremos a classe de migração Compra. Podemos notar que os métodos Up() e Down() estão vazios. O que queremos é criar a tabela Compra no banco de dados, mas o que fizemos de errado?
+
+Estamos esquecendo de um passo importante, que é dizer pro Entity gerenciar a persistência da classe Compra. Para fazermos isso, acessaremos a classe de contexto LojaContext, e criaremos uma propriedade DbSet<Compra> Compras.
+
+using Microsoft.EntityFrameworkCore;
+using System;
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    internal class LojaContext : DbContext
+    {
+        public DbSet<Produto> Produtos { get; set; }
+        public DbSet<Compras> Compras { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=LojaDB;Trusted_Connection=true;")
+        }
+    }
+}
+ . Removeremos a migração que acabamos de fazer executando o comando Remove-Migration
+ no Console. A classe de migração com os métodos Up() e Down() vazias, será excluída.
+
+ . Rodaremos novamente o comando Add-Migration Compra. A classe criada para essa 
+ migração possui código nos métodos Up() e Down(). Basicamente o método Up() irá 
+ criar uma tabela com as colunas Id, Preco, ProdutoId e Quantidade.
+
+ . Não criamos nenhuma propriedade na classe Compras com o nome ProdutoId, então 
+ de onde veio essa coluna? Isso acontece porque no modelo relacional não é possível
+ guardar uma referência para um objeto, como fazemos no modelo orientado a objetos.
+ Justamente por isso, no modelo relacional é guardado uma referência para a chave 
+ primária do produto, e o Entity usa na coluna a convenção [nome da classe]Id.
+
+ . É sempre importante analisarmos o código antes de atualizar as migrações. A 
+ linha de criação da coluna ProdutoId permite que um produto seja nulo:
+
+ProdutoId = table.Column<int>(nullable: true);
+
+ . Quando efetuamos uma compra, é obrigatório ter um produto. Essa migração não 
+ está atendendo as nossas necessidades. Por isso iremos removê-la com o comando 
+ Remove-Migration.
+
+ . Para indicar que um Produto é obrigatório, iremos deixar explícito a chave 
+ estrangeira ProdutoId.
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    internal class Compra
+    {
+        public int Id { get; set; }
+        public int Quantidade { get; internal set; }
+        public int ProdutoId { get; set; }
+        public Produto Produto { get; internal set; }
+        public double Preco { get; internal set; }
+    }
+}
+ . Como um valor do tipo int não pode ser nulo, o Entity irá interpretar que a 
+ propriedade deve ser obrigatória. Executaremos o comando Add-Migration Compra 
+ para adicionar a migração.
+
+ . Podemos ver na classe de migração Compra, que a coluna ProdutoId não permite 
+ valores nulos:
+
+ProdutoId = table.Column<int>(nullable: false);
+
+ . Finalmente podemos sincronizar essa migração com o banco de dados, usaremos o 
+ comando Update-Database. A tabela Compras foi criada, e a migração foi adicionada
+ no histórico de migrações na tabela __EFMigrationsHistory.
+
+//-------------------------------------------------------------------------
+
+	* 5 - Inserindo objetos relacionados
+
+ . Anteriormente, criamos uma nova classe chamada Compra e sincronizamos o modelo de 
+ classe com o banco usando o recurso de Migrations. Temos tudo que precisamos para 
+ registrar a compra do banco de dados.
+
+ . Na classe Program, iremos instanciar um objeto do contexto de LojaContext. Com o 
+ objeto, iremos adicionar a compra ao contexto do Entity e salvar as alterações. 
+ Para visualizarmos as ações, colocaremos o código de Logger. A classe ficará da 
+ seguinte maneira:
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        //compra de 6 pães franceses
+        var paoFrances = new Produto();
+        paoFrances.Nome = "Pão Francês";
+        paoFrances.PrecoUnitario = 0.40;
+        paoFrances.Unidade = "Unidade";
+        paoFrances.Categoria = "Padaria";
+
+        var compra = new Compra();
+        compra.Quantidade = 6;
+        compra.Produto = paoFrances;
+        compra.Preco = paoFrances.PrecoUnitario * compra.Quantidade;
+
+        using(var contexto = new LojaContext())
+        {
+            var serviceProvider = contexto.GetInfrastructure<IServiceProvider>();
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+            contexto.Compras.Add(compra);
+
+            contexto.SaveChanges();
+        }
+    }
+}
+ . Sabemos que o estado de compra vai ser Added, mas qual será o estado do 
+ paoFrances? Nós não pegamos o paoFrances do banco de dados, ele é um produto 
+ novo. Tivemos todo o trabalho de refazer a migração Compra justamente para não 
+ ter um produto nulo, como será que o Entity irá reagir nessa situação?
+
+ . Quando adicionarmos o compra no Change Tracker, o Entity perceberá que existe 
+ uma referência ao produto paoFrances e também o incluirá para ser supervisionado.
+
+ . Comentaremos a linha do SaveChanges(), e colocaremos na classe Program o método
+ ExibeEntries() que usamos nas aulas anteriores.
+
+class Program
+{
+    static void Main (string [] args)
+    {
+        //compra de 6 pães franceses
+        var paoFrances = new Produto();
+        paoFrances.Nome = "Pão Francês";
+        paoFrances.PrecoUnitario = 0.40;
+        paoFrances.Unidade = "Unidade";
+        paoFrances.Categoria = "Padaria";
+
+        var compra = new Compra();
+        compra.Quantidade = 6;
+        compra.Produto = paoFrances;
+        compra.Preco = paoFrances.PrecoUnitario * compra.Quantidade;
+
+        using(var contexto = new LojaContext())
+        {
+            var serviceProvider = contexto.GetInfraestructure<IServiceProvider>();
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+            contexto.Compras.Add(compra);
+
+            ExibeEntries(contexto.ChangeTracker.Entries());
+
+            //contexto.SaveChanges();
+        }
+    }
+    private static void ExibeEntries(IEnumerable<EntityEntry> entries)
+    {
+        foreach(var e in entries)
+        {
+            Console.WriteLine(e.Entity.ToString() + " - " + e.State);
+        }
+    }
+}
+ . Executaremos a aplicação, como resultado veremos que temos duas entidades, um 
+ do tipo Compra e outro do tipo Produto. As duas entidades estão com o estado Added, 
+ por isso o Entity irá gerar o comando SQL INSERT para cada um deles. O contexto 
+ foi esperto o suficiente para adicionar a referência do produto contida na compra.
+
+ . Removeremos o comentário da linha contexto.SaveChanges() e executaremos a 
+ aplicação. Veremos que o Entity inseriu primeiro o produto no banco de dados, 
+ depois inseriu a compra, justamente por ser necessário ter um produto preenchido 
+ para incluirmos a compra. Se olharmos o banco, veremos todas as informações 
+ persistidas.
 
 
 
 
+//-------------------------------------------------------------------------
+
+
+
+
+
+//-------------------------------------------------------------------------
 
 
 

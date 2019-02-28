@@ -11,6 +11,7 @@ namespace ConsoleApp1
         // a classe deve herdar de DbContext
 
         public DbSet<Produto> Produtos { get; set; }
+        public DbSet<Compra>  Compras  { get; set; }
 
         // Método de configuração do LojaContext
         protected override void OnConfiguring(DbContextOptionsBuilder optionBuilder)
