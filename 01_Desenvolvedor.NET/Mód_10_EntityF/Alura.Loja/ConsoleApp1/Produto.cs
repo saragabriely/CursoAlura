@@ -1,4 +1,6 @@
-﻿namespace ConsoleApp1
+﻿using System.Collections.Generic;
+
+namespace ConsoleApp1
 {
     public class Produto
     {
@@ -7,6 +9,8 @@
         public string Categoria      { get; internal set; }
         public double PrecoUnitario  { get; internal set; } // Preco
         public string Unidade        { get; internal set; }
+        public IList<PromocaoProduto> Promoces {get; set;}
+        public IList<Compra> Compras  { get; set; }
 
         public override string ToString()
         {

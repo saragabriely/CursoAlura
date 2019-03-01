@@ -2,6 +2,7 @@
 
 . cls - Limpa a console (Console de Gerenciamento de Pacotes);
 
+. Ctrl + Shift + A: criar classe
 
 
 

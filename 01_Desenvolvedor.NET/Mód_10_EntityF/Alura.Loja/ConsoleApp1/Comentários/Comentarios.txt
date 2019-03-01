@@ -1045,18 +1045,1299 @@ class Program
  persistidas.
 
 
+//-------------------------------------------------------------------------
 
+	* 6 - 01 - Relacionamento muitos para muitos e a classe de join
+
+ . Na aula anterior introduzimos a classe Compra, para representarmos a compra 
+ de um produto com base no preço e quantidade. Utilizamos essa funcionalidade para 
+ introduzir o conceito de relacionamento entre entidades. Nessa aula continuaremos 
+ falando sobre relacionamentos, porém em vez de ter relacionamento apenas com a 
+ instância de uma única classe, faremos o relacionamento para uma coleção de
+ instâncias.
+
+ . Vamos imaginar que a nossa loja crie regularmente, promoções para baixar o 
+ estoque dos produtos. Representaremos esse conceito criando uma classe chamada 
+ de Promocao.
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    public class Promocao
+    {
+
+    }
+}
+. Agora na classe Program, dentro do método Main() criaremos um cenário para essas
+promoções. Deixaremos dentro do método apenas a instancia do contexto do Entity e 
+o código do Logger.
+
+ . Instanciaremos uma promoção e armazenaremos em um objeto chamado promocaoDePascoa. 
+A partir desse objeto, chamaremos as propriedades Descricao, DataInicio, DataTermino. 
+Além dessas propriedades, adicionaremos três produtos na propriedade Produtos.
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        var promocaoDePascoa = new Promocao();
+        promocaoDePascoa.Descricao = "Páscoa Feliz";
+        promocaoDePascoa.DataInicio = DateTime.Now;
+        promocaoDePascoa.DataTermino = DateTime.Now.AddMonths(3);
+        promocaoDePascoa.Produtos.Add(new Produto());
+        promocaoDePascoa.Produtos.Add(new Produto());
+        promocaoDePascoa.Produtos.Add(new Produto());
+
+        using(var contexto = new LojaContext())
+        {
+            var serviceProvider = contexto.GetInfra structure<IServiceProvider>();
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            loggerFactory.AddProvider(SqlLoggerProvider.Create());
+        }
+    }
+
+    private static void ExibeEntries(IEnumerable<EntityEntry> entries)
+    {
+        foreach(var e in entries)
+        {
+            Console.WriteLine(e.Entity.ToString() + " - " + e.State);
+        }
+    }
+}
+As propriedades ainda não existem na classe Promocao, por isso iremos criá-la.
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    public class Promocao
+    {
+        public string Descricao { get; internal set; }
+        public DateTime DataInicio { get; internal set; }
+        public DateTime DataTermino { get; internal set; }
+        public IList<Produto> Produtos { get; internal set; }
+    }
+}
+. Para podermos usar a propriedade Produtos, é necessário colocarmos a classe Produto
+como public. Como o Entity irá refletir isso no banco de dados? Sabemos que a classe 
+Promocao ainda não tem a sua tabela representativa, faremos essa configuração.
+
+. Na classe LojaContext, criaremos uma nova propriedade DbSet<Promocao> Promocoes.
+
+using Microsoft.EntityFrameworkCore;
+using System;
+
+namespace Alura.Loja.Teste.ConsoleApp
+{
+    public class LojaContext : DbContext
+    {
+        public DbSet<Produto> Produtos { get; set; }
+        public DbSet<Compra> Compras { get; set; }
+        public DbSet<Promocao> Promocoes { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.
+			UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=LojaDB;
+			Trusted_Connection=true;")
+        }
+    }
+}
+. Se tentarmos usar o comando Add-Migration receberemos um erro informando que não 
+possuímos um chave primária, por isso criaremos na classe promoção a propriedade Id. 
+Em seguida, podemos finalmente adicionar a migração que chamaremos de Promocao. 
+O comando completo será Add-Migration Promocao.
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    public class Promocao
+    {
+        public int Id { get; set; }
+        public string Descricao { get; internal set; }
+        public DateTime DataInicio { get; internal set; }
+        public DateTime DataTermino { get; internal set; }
+        public IList<Produto> Produtos { get; internal set; }
+    }
+}
+ . Analisando a classe de migração Promocao, veremos que ele está criando um 
+ coluna PromocaoId na tabela Produto. O Entity interpretou que cada produto 
+ está associado a apenas um promoção. O que não faz sentido para a nossa aplicação.
+ O que queremos é que a promoção acesse uma coleção de produtos, e o produto acesse
+ uma coleção de promoções. Removeremos essa migração com Remove-Migration.
+
+Para resolvermos isso, adicionaremos na classe Produto uma lista de promoções.
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    public class Produto
+    {
+        public int Id { get; internal set; }
+        public int Nome { get; internal set; }
+        public int Categoria { get; internal set; }
+        public int PrecoUnitario { get; internal set; }
+        public string Unidade { get; set; }
+        public IList<Promocao> Promocoes { get; set; }
+
+        public override string ToString()
+        {
+            return $"Produto: {this.Id}, {this.Nome}, {this.Categoria}, 
+						{this.PrecoUnitario}";
+        }
+    }
+}
+. Dessa forma temos o relacionamento de muitas promoções para muitos produtos. 
+Porém se tentarmos adicionar a migração teremos um erro. A versão 6 que é a 
+anterior do Entity Framework Core, conseguia identificar as tabelas JOIN 
+automaticamente. Mas na versão atual, que é um subset da versão anterior, foi 
+deixado de fora (por enquanto) essa função.
 
 //-------------------------------------------------------------------------
 
+	* 6 - Aula 02 Mapeando chaves primárias compostas
+
+ . Para termos a tabela de JOIN, criaremos uma classe que representará esse 
+ relacionamento e será reconhecido pelo Entity. A classe se chamará PromocaoProduto.
+
+namespace Alura.Loja.Testes.CosoleApp
+{
+    public class PromocaoProduto
+    {
+    }
+}
+A classe terá as propriedades ProdutoId, Produto, PromocaoId e Promocao:
+
+namespace Alura.Loja.Testes.CosoleApp
+{
+    public class PromocaoProduto
+    {
+        public int ProdutoId { get; set; }
+        public Produto produto { get; set; }
+        public int PromocaoId { get; set; }
+        public Promocao Promocao { get;  set; }
+    }
+}
+ . Na classe Promocao, mudaremos o tipo da lista IList<Produto> para 
+ IList<PromocaoProduto>:
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    public class Promocao
+    {
+        public int Id { get; set; }
+        public string Descricao { get; internal set; }
+        public DateTime DataInicio { get; internal set; }
+        public DateTime DataTermino { get; internal set; }
+        public IList<PromocaoProduto> Produtos { get; internal set; }
+    }
+}
+ . Na classe Produto também mudaremos o tipo da lista, de IList<Promocao> para 
+ IList<PromocaoProduto>:
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    public class Produto
+    {
+        public int Id { get; internal set; }
+        public int Nome { get; internal set; }
+        public int Categoria { get; internal set; }
+        public int PrecoUnitario { get; internal set; }
+        public string Unidade { get; set; }
+        public IList<PromocaoProduto> Promocoes { get; set; }
+
+        public override string ToString()
+        {
+            return $"Produto: {this.Id}, {this.Nome}, {this.Categoria}, 
+			{this.PrecoUnitario}";
+        }
+    }
+}
+ . Antes de adicionarmos a migração, é necessário comentarmos o trecho de código 
+ onde adicionamos um novo produto na promoção que simulamos na classe Program:
+
+//promocaoDePascoa.Produtos.Add(new Produto());
+//promocaoDePascoa.Produtos.Add(new Produto());
+//promocaoDePascoa.Produtos.Add(new Produto());
+ . Tentaremos adicionar a migração com o comando Add-Migration Promocao. 
+ Receberemos um erro informando que é necessário um Id para ser a chave 
+ primária da classe PromocaoProduto. Mas será que faz sentido? Não, por ser 
+ uma classe de JOIN.
+
+ . Podemos criar uma chave primária composta, que será identificada pelo ProdutoId
+ e PromocaoId. Na classe LojaContext iremos sobrescrever outro método, chamado 
+ OnModelCreating().
+
+ . Esse método é executado no evento de criação do modelo. Podemos configurar 
+ informado que a entidade PromocaoProduto tem a chave composta, com a composição 
+ de ProdutoId e PromocaoId. A configuração ficará da seguinte maneira:
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    public class LojaContext : DbContext
+    {
+        public DbSet<Produto> Produtos { get; set; }
+        public DbSet<Compra> Compras { get; set; }
+        public DbSet<Promocao> Promocoes { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder
+                .Entity<PromocaoProduto>()
+                .HasKey(pp => new { pp.PromocaoId, pp.ProdutoId });
+            base.OnModelCreating(modelBuilder);
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;
+			Database=LojaDB;Trusted_Connection=true;")
+        }
+    }
+}
+ . Se executarmos o comando Add-Migration Promocao, a migração será criada com 
+ sucesso. Analisando a classe de migração Promocao, veremos que o no método Up()
+ será criado as tabelas Promocoes e PromocaoProduto. Detalhe que na tabela JOIN, 
+ possui a chave composta, com as chaves estrangeiras de Produtos e Promocoes. 
+ Assim se deletarmos um produto ou uma promoção, os registros da tabela 
+ PromocaoProduto serão deletados em cascata.
+
+ . Era isso que queríamos. Executaremos o comando Update-Database para que as 
+ evoluções da sistema sejam aplicadas no banco de dados. Também será adicionado 
+ na tabela de registros, que essa migração foi executada.
+
+ //-------------------------------------------------------------------------
+
+ No sistema bancário que Manoel está produzindo, chegou a hora de relacionar contas 
+ a clientes. O requisito que Manoel precisa atender é: uma conta pode estar associada
+ a vários clientes, e um cliente pode ter várias contas.
+
+Suponha que as classes Conta e Cliente estejam especificadas desta maneira:
+
+namespace Alura.Banco.Modelo
+{
+    public class Conta
+    {
+        public int Id { get; set; }
+        public string Numero { get; set; }
+        public double Saldo { get; set; }
+    }
+
+    public class Cliente
+    {
+        public int Id { get; set; }
+        public string Nome { get; set; }
+        public string CPF { get; set; }
+    }
+}
+Para que o Entity consiga mapear o cenário Contas x Clientes (descrito no primeiro 
+parágrafo) no banco de dados, selecione as alternativas que descrevem as mudanças 
+que você vai precisar fazer em seu modelo.
+
+O código da solução deve ficar parecido com:
+
+namespace Alura.Banco.Modelo
+{
+    public class Conta
+    {
+        public int Id { get; set; }
+        public string Numero { get; set; }
+        public double Saldo { get; set; }
+        public IList<ContaCliente> Clientes { get; set; }
+    }
+
+    public class Cliente
+    {
+        public int Id { get; set; }
+        public string Nome { get; set; }
+        public string CPF { get; set; }
+        public IList<ContaCliente> Contas { get; set; }
+    }
+
+    public class ContaCliente
+    {
+        public int IdConta { get; set; }
+        public int IdCliente { get; set; }
+        public Conta Conta { get; set; }
+        public Cliente Cliente { get; set; }
+    }
+}
+
+ //-------------------------------------------------------------------------
+
+	* 6 - Aula 05 Manipulando promoções e produtos
+
+ . Criamos a tabela Promocao junto com a tabela de JOIN chamada de PromocaoProduto. 
+ Agora cadastraremos uma promoção no banco de dados, para vermos o comportamento do 
+ Entity com o relacionamento muito para muitos.
+
+ . Na classe Program, tiraremos os comentários das linhas onde são incluídos os 
+ produtos. Mas temos um problema, por conta da configuração que fizemos para ter o
+ relacionamento muitos para muitos, o método Produtos.Add() não recebe mais um 
+ Produto, e sim um PromocaoProduto.
+
+ . Para não poluirmos o código de produção com uma classe interna, criaremos um 
+ método na classe Promocao chamado IncluiProduto().
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        var promocaoDePascoa = new Promocao();
+        promocaoDePascoa.Descricao = "Páscoa Feliz";
+        promocaoDePascoa.DataInicio = DateTime.Now;
+        promocaoDePascoa.DataTermino = DateTime.Now.AddMonths(3);
+
+        promocaoDePascoa.IncluiProduto(p1);
+        promocaoDePascoa.IncluiProduto(p2);
+        promocaoDePascoa.IncluiProduto(p3);
+
+        using(var contexto = new LojaContext())
+        {
+            var serviceProvider = contexto.GetInfrastructure<IServiceProvider>();
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            loggerFactory.AddProvider(SqlLoggerProvider.Create());
+        }
+    }
+    // ...
+}
+Não podemos esquecer de instanciar os produtos p1, p2 e p3.
+
+static void Main(string[] args)
+{
+    var p1 = new Produto();
+    var p2 = new Produto();
+    var p3 = new Produto();
+
+    var promocaoDePascoa = new Promocao();
+    promocaoDePascoa.Descricao = "Páscoa Feliz";
+    promocaoDePascoa.DataInicio = DateTime.Now;
+    promocaoDePascoa.DataTermino = DateTime.Now.AddMonths(3);
+
+    promocaoDePascoa.IncluiProduto(p1);
+    promocaoDePascoa.IncluiProduto(p2);
+    promocaoDePascoa.IncluiProduto(p3);
+
+    using(var contexto = new LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrastructure<IServiceProvider>();
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+    }
+}
+
+ . Em seguida, implementaremos o método IncluiProduto() na classe Promocao. Para 
+ não recebermos um erro, precisaremos instanciar a lista Produtos no construtor 
+ da classe. Ela ficará da seguinte maneira:
+
+public class Promocao
+{
+    public int Id { get; set; }
+    public string Descricao { get; internal set; }
+    public DateTime DataInicio { get; internal set; }
+    public DateTime DataTermino { get; internal set; }
+    public IList<PromocaoProduto> Produtos { get; internal set; }
+
+    public Promocao()
+    {
+        this.Produtos = new List<PromocaoProduto>();
+    }
+
+    public void IncluiProduto(Produto produto)
+    {
+        this.Produtos.Add(new PromocaoProduto() { Produto = produto });
+    }
+}
+
+ . Incluiremos os produtos no banco de dados, por isso os popularemos com alguns 
+ valores. Em seguida, adicionaremos o promocaoDePascoa ao contexto do Entity e 
+ exibir com o método ExibeEntries().
+
+static void Main(string[] args)
+{
+    var p1 = new Produto() { Nome = "Suco de Laranja", Categoria = "Bebidas", PrecoUnitario = 8.79, Unidade = "Litros"};
+    var p2 = new Produto() { Nome = "Café", Categoria = "Bebidas", PrecoUnitario = 12.45, Unidade = "Gramas"};
+    var p3 = new Produto() { Nome = "Macarrão", Categoria = "Alimentos", PrecoUnitario = 4.23, Unidade = "Gramas"};
+
+    var promocaoDePascoa = new Promocao();
+    promocaoDePascoa.Descricao = "Páscoa Feliz";
+    promocaoDePascoa.DataInicio = DateTime.Now;
+    promocaoDePascoa.DataTermino = DateTime.Now.AddMonths(3);
+
+    promocaoDePascoa.IncluiProduto(p1);
+    promocaoDePascoa.IncluiProduto(p2);
+    promocaoDePascoa.IncluiProduto(p3);
+
+    using(var contexto = new LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrastructure<IServiceProvider>();
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+        contexto.Promocoes.Add(promocaoDePascoa);
+        ExibeEntries(contexto.ChangeTracker.Entries());
+    }
+
+    private static void ExibeEntries(IEnumerable<EntityEntry> entries)
+    {
+        // ...
+    }
+}
+
+ . Executaremos a aplicação. Como resultado, veremos que o Entity passou a 
+ monitorar as entidade Promocao, PromocaoProduto, além dos três produtos 
+ adicionados. Todos os elementos adicionados ficaram com o estado Added. 
+ Podemos colocar o SaveChanges() no código para que as promoções seja persistidas
+ no banco de dados.
+
+static void Main(string[] args)
+{
+    var p1 = new Produto() { Nome = "Suco de Laranja", Categoria = "Bebidas", PrecoUnitario = 8.79, Unidade = "Litros"};
+    var p2 = new Produto() { Nome = "Café", Categoria = "Bebidas", PrecoUnitario = 12.45, Unidade = "Gramas"};
+    var p3 = new Produto() { Nome = "Macarrão", Categoria = "Alimentos", PrecoUnitario = 4.23, Unidade = "Gramas"};
+
+    var promocaoDePascoa = new Promocao();
+    promocaoDePascoa.Descricao = "Páscoa Feliz";
+    promocaoDePascoa.DataInicio = DateTime.Now;
+    promocaoDePascoa.DataTermino = DateTime.Now.AddMonths(3);
+
+    promocaoDePascoa.IncluiProduto(p1);
+    promocaoDePascoa.IncluiProduto(p2);
+    promocaoDePascoa.IncluiProduto(p3);
+
+    using(var contexto = new LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrastructure<IServiceProvider>();
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+        contexto.Promocoes.Add(promocaoDePascoa);
+        contexto.SaveChanges();
+
+    }
+
+    private static void ExibeEntries(IEnumerable<EntityEntry> entries)
+    {
+        // ...
+    }
+}
+
+ . Novamente executando a aplicação, tudo funciona como o esperado. Olhando 
+ no banco de dados, veremos a promoção cadastrada na tabela Promocao, e na 
+ tabela Produto os três novos produtos também estão cadastrados.
+
+ . Mas o que acontece se deletarmos a promoção? Faremos um teste pegando a 
+ promoção do banco e chamando o método contexto.Promocoes.Remove().
+
+static void Main(string[] args)
+{
+    var p1 = new Produto() { Nome = "Suco de Laranja", Categoria = "Bebidas", PrecoUnitario = 8.79, Unidade = "Litros"};
+    var p2 = new Produto() { Nome = "Café", Categoria = "Bebidas", PrecoUnitario = 12.45, Unidade = "Gramas"};
+    var p3 = new Produto() { Nome = "Macarrão", Categoria = "Alimentos", PrecoUnitario = 4.23, Unidade = "Gramas"};
+
+    var promocaoDePascoa = new Promocao();
+    promocaoDePascoa.Descricao = "Páscoa Feliz";
+    promocaoDePascoa.DataInicio = DateTime.Now;
+    promocaoDePascoa.DataTermino = DateTime.Now.AddMonths(3);
+
+    promocaoDePascoa.IncluiProduto(p1);
+    promocaoDePascoa.IncluiProduto(p2);
+    promocaoDePascoa.IncluiProduto(p3);
+
+    using(var contexto = new LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrastructure<IServiceProvider>();
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+        //contexto.Promocoes.Add(promocaoDePascoa);
+        var promocao = contexto.Promocoes.Find(3);
+        contexto.Promocoes.Remove(promocao);
+        contexto.SaveChanges();
+    }
+    // ...
+}
+ . A promoção será deletada, junto com o elemento de PromocaoProduto pelo efeito
+ de cascata, já que eles são completamente interligados. Mas os produtos 
+ cadastrados ainda permanecem no banco.
+
+ //-------------------------------------------------------------------------
+ //-------------------------------------------------------------------------
+ //-------------------------------------------------------------------------
+
+	* 7 - Aula 01 - Relacionamento um para um
+
+ . Na aula anterior vimos como o Entity trata o relacionamento muitos para muitos, 
+ usando o conceito da classe Promocao. Nessa aula aprenderemos o relacionamento de
+ um para um.
+
+ . A ideia é criarmos uma entidade para os clientes que compram na loja. Além disso,
+ também criaremos uma outra entidade para o endereço de entrega.
+
+ . Antes de começarmos, iremos mover todo o conteúdo do método Main() para um novo
+ método chamado MuitosParaMuitos(). Com o método Main() vazio, começaremos 
+ instanciando um objeto da classe Cliente.
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        var fulano = new Cliente();
+        fulano.Nome = "Fulaninho de Tal";
+    }
+
+    private static void MuitosParaMuitos()
+    {
+        // ...
+    }
+
+    private static void ExibeEntries(IEnumerable<EntityEntry> entries)
+    {
+        // ...
+    }
+}
+
+ . Como a classe Cliente ainda não existe, iremos criá-la. Lembrando que além das 
+ propriedades Nome e EnderecoDeEntrega, criaremos a propriedade Id para persistirmos
+ no banco de dados.
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    public class Cliente
+    {
+        public int Id { get; set; }
+        public string Nome { get; internal set; }
+        public Endereco EnderecoDeEntrega { get; set; }
+    }
+}
+
+ . Criaremos agora a classe Endereco com as propriedades Numero, Logradouro, 
+ Complemento, Bairro e Cidade.
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    public class Endereco
+    {
+        public int Numero { get; internal set; }
+        public string Logradouro { get; internal set; }
+        public string Complemento { get; internal set; }
+        public string Bairro { get; internal set; }
+        public string Cidade { get; internal set; }
+    }
+}
+
+ . Voltaremos para o método Main() para popularmos as informações de endereço e
+ associarmos com o cliente. Já instanciaremos o objeto de LojaContext para 
+ persistirmos.
+
+static void Main(string[] args)
+{
+    var fulano = new Cliente();
+    fulano.Nome = "Fulaninho de Tal";
+    fulano.EnderecoDeEntrega = new Endereco()
+    {
+        Numero = 12,
+        Logradouro = "Rua dos Inválidos",
+        Complemento = "sobrado",
+        Bairro = "Centro",
+        Cidade = "Cidade"
+    };
+
+    using (var contexto = new LojaContext())
+    {
+        contexto.Clientes.Add(fulano);
+        contexto.SaveChanges();
+    }
+}
+
+ . Dentro da classe LojaContext iremos criar a propriedade para o cliente.
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    public class LojaContext : DbContext
+    {
+        public DbSet<Produto> Produtos { get; set; }
+        public DbSet<Compras> Compras { get; set; }
+        public DbSet<Promocao> Promocoes { get; set; }
+        public DbSet<Cliente> Clientes { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;
+			Database=LojaDB;Trusted_Connection=true;")
+        }
+    }
+}
+
+ . Fizemos mais uma evolução da aplicação. Agora precisamos sincronizar com o 
+ banco de dados.
+
+ //-------------------------------------------------------------------------
+
+	* 7 - Aula 02 - Escondendo informações específicas do banco
+
+ . Abriremos o Console do NuGet, e usaremos o comando Add-Migration Cliente para 
+ adicionar essa migração. Ao executarmos receberemos um erro informando que a 
+ classe Endereco precisa de um Id.
+
+ . Como o Entity soube que queríamos persistir a classe Endereco se não criamos 
+ uma propriedade no LojaContext? Quando definimos uma entidade no LojaContext, 
+ ele navega por suas propriedades. Dessa forma, caso o valor seja um referência 
+ de outra classe - como a Endereco - , ela automaticamente passa a ser controlada 
+ pelo Entity.
+
+ . A decisão de mapear uma classe no LojaContext fica de acordo com a lógica de 
+ negócio. Caso seja necessário manipular os atributos da classe de forma independente,
+ criar um propriedade em LojaContext fará sentido. Em nosso caso não criaremos, nós 
+ apenas iremos manipular o endereço por meio da classe Cliente.
+
+ . Para resolvermos nosso problema, bastaríamos criar uma propriedade Id ou 
+ EnderecoId, para que o Entity mapeie automaticamente como chave primária. Mas 
+ existem cenários de relacionamentos um para um, onde a tabela dependente - Endereco -
+ assume o Id da tabela principal, a tabela Cliente.
+
+ . Usaremos este exemplo para aprendermos que não precisamos necessariamente ter um
+ chave primária em nossa classe. Como colocar um tributo ClienteId não faz sentido
+ para o modelo, podemos ensinar ao Entity por meio do método OnModelCreating() da 
+ classe LojaContext.
+
+ . Dentro do método OnModelCreating(), chamaremos o modelBuilder dizendo que a 
+ entidade Endereco possui uma propriedade ClienteId e por último criaremos a chave, 
+ o método ficará da seguinte maneira:
+
+internal class LojaContext : DbContext
+{
+    // ...
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<PromocaoProduto>()
+            .HasKey(pp => new { pp.PromocaoId, pp.ProdutoId });
+
+        modelBuilder
+            .Entity<Endereco>()
+            .Property("ClienteId");
+    }
+    // ...
+}
+
+ . O nome desse conceito para o Entity é Shadow Property, ou seja, uma propriedade 
+ que está escondida, ficando apenas no banco de dados. Podemos rodar o comando 
+ Add-Migration Cliente.
+
+ . Ao executarmos receberemos outro erro, mas desta vez é informado que para usarmos
+ Shadow Property é necessário passar o tipo da propriedade. Basta adicionarmos na 
+ definição da propriedade "ClienteId".
+
+internal class LojaContext : DbContext
+{
+    // ...
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<PromocaoProduto>()
+            .HasKey(pp => new { pp.PromocaoId, pp.ProdutoId });
+
+        modelBuilder
+            .Entity<Endereco>()
+            .Property<int>("ClienteId");
+
+        modelBuilder
+            .Entity<Endereco>()
+            .HasKey("ClienteId");
+    }
+    // ...
+}
+
+ . Executaremos o comando Add-Migration Cliente novamente. A migração será 
+ criada, mas o Entity interpretou errado e considerou que a classe principal era 
+ a Endereco e a dependente era a Cliente, por esse motivo a coluna ClienteId foi 
+ criada em Cliente. Outro detalhe é que o nome da tabela ficou como Endereco no 
+ singular, o que não é o ideal já que a tabela armazenará diversos endereços.
+
+ . Novamente no Console, removeremos a migração com Remove-Migration. Veremos 
+ como alterar do nome da tabela e resolver a dependência entre Cliente e Endereco.
+
+ //-------------------------------------------------------------------------
+
+	* 7 - Aula 05 - Mudando o nome da tabela
+
+ . Quando criamos uma propriedade em LojaContext, o Entity usa o nome da 
+ propriedade como nome da tabela. O problema é que não temos uma propriedade 
+ criada para Endereco. Como faremos para alterar o nome da tabela?
+
+ . Usaremos também o modelBuilder no método OnModelCreating(). Com o objeto 
+ modelBuilder, mapearemos a entidade Endereco para a tabela Enderecos. O método 
+ ficará da seguinte maneira:
+
+internal class LojaContext : DbContext
+{
+    // ...
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<PromocaoProduto>()
+            .HasKey(pp => new { pp.PromocaoId, pp.ProdutoId });
+
+        modelBuilder
+            .Entity<Endereco>()
+            .ToTable("Enderecos");
+
+        modelBuilder
+            .Entity<Endereco>()
+            .Property<int>("ClienteId");
+
+        modelBuilder
+            .Entity<Endereco>()
+            .HasKey("ClienteId");
+    }
+    // ...
+}
+ 
+ . Resolvemos o problema do nome da tabela. Porém ainda precisamos fazer com 
+ que a tabela Enderecos seja dependente da tabela Clientes. Criaremos na classe
+ Endereco uma propriedade que faz referencia para a classe Cliente.
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    public class Endereco
+    {
+        public int Numero { get; internal set; }
+        public string Logradouro { get; internal set; }
+        public string Complemento { get; internal set; }
+        public string Bairro { get; internal set; }
+        public string Cidade { get; internal set; }
+        public Cliente Cliente { get; set; }
+    }
+}
+
+ . A propriedade Cliente faz sentido em nosso modelo, afinal um endereço precisa 
+ de um cliente. Executaremos o comando Add-Migration Cliente e veremos que a 
+ migração será criada. Um aviso será dado no Console informando que a entidade 
+ endereço contém uma propriedade com o estado Shadow Property.
+
+ . Analisando a classe de migração, veremos que primeiro ocorrerá a criação da 
+ tabela Clientes com as propriedades Nome e EnderecoDeEntrega. Em seguida a 
+ tabela Enderecos será criada com suas propriedades, inclusive com a chave 
+ primária sendo a estrangeira de Clientes, trabalhando em forma de cascata.
+
+ . A migração está fazendo sentido. Para sincronizarmos com o banco de dados,
+ usaremos o comando SQL Update-Database.
+
+ . Com as tabelas criadas, executaremos a aplicação para persistirmos as 
+ informações que configuramos no método Main() da classe Program:
+
+static void Main(string[] args)
+{
+    var fulano = new Cliente();
+    fulano.Nome = "Fulaninho de Tal";
+    fulano.EnderecoDeEntrega = new Endereco()
+    {
+        Numero = 12,
+        Logradouro = "Rua dos Inválidos",
+        Complemento = "sobrado",
+        Bairro = "Centro",
+        Cidade = "Cidade"
+    };
+
+    using (var contexto = new LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrastructure<IServiceProvider>();
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+        contexto.Clientes.Add(fulano);
+        contexto.SaveChanges();
+    }
+}
+
+ . O Entity inseriu as informações em Clientes e em seguida Enderecos, sendo que
+ a chave primária do endereço é a mesma de cliente. Com isso entendemos como 
+ funciona os diversos tipo de relacionamentos.
+
+ . Na próxima aula veremos como recuperar objetos relacionados.
+
+ . Quando executado, o Add-Migration o ModelBuilder pode se perder, caso isso 
+ aconteça, ele pode gerar primeiro a tabela Enderecos antes da Clientes e não 
+ gera a dependência em cascata. Para corrigir esse problema basta adicionar na
+ classe Endereco a propriedade ClienteId, não criar a ShadowProperty e referenciar
+ a chave primaria o ClienteId.
+
+ //-------------------------------------------------------------------------
+ //-------------------------------------------------------------------------
+ //-------------------------------------------------------------------------
+
+	* 8 - Aula 01 - Aplicando condições nas consultas
+
+ . Nas aulas anteriores conversamos sobre relacionamentos. Nessa aula usaremos 
+ esses relacionamentos para montarmos querys um pouco mais complexas.
+
+ . Como já fizemos em aulas anteriores, vamos mover todo o código contido no 
+ método Main() para um outro método chamado UmParaUm(). Em seguida criaremos 
+ o objeto de LojaContext e uma promoção para janeiro.
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        using(var contexto = new LojaContext())
+        {
+            var promocao = new Promocao();
+            promocao.Descricao = "Queima Total 2017";
+            promocao.DataInicio = new DateTime(2017, 1, 1);
+            promocao.DataTermino = new DateTime(2017, 1, 31);
+        }
+    }
+    // ...
+}
+
+ . Adicionaremos produtos nessa promoção, mas ao invés de criarmos novos produtos, 
+ pegaremos do banco de dados todos os produtos da categoria "Bebidas". Estamos 
+ acostumados a pegar todos os produtos usando apenas o ToList(), mas o LINQ do 
+ C# possui métodos que nos auxiliam. Um desses métodos é o Where() que recebe uma 
+ expressão lambda booleana. Depois de pegar os produtos, adicionaremos dentro da
+ promoção e a promoção no contexto. A classe ficará da seguinte maneira:
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        using(var contexto = new LojaContext())
+        {
+            var promocao = new Promocao();
+            promocao.Descricao = "Queima Total Janeiro 2017";
+            promocao.DataInicio = new DateTime(2017, 1, 1);
+            promocao.DataTermino = new DateTime(2017, 1, 31);
+
+            var produtos = contexto
+                .Produtos
+                .Where(p => p.Categoria == "Bebidas")
+                .ToList();
+
+            foreach(var item in produtos)
+            {
+                promocao.IncluiProduto(item);
+            }
+            contexto.Promocoes.Add(promocao);
+        }
+    }
+    // ...
+}
+
+ . Após o contexto.Promocoes.Add(promocao) chamaremos o método ExibeEntries() 
+ para verificarmos como o Entity está tratando as informações.
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        using(var contexto = new LojaContext())
+        {
+            var promocao = new Promocao();
+            promocao.Descricao = "Queima Total Janeiro 2017";
+            promocao.DataInicio = new DateTime(2017, 1, 1);
+            promocao.DataTermino= new DateTime(2017, 1, 31);
+
+            var produtos = contexto
+                .Produtos
+                .Where(p => p.Categoria == "Bebidas")
+                .ToList();
+
+            foreach(var item in produtos)
+            {
+                promocao.IncluiProduto(item);
+            }
+            contexto.Promocoes.Add(promocao);
+        ExibeEntries(contexto.ChangeTracker.Entries());
+        }
+    }
+    // ...
+}
+
+ . Veremos que ele buscou apenas produtos com a categoria "Bebidas" (caso não 
+ tenha nada no banco cadastre alguns produtos para testar). Em seguida ele 
+ adicionou em promocao e deixou com o estado Added.
+
+ . Como tudo parece estar funcionando, adicionaremos o contexto.SaveChanges(). 
+ Fora do escopo do contexto, criaremos outro objeto de LojaContext() para 
+ mostrarmos os produtos cadastrados na promocao. Quando fechamos um contexto do 
+ Entity, os objetos deixam de ser rastreados por aquele contexto.
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        using(var contexto = new LojaContext())
+        {
+            var promocao = new Promocao();
+            promocao.Descricao = "Queima Total Janeiro 2017";
+            promocao.DataInicio = new DateTime(2017, 1, 1);
+            promocao.DataTermino = new DateTime(2017, 1, 31);
+
+            var produtos = contexto
+                .Produtos
+                .Where(p => p.Categoria == "Bebidas")
+                .ToList();
+
+            foreach(var item in produtos)
+            {
+                promocao.IncluiProduto(item);
+            }
+
+            contexto.Promocoes.Add(promocao);
+        ExibeEntries(contexto.ChangeTracker.Entries());
+            contexto.SaveChanges();
+        }
+
+        using(var contexto2 = new LojaContext())
+        {
+            var promocao = contexto2.Promocoes.FirstOrDefault();
+            Console.WriteLine("\nMotrando os produtos da promoção...");
+            foreach(var item in promocao.Produtos)
+            {
+                Console.WriteLine(item.Produto);
+            }
+        }
+    }
+    // ...
+}
+
+ . Após executarmos a aplicação veremos que o primeiro contexto fez o SELECT 
+ em Produtos com a categoria "Bebida", os produtos foram adicionados no Change 
+ Tracker, e então foi feito o INSERT em Promocoes e em PromocaoProduto.
+
+ . Já o segundo contexto fez o SELECT na primeira promoção e não mostrou nada. 
+ Olhando no banco de dados vemos que os produtos foram adicionados no 
+ ProdutoPromocao, lembrando que para isso é necessário que os produtos existam 
+ no banco.
+
+ . O próximo passo é descobrir por que ele não está mostrando os produtos.
+
+ //-------------------------------------------------------------------------
+
+	* 8 - Aula 03 - Como realizar joins entre entidades relacionadas
+
+ . Queremos saber porque os produtos da promoção não estão sendo recuperados, 
+ quando buscamos com outro contexto do Entity. Na verdade, esse tipo de comportamento
+ de não recuperar as entidade relacionadas junto com o SELECT é padrão em várias 
+ ferramentas de ORM.
+
+ . Se as ferramentas de ORM não tivessem esse tipo de comportamento, seria buscado 
+ para a memória todas as entidades relacionadas a classe, o que poderia trazer 
+ problemas de performance. Temos que informar que queremos entidades relacionadas
+ explicitamente por meio de métodos.
+
+ . Antes começarmos a trabalhar na busca, extrairemos todo o código que insere a 
+ promoção no banco para um método chamado IncluirPromocao(). Deixaremos no Main() 
+ apenas o código onde buscamos pelos produtos da promoção:
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        using(var contexto2 = new LojaContext())
+        {
+            var promocao = contexto2.Promocoes.FirstOrDefault();
+            Console.WriteLine("\nMotrando os produtos da promoção...");
+            foreach(var item in promocao.Produtos)
+            {
+                Console.WriteLine(item.Produto);
+            }
+        }
+    }
+    // ...
+}
+
+ . O método que precisamos invocar é o Include(), que incluirá a entidade relacionada.
+ Porém como queremos os produtos, precisamos chamar a entidade PromocaoProduto. Para
+ inclui-lá usaremos o método ThenInclude(), ou seja, buscaremos uma Promocao que 
+ busca uma PromocaoProduto, onde podemos acessar o Produto. A busca será feita da 
+ seguinte forma:
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        using(var contexto2 = new LojaContext())
+        {
+            var promocao = contexto2
+                .Promocoes
+                .Include(p => p.Produtos)
+                .ThenInclude(pp => pp.Produto)
+                .FirstOrDefault();
+
+            Console.WriteLine("\nMotrando os produtos da promoção...");
+            foreach(var item in promocao.Produtos)
+            {
+                Console.WriteLine(item.Produto);
+            }
+        }
+    }
+    // ...
+}
+
+ . Executaremos a aplicação. Como resultado, veremos um SELECT em Promocoes, mas 
+ além disso, temos outro SELECT para trazer os produtos. É dessa forma que o Entity
+ utiliza para buscar entidades relacionadas e manter a performance.
+
+ . Veremos como fazer essas buscas com relacionamentos um para um e um para muitos.
+
+ //-------------------------------------------------------------------------
+
+	Para saber mais: sobrecarga de Include
+
+ . O método Include possui uma segunda sobrecarga, que permite informarmos como 
+ argumento de entrada uma string com o nome da propriedade de navegação a ser 
+ incluída no join. A vantagem dessa abordagem é que não precisamos usar outros 
+ métodos ThenInclude para continuar a navegação em outras entidades. Por exemplo, 
+ para o exemplo Cliente x Conta, poderíamos fazer:
+
+ var lista = contexto.Clientes.Include("Contas.Conta");
+
+ . A desvantagem é que se o nome da propriedade mudar, teremos que lembrar todos 
+ os lugares onde fizemos isso, porque não teremos ajuda do compilador.
+
+ //-------------------------------------------------------------------------
+
+	* 8 - Aula 06 - Corrigindo o modelo para recuperar objetos relacionados
+
+Exploraremos o relacionamento um para um entre Cliente e Endereco. Como já fizemos anteriormente, vamos colocar todo o conteúdo do método Main() e um método chamado ExibeProdutosDaPromocao(). Dentro do Main() criaremos apenas um objeto de contexto do Entity e deixaremos os Logger.
+
+static void Main(string[] args)
+{
+    using (var contexto = new LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrastructure<IServiceProvider>();
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+    }
+}
+Buscaremos a propriedade Logradouro do endereço de um Cliente. Porém antes precisamos buscar o cliente, faremos isso usando o FirstOrDefault(). Como a propriedade EnderecoDeEntrega já está disponível, podemos acessar o Logradouro.
+
+static void Main(string[] args)
+{
+    using (var contexto = new LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrastructure<IServiceProvider>();
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+        var cliente = contexto.Clientes.FirstOrDefault();
+
+        Console.WriteLine($"Endereço de entrega: {cliente.EnderecoDeEntrega.Logradouro}");
+    }
+}
+Ao executarmos a aplicação ocorrerá um exceção. Isso aconteceu porque acessamos a propriedade Logradouro nula, o Entity não carregou essa propriedade. Incluiremos a entidade em nossa busca:
+
+static void Main(string[] args)
+{
+    using (var contexto = new LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrastructure<IServiceProvider>();
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+        var cliente = contexto
+            .Clientes
+            .Include(c => c.EnderecoDeEntrega)
+            .FirstOrDefault();
+
+        Console.WriteLine($"Endereço de entrega: {cliente.EnderecoDeEntrega.Logradouro}");
+    }
+}
+Executaremos a aplicação e veremos que funcionou perfeitamente. O SELECT que o Entity utilizou foi com LEFT JOIN, pelo fato do endereço não ser obrigatório para o cliente.
+
+Continuaremos explorando as consultas com relacionamento, pegaremos as compras de um produto. Primeiro pegaremos um produto qualquer - no nosso caso o produto com uma compra era o com Id 9004 - passando o seu Id pelo Where().
+
+static void Main(string[] args)
+{
+    using (var contexto = new LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrastructure<IServiceProvider>();
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+        var cliente = contexto
+            .Clientes
+            .Include(c => c.EnderecoDeEntrega)
+            .FirstOrDefault();
+
+        Console.WriteLine($"Endereço de entrega: {cliente.EnderecoDeEntrega.Logradouro}");
+
+        var produto = contexto
+            .Produtos
+            .Where(p => p.Id == 9004)
+            .FirstOrDefault();
+    }
+}
+Com esse produto faremos um foreach na listagem produto.Compras. Porém não temos a lista de Compras pelo fato de que o Entity não nos obrigar a criá-la. Adicionaremos a lista na classe Produto:
+
+namespace Alura.Loja.Testes.ConsoleApp
+{
+    public class Produto
+    {
+        public int Id { get; internal set; }
+        public int Nome { get; internal set; }
+        public int Categoria { get; internal set; }
+        public int PrecoUnitario { get; internal set; }
+        public string Unidade { get; set; }
+        public IList<PromocaoProduto> Promocoes { get; set; }
+        public IList<Compra> Compras { get; set; }
+
+        public override string ToString()
+        {
+            return $"Produto: {this.Id}, {this.Nome}, {this.Categoria}, {this.PrecoUnitario}";
+        }
+    }
+}
+Antes de inciarmos a iteração pela lista, precisamos incluir as compras no Include().
+
+static void Main(string[] args)
+{
+    using (var contexto = new LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrastructure<IServiceProvider>();
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+        var cliente = contexto
+            .Clientes
+            .Include(c => c.EnderecoDeEntrega)
+            .FirstOrDefault();
+
+        Console.WriteLine($"Endereço de entrega: {cliente.EnderecoDeEntrega.Logradouro}");
+
+        var produto = contexto
+            .Produtos
+            .Include(p => p.Compras)
+            .Where(p => p.Id == 9004)
+            .FirstOrDefault();
+
+        Console.WriteLine($"Mostrando as compras do produto {produto.Nome}");
+        foreach(var item in produto.Compras)
+        {
+            Console.WriteLine(item);
+        }
+    }
+}
+Executaremos a aplicação e como resultado, veremos que o Entity buscou o produto com o Id 9004, em seguida ele fez um INNER JOIN de Compras com Produtos para pegar as compras, e por último foi mostrado a compra. A única coisa que precisamos fazer é uma propriedade, onde navegaremos para o lado onde temos muitos.
+
+ . Vimos como trabalhar com buscas de relacionamentos muitos para muitos, um para um e um para muitos. Mas e se quiséssemos buscar as compras acima de um valor determinado? É o nosso próximo passo!
+
+ //-------------------------------------------------------------------------
+
+	* 8 - Aula 08 - Populando coleções após a carga da entidade principal
+
+ . Queremos filtrar as compras acima de R$ 10,00. Não podemos usar o Where() para 
+ filtrar o preço da compra, justamente por estarmos acessando a partir de Produtos. 
+ O Include() também não será útil nessa situação. O que faremos é um segundo SELECT
+ para filtrar as compras do produto que já buscamos.
+
+ . Com o objeto contexto, chamaremos o método Entry() passando a referência de 
+ produto. Após, pegaremos a coleção da propriedade Compra com o método 
+ Collection(p => p.Compras). Em seguida faremos uma Query(), que filtrará com a 
+ condição Where(c => c.Preco > 10). Por último, carregaremos com Load() na referência
+ passada no Entry(). O código ficará da seguinte maneira:
+
+static void Main(string[] args)
+{
+    using (var contexto = new LojaContext())
+    {
+        var serviceProvider = contexto.GetInfrastructure<IServiceProvider>();
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        loggerFactory.AddProvider(SqlLoggerProvider.Create());
+
+        var cliente = contexto
+            .Clientes
+            .Include(c => c.EnderecoDeEntrega)
+            .FirstOrDefault();
+
+        Console.WriteLine($"Endereço de entrega: {cliente.EnderecoDeEntrega.Logradouro}");
+
+        var produto = contexto
+            .Produtos
+            .Where(p => p.Id == 9004)
+            .FirstOrDefault();
+
+        contexto.Entry(produto)
+            .Collection(p => p.Compras)
+            .Query()
+            .Where(c => c.Preco > 10)
+            .Load();
+
+        Console.WriteLine($"Mostrando as compras do produto {produto.Nome}");
+        foreach(var item in produto.Compras)
+        {
+            Console.WriteLine("\t" + item);
+        }
+    }
+}
+
+ . Executaremos a aplicação com "Ctrl + F5". Poderemos ver que foi executado um 
+ SELECT em Produtos no banco de dados, buscando o produto com o Id passado no 
+ filtro Where(). Em seguida foi feito um segundo SELECT em Compras, filtrando pelo 
+ Id do produto passado no Entry() e pelo preço. Por fim, serão apresentados os 
+ produtos com preço acima de R$ 10,00.
+
+ . Esse cenário é bastante utilizado quando queremos aplicar filtros em objetos 
+ relacionados da aplicação. Esta estratégia é conhecida como Carregamento Explícito,
+ onde trazemos só o que nos interessa.
 
 
+ //-------------------------------------------------------------------------
 
+	ENCERRAMENTO - O QUE APRENDEMOS
 
-//-------------------------------------------------------------------------
+ . Finalizamos o curso de Entity Framework Core! Faremos um resumo sobre o que 
+ aprendemos durante o curso.
 
+ . Vimos que para trabalhar com o modelo de negócios e persisti-lo no banco de 
+ dados era algo extremamente trabalhoso. O programador era responsável por 
+ gerenciar e manter o código que se comunicava com o banco. Qualquer mudança na 
+ lógica de negócio, gerava uma série de impactos nas classes de acesso aos dados.
 
+ . Em seguida, Começamos o uso do Entity após a instalação dos pacotes, passando 
+ a substituir todo o trabalho, permitindo forcarmos na lógica de negócio. Aprendemos
+ como o Entity gerencia os comandos SQL, trabalhando com a DML (INSERT, SELECT, 
+ UPDATE e DELETE) para manipular os dados.
 
+manipulação de dados
+
+ . Para gerenciar quais objetos e quais comandos SQL precisavam ser emitidos para 
+ o banco de dados, o Entity usava um recurso chamado Change Tracker, onde era 
+ armazenado os estados de cada objeto.
+
+change tracker
+
+ . Enquanto a aplicação evoluía, era necessário sincronizá-la com o banco de dados, 
+ onde Entity também nos auxilia com a DDL (CREATE, DROP, ALTER, RENAME). Utilizamos
+ o conceito de migrações (Migrations), onde as alterações no negócio são aplicadas 
+ ao banco. As migrações eram feitas por meio de classes, que tinha os métodos Up() 
+ para subir e Down() para descer de versão.
+
+ . Instalamos no NuGet, um pacote para utilizarmos diversos comandos que trabalham 
+ com as migrações.
+
+Add-Migration
+Remove-Migration
+Update-Database
+
+ . Todas as alterações no banco de dados eram armazenadas na tabela 
+ __EFMigrationHistory. A tabela indicava quais migrações tinham sido aplicadas no 
+ banco de dados.
+
+ . Após entender como o Entity funciona, aprendemos como ele trabalha e gerencia 
+ os relacionamentos entre classe. Os relacionamentos eram um para um, um para 
+ muitos e muitos para muitos. Porém o Entity Core não gerencia sozinho as tabelas 
+ JOIN, por isso contornamos criando uma classe específica.
+
+tabela de relacionamentos
+
+Para recuperarmos dados relacionados, usamos métodos específicos:
+
+Include()
+ThenInclude()
+Load()
+Esse foi o curso de Entity Framework Core. Te vejo nos próximos cursos!
+
+ //-------------------------------------------------------------------------
 
 
 

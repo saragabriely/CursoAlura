@@ -4,33 +4,22 @@ using ConsoleApp1;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ConsoleApp1.Migrations
 {
     [DbContext(typeof(LojaContext))]
-    partial class LojaContextModelSnapshot : ModelSnapshot
+    [Migration("20190228174332_Promocao")]
+    partial class Promocao
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "2.2.2-servicing-10034")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-            modelBuilder.Entity("ConsoleApp1.Cliente", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("Nome");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Clientes");
-                });
 
             modelBuilder.Entity("ConsoleApp1.Compra", b =>
                 {
@@ -49,25 +38,6 @@ namespace ConsoleApp1.Migrations
                     b.HasIndex("ProdutoId");
 
                     b.ToTable("Compras");
-                });
-
-            modelBuilder.Entity("ConsoleApp1.Endereco", b =>
-                {
-                    b.Property<int>("ClienteId");
-
-                    b.Property<string>("Bairro");
-
-                    b.Property<string>("Cidade");
-
-                    b.Property<string>("Complemento");
-
-                    b.Property<string>("Logradouro");
-
-                    b.Property<int>("Numero");
-
-                    b.HasKey("ClienteId");
-
-                    b.ToTable("Enderecos");
                 });
 
             modelBuilder.Entity("ConsoleApp1.Produto", b =>
@@ -124,14 +94,6 @@ namespace ConsoleApp1.Migrations
                     b.HasOne("ConsoleApp1.Produto", "Produto")
                         .WithMany()
                         .HasForeignKey("ProdutoId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("ConsoleApp1.Endereco", b =>
-                {
-                    b.HasOne("ConsoleApp1.Cliente", "Cliente")
-                        .WithOne("EnderecoDeEntrega")
-                        .HasForeignKey("ConsoleApp1.Endereco", "ClienteId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

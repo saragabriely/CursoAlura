@@ -4,14 +4,16 @@ using ConsoleApp1;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ConsoleApp1.Migrations
 {
     [DbContext(typeof(LojaContext))]
-    partial class LojaContextModelSnapshot : ModelSnapshot
+    [Migration("20190301124658_Cliente")]
+    partial class Cliente
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
