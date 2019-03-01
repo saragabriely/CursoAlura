@@ -1,0 +1,9 @@
+﻿
+Ctrl + k + c: Comenta o código selecionado;
+
+Ctrl + k + u: Descomenta o código selecionado;
+
+Ctrl + . (ponto): Extrair método - Cria um método com o código selecionado.
+
+cw + tab + tab: Console.WriteLine(); 
+

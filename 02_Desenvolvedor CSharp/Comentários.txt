@@ -1,0 +1,21 @@
+
+ Os módulos de 01 a 09 estão na Pasta - Desenvolvedor .NET
+
+---------------------------------------------------------------
+
+
+.. Assuntos que serão abordados no decorrer do curso, começando pelo tipo de coleção mais básica e primitiva do .NET Framework, as matrizes, ou arrays. Aprenderemos a modificar e acessá-los por meio do índice, e a copiar e cloná-los também.
+
+	Em seguida, iremos explorar o poder das listas, os arrays dinâmicos, com atenção especial por se tratar de coleções poderosas.
+
+	Veremos também como ordenar uma lista tendo por base elementos de uma classe customizada, preparando esta lista para que os elementos sejam comparáveis com outros elementos.
+
+	Criaremos objetos que expõem coleções do tipo "Somente leitura" para impedir que suas informações sejam manipuladas externamente a este objeto.
+
+	Aprenderemos a copiar e clonar listas, totalizando os valores contidos nos objetos da coleção. Veremos como trabalhar com conjuntos no .NET Framework (objetos baseados no conceito matemático de conjuntos).
+
+	Aprenderemos a lidar com hashing, e como implementar os métodos necessários para a definição deste espalhamento.
+
+	Para ler ou gravar valores facilmente a partir de uma chave, aprenderemos sobre a coleção dicionário, a lista ligada (linked list), e como seus nós se conectam durante a criação desta lista.
+
+	Também veremos como trabalhar com a coleção do tipo pilha e, para finalizar, desenvolveremos uma solução prática utilizando filas com .NET Framework.

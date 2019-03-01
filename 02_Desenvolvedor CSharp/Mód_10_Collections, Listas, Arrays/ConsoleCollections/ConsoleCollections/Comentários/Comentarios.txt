@@ -1,0 +1,397 @@
+﻿
+-- Desenvolvedor C# ----------------------------------------------------
+
+ * 01 - Aula 03 - Declarando e Populando Arrays (TRANSRIÇÃO)
+
+ . Começaremos pelo tipo mais básico de coleção existente no .NET Framework, 
+ o Array. Supondo que temos 3 aulas a serem colocadas em uma coleção, 
+ representadas por 3 strings diferentes, vamos declará-las, armazenando-as 
+ em uma coleção (array).
+
+ . Faremos isto em uma sintaxe especial, colocando inicialmente o tipo do elemento
+ a ser contido no array, que no caso será uma string. Há duas maneiras de se 
+ declarar um array, e uma delas é quando já sabemos quais elementos ele irá conter.
+
+ . Neste caso, sabemos que haverá 3 elementos, as três aulas, então poderemos 
+ simplesmente colocar o valor das três variáveis:
+
+namespace CSharpCollections
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string aulaIntro = "Introdução às Coleções";
+            string aulaModelando = "Modelando a Classe Aula";
+            string aulaSets = "Trabalhando com Conjuntos";
+
+            string[] aulas = new string[]
+            {
+                aulaIntro, aulaModelando,  aulaSets
+            };
+        }
+    }
+}
+
+ . Vamos rodar a aplicação colocando um breakpoint na linha que fecha as strings.
+ Veremos que em aulas há três elementos ("Introdução às Coleções", "Modelando a 
+ Classe Aula" e "Trabalhando com Conjuntos"), como gostaríamos.
+
+ . O primeiro deles começa no índice 0, o segundo no 1 e o último no 2. Ou seja, o 
+ índice de um elemento será igual à sua posição menos um. Esta é a primeira forma 
+ de declararmos um array no caso de já sabermos de antemão quais elementos ele irá
+ conter.
+
+ . A outra forma de declararmos um array consiste em incluirmos o tamanho que ele 
+ irá ocupar, algo que foi declarado implicitamente na primeira forma. Desta vez o
+ faremos explicitamente.
+
+ . É importante lembrarmos que um array é uma coleção de tamanho fixo!
+
+string[] aulas = new string[3];
+
+ . Rodando a app desta forma, veremos que em aulas estão armazenadas três posições,
+ cada uma com valor null (nulo), e estes elementos ainda são desconhecidos, porém 
+ já temos o array declarado. Completaremos o código:
+
+string[] aulas = new string[3];
+aulas[0] = aulaIntro;
+aulas[1] = aulaModelando;
+aulas[2] = aulaSets;
+
+ . Vamos rodar o código mais uma vez. Veremos que o array aulas possui os três 
+ elementos preenchidos. Imprimiremos isto na tela acrescentando Console.WriteLine(); 
+ - que também pode ser feito com o atalho "cw + Tab + Tab":
+
+string[] aulas = new string[3];
+aulas[0] = aulaIntro;
+aulas[1] = aulaModelando;
+aulas[2] = aulaSets;
+
+Console.WriteLine(aulas);
+
+ . Ao rodarmos a aplicação para verificar o resultado, temos impresso na tela 
+ System.String[], o que não é exatamente o que queríamos. Queremos imprimir os 
+ elementos do array de aulas e, para isto, varreremos esta coleção (aulas) e 
+ imprimiremos cada um dos itens.
+
+ . Uma das maneiras de se fazer isso é utilizar a instrução foreach para informar 
+ que, para cada aula em aulas, se faça algo (que no caso é a impressão).
+
+string[] aulas = new string[3];
+aulas[0] = aulaIntro;
+aulas[1] = aulaModelando;
+aulas[2] = aulaSets;
+
+Console.WriteLine(aulas);
+
+foreach (var aula in aulas)
+{
+    Console.WriteLine(aula);
+}
+
+ . Rodando novamente o código, obteremos como Output o seguinte:
+
+ . Introdução às Coleções
+ . Modelando a Classe Aula
+ . Trabalhando com Conjuntos
+ . Pegaremos esta instrução e a jogaremos a outro método para a reutilização 
+ conforme nossa necessidade. Utilizando "Ctrl + . (ponto)" extrairemos o método
+ denominado Imprimir(). Nele, teremos nosso laço foreach.
+
+ . Como segunda forma de imprimirmos estes elementos, utilizaremos outro laço o 
+ for que varrerá o comprimento do nosso array de um índice até a posição final. 
+ Comentaremos o código do laço foreach
+
+{
+// strings omitidos
+
+    Console.WriteLine(aulas);
+
+    Imprimir(aulas);
+}
+
+private static void Imprimir(string[] aulas)
+{
+    //foreach (var aula in aulas)
+    //{
+    //  Console.WriteLine(aula);
+    //}
+
+    for (int i = 0; i < aulas.Length; i++)
+    {
+        Console.WriteLine(aulas[i]);
+    }
+}
+
+ . Feito isto, podemos rodar a aplicação mais uma vez. O resultado é exatamente 
+ o mesmo que o anterior, embora a forma de chegarmos a ele seja outra.
+
+ . Com o laço foreach não precisávamos de muitas informações, bastando passar o nome
+ do array. Com o for, conseguimos controlar o avanço do índice. Neste caso, é 
+ necessário sabermos seu comprimento e o índice que está sendo impresso.
+
+ . Para imprimirmos o primeiro elemento do nosso array, usaremos Console.WriteLine();
+ novamente, acessando este elemento, cujo índice é 0.
+
+{
+// strings omitidos
+
+    Console.WriteLine(aulas);
+
+    Imprimir(aulas);
+
+    Console.WriteLine(aulas[0]);
+}
+
+ . Rodando a app, veremos a impressão de "Introdução às Coleções" na tela. Para 
+ acessarmos o último elemento, precisaremos realizar uma conta:
+
+{
+// strings omitidos
+
+    Console.WriteLine(aulas);
+
+    Imprimir(aulas);
+
+    Console.WriteLine(aulas[0]);
+    Console.WriteLine(aulas[aulas.Length - 1]);
+}
+
+ . Verificaremos que tudo funciona conforme esperado, quando rodamos a app vemos 
+ "Trabalhando com Conjuntos" no Output. Se quisermos trocar um elemento deste array,
+ como faremos?
+
+{
+// strings omitidos
+
+    Console.WriteLine(aulas);
+
+    Imprimir(aulas);
+
+    Console.WriteLine(aulas[0]);
+    Console.WriteLine(aulas[aulas.Length - 1]);
+
+    aulaIntro = "Trabalhando com Arrays";
+    Imprimir(aulas);
+}
+
+ . Rodaremos a aplicação e não teremos nenhuma mudança! Isso ocorre pois aulaIntro
+ não está sendo armazenado no nosso array de aulas. O que armazenamos ali foi o 
+ valor copiado de aulaIntro, portanto não adianta mudarmos seu valor.
+
+ . Precisaremos acessar diretamente a primeira posição do nosso array de aulas. 
+ Para atribuirmos um valor a esta posição, de índice 0, deixaremos o código assim:
+
+{
+// strings omitidos
+
+    Console.WriteLine(aulas);
+
+    Imprimir(aulas);
+
+    Console.WriteLine(aulas[0]);
+    Console.WriteLine(aulas[aulas.Length - 1]);
+
+    aulaIntro = "Trabalhando com Arrays";
+    Imprimir(aulas);
+
+    aulas[0] = "Trabalhando com Arrays";
+    Imprimir(aulas);
+}
+
+ . Rodaremos a aplicação e veremos que conseguimos trocar com sucesso o primeiro
+ elemento do nosso array.
+
+ //--------------------------------------------------------------------
+
+	* 01 - Aula 06 - Operações com Arrays
+
+ . Agora vamos procurar um elemento no array, a aula "Modelando a Classe Aula", 
+ por exemplo. Para isso, imprimiremos o texto "Aula modelando está no índice " 
+ concatenado com o índice onde ele foi encontrado, mostrando onde teve a ocorrência 
+ da nossa string.
+
+ . Utilizaremos um método estático IndexOf da classe Array que buscará a primeira 
+ ocorrência de uma string, retornando o índice onde foi encontrado:
+
+aulas[0] = "Trabalhando com Arrays";
+Imprimir(aulas);
+
+Console.WriteLine("Aula modelando está no índice " + Array.IndexOf(aulas, aulaModelando));
+
+ . Ao rodarmos a aplicação, será exibido o texto "A aula modelando está no índice 1".
+ É a primeira ocorrência desta string no array de strings. Digamos que este texto se
+ repita algumas vezes no nosso array, então é possível procurá-la assim:
+
+aulas[0] = "Trabalhando com Arrays";
+Imprimir(aulas);
+
+Console.WriteLine("Aula modelando está no índice " + Array.IndexOf(aulas, aulaModelando));
+Console.WriteLine(Array.LastIndexOf(aulas, aulaModelando));
+
+ . Rodando a app mais uma vez, a aula será encontrada no índice 1 por tratar-se da
+ primeira e última ocorrência desta string no array. Prosseguindo, faremos uma 
+ operação para trocar a ordem dos elementos, colocando o último como primeiro, e 
+ vice-versa.
+
+Para revertermos o array, chamaremos o método estático do Array chamado Reverse():
+
+Console.WriteLine("Aula modelando está no índice " + Array.IndexOf(aulas, aulaModelando));
+Console.WriteLine(Array.LastIndexOf(aulas, aulaModelando));
+
+Array.Reverse(aulas);
+Imprimir(aulas);
+
+ . Em contrapartida, para voltar o Array para sua ordem original, faremos a reversão
+ mais uma vez:
+
+Console.WriteLine("Aula modelando está no índice " + Array.IndexOf(aulas, aulaModelando));
+Console.WriteLine(Array.LastIndexOf(aulas, aulaModelando));
+
+Array.Reverse(aulas);
+Imprimir(aulas);
+
+Array.Reverse(aulas);
+Imprimir(aulas);
+
+ . Vimos, então, que o método Reverse() funciona como um método idempotente, ou seja,
+ se ele for rodado duas vezes, volta-se ao estado original. Supondo que tenhamos que 
+ redimensionar um array, reduzindo seu tamanho, a classe Array também permite que se
+ faça isto, por meio do método estático denominado "Redimensionar", ou "Resize", não 
+ esquecendo de imprimir aulas de novo:
+
+Array.Reverse(aulas);
+Imprimir(aulas);
+
+Array.Reverse(aulas);
+Imprimir(aulas);
+
+Array.Resize(ref aulas, 2);
+Imprimir(aulas);
+
+ . No entanto, como conseguimos redimensionar um array, se ele é um tipo de 
+ coleção de tamanho fixo? O que acontece é que, internamente, o Resize() cria uma 
+ nova coleção (array) com o tamanho definido (neste caso, 2) e, em seguida, copia os
+ primeiros elementos da nossa classe original para este array de destino. No final, 
+ troca-se a referência da variável aulas apontando-a para o novo array.
+
+ . Ou seja, sem que tivéssemos visto, uma cópia interna é criada. Este é o pequeno
+ "truque" que acontece no método Resize(). Se quiséssemos aumentar o nosso array 
+ novamente, para o tamanho 3, poderemos tentar:
+
+Array.Reverse(aulas);
+Imprimir(aulas);
+
+Array.Resize(ref aulas, 2);
+Imprimir(aulas);
+
+Array.Resize(ref aulas, 3);
+Imprimir(aulas);
+
+ . Rodaremos de novo a app e teremos exatamente o mesmo resultado. Para confirmar 
+ que esta alteração foi de fato realizada, colocaremos um breakpoint nesta última 
+ linha que acabamos de criar, rodaremos a aplicação e inspecionaremos o array aulas.
+
+ . Ao fazermos isto, veremos 3 elementos, cujo último deles, de índice 2, está 
+ com valor nulo, o que ocorre porque este elemento (ou índice) está vago, ou seja,
+ não há nenhum valor dentro dele.
+
+ . É preciso, então, preenchermos esta última posição com um valor. Digamos que 
+ queiramos colocar a última aula como sendo a de conclusão. Para atribuirmos um 
+ valor a ela, colocaremos entre colchetes o índice que queremos usar.
+
+O índice da última aula é 2, portanto o código ficará assim:
+
+Array.Resize(ref aulas, 3);
+Imprimir(aulas);
+
+aulas[2] = "Conclusão";
+Se tivermos um array cujo tamanho desconhecemos e quisermos preencher a última posição deste array, não poderemos simplesmente colocar 2, que no caso seria o número mágico, e sim uma expressão que sempre acesse a última posição do array.
+
+Sendo o índice sempre n - 1, poderemos colocar o número do array, que é aulas.Length e - 1, garantindo que estamos sempre acessando a última posição do array. O código ficará assim, portanto:
+
+aulas[aulas.Length - 1] = "Conclusão";
+Imprimir(aulas);
+Vamos rodar a aplicação e verificar seu funcionamento. Agora sim, conseguimos preencher a última posição com a string "Conclusão".
+
+Para ordenarmos este array alfabeticamente, poderíamos utilizar o método estático da classe Array "Ordenar", que em inglês é "Sort", a partir do qual passaremos nosso array, imprimindo-o em seguida.
+
+Array.Sort(aulas);
+Imprimir(aulas);
+Rodando o código, desta vez teremos as aulas em ordem alfabética, como gostaríamos:
+
+Conclusão
+Modelando a Classe Aula
+Trabalhando com Arrays
+
+ . O método Sort() não pode ser revertido, porque não é idempotente como o Reverse().
+
+ . Para copiarmos um array a outro, criaremos um de destino, acrescentando seu novo
+ tamanho, 2 (duas posições). Queremos duplicar as duas últimas aulas do nosso array
+ de aulas para esta cópia.
+
+ . Acessaremos o método estático da classe Array "cópia" (em inglês, "Copy"), 
+ passando o array de origem (aulas), o índice inicial a partir do qual copiaremos
+ o array de aulas (1, que equivale à segunda posição), o nome do array de destino,
+ a posição inicial (índice 0), e a quantidade de elementos que iremos copiar (2):
+
+string[] copia = new string[2];
+Array.Copy(aulas, 1, copia, 0, 2);
+Imprimir(copia);
+
+ . Rodaremos a aplicação e veremos que copiamos as duas últimas aulas. Para fazer 
+ o mesmo com todos os elementos, do início ao fim, poderíamos optar por uma maneira
+ mais simples utilizando um método de clonagem.
+
+ . Declararemos um novo array denominado clone. E, em vez de declararmos uma nova
+ string, colocaremos a referência do nosso array inicial (aulas) chamando um 
+ método muito conveniente: Clone.
+
+string[] clone = aulas.Clone();
+
+ . Porém o Visual Studio está "reclamando" por não conseguir converter o tipo object
+ para string[], então teremos que fazer um cast:
+
+string[] clone = aulas.Clone() as string[];
+Imprimir(copia);
+
+ . Rodaremos a aplicação e obteremos o resultado do nosso array clonado, que é 
+ exatamente o nosso original aulas. Para terminar, veremos como limpar alguns 
+ elementos do array clone, neste caso, os dois últimos.
+
+ . Acessaremos o método estático da classe Array, de limpeza, do inglês clear, 
+ bem como o índice da segunda posição (1) e o número de elementos que queremos 
+ limpar (2), não esquecendo de imprimir este array clone:
+
+Array.Clear(clone, 1, 2);
+Imprimir(clone);
+
+ . Feito isto, rodaremos o código e veremos que conseguimos limpar os dois últimos 
+ elementos deste array. Se colocarmos um breakpoint na linha de código que acabamos
+ de criar e rodarmos novamente a aplicação, confirmaremos isso.
+
+ . Ao inspecionarmos o array, veremos que o primeiro elemento permanece intacto 
+ (índice 0, "Conclusão"), e os outros dois passaram a ter valor nulo.
+
+ . É importante lembrarmos que o array é um tipo muito básico de coleção do .NET,
+ então o utilizaremos em casos específicos, como em transferências de arquivos, 
+ manipulação de buffer ou imagens, em arquivos de baixo nível. Isso porque 
+ normalmente, embora faça parte de várias coleções do .NET, o array não é tão 
+ usado quanto outro tipo de coleção (como o List). Assim sendo, se for usar um 
+ tipo de coleção, busque sempre ver se é possível optar pela lista no lugar de 
+ um array, pois ela fornece métodos muito mais convenientes do que um simples array.
+
+
+ //--------------------------------------------------------------------
+
+
+
+
+  //--------------------------------------------------------------------
+
+
+
+
+   //--------------------------------------------------------------------
+
