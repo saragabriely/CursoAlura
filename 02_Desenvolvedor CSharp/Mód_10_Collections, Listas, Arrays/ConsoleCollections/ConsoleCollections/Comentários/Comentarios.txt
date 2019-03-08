@@ -3,17 +3,7 @@
 
  * 01 - Aula 03 - Declarando e Populando Arrays (TRANSRIÇÃO)
 
- . Começaremos pelo tipo mais básico de coleção existente no .NET Framework, 
- o Array. Supondo que temos 3 aulas a serem colocadas em uma coleção, 
- representadas por 3 strings diferentes, vamos declará-las, armazenando-as 
- em uma coleção (array).
-
- . Faremos isto em uma sintaxe especial, colocando inicialmente o tipo do elemento
- a ser contido no array, que no caso será uma string. Há duas maneiras de se 
- declarar um array, e uma delas é quando já sabemos quais elementos ele irá conter.
-
- . Neste caso, sabemos que haverá 3 elementos, as três aulas, então poderemos 
- simplesmente colocar o valor das três variáveis:
+ . Código inicial
 
 namespace CSharpCollections
 {
@@ -33,83 +23,57 @@ namespace CSharpCollections
     }
 }
 
- . Vamos rodar a aplicação colocando um breakpoint na linha que fecha as strings.
- Veremos que em aulas há três elementos ("Introdução às Coleções", "Modelando a 
- Classe Aula" e "Trabalhando com Conjuntos"), como gostaríamos.
-
  . O primeiro deles começa no índice 0, o segundo no 1 e o último no 2. Ou seja, o 
- índice de um elemento será igual à sua posição menos um. Esta é a primeira forma 
- de declararmos um array no caso de já sabermos de antemão quais elementos ele irá
- conter.
+ índice de um elemento será igual à sua posição menos um. 
 
- . A outra forma de declararmos um array consiste em incluirmos o tamanho que ele 
- irá ocupar, algo que foi declarado implicitamente na primeira forma. Desta vez o
- faremos explicitamente.
+ . A outra forma de declararmos um array: incluindo o tamanho que ele 
+ irá ocupar, algo que foi declarado implicitamente na primeira forma. 
 
- . É importante lembrarmos que um array é uma coleção de tamanho fixo!
+ . Um array é uma coleção de tamanho fixo! ==> string[] aulas = new string[3];
 
-string[] aulas = new string[3];
+ . Rodando desta forma, o array armazena três posições com valor null (nulo).
 
- . Rodando a app desta forma, veremos que em aulas estão armazenadas três posições,
- cada uma com valor null (nulo), e estes elementos ainda são desconhecidos, porém 
- já temos o array declarado. Completaremos o código:
+ . Populando o array:
 
-string[] aulas = new string[3];
-aulas[0] = aulaIntro;
-aulas[1] = aulaModelando;
-aulas[2] = aulaSets;
+		string[] aulas = new string[3];
+		aulas[0] = aulaIntro;
+		aulas[1] = aulaModelando;
+		aulas[2] = aulaSets;
 
- . Vamos rodar o código mais uma vez. Veremos que o array aulas possui os três 
- elementos preenchidos. Imprimiremos isto na tela acrescentando Console.WriteLine(); 
- - que também pode ser feito com o atalho "cw + Tab + Tab":
+ . Imprimindo na tela com Console.WriteLine() (atalho "cw + Tab + Tab":)
 
-string[] aulas = new string[3];
-aulas[0] = aulaIntro;
-aulas[1] = aulaModelando;
-aulas[2] = aulaSets;
+	string[] aulas = new string[3];
+	aulas[0] = aulaIntro;
+	aulas[1] = aulaModelando;
+	aulas[2] = aulaSets;
 
-Console.WriteLine(aulas);
+	Console.WriteLine(aulas); -- Não é o jeito certo
 
- . Ao rodarmos a aplicação para verificar o resultado, temos impresso na tela 
- System.String[], o que não é exatamente o que queríamos. Queremos imprimir os 
- elementos do array de aulas e, para isto, varreremos esta coleção (aulas) e 
- imprimiremos cada um dos itens.
+ . Imprimir os resultados varrendo o array: é utilizar a instrução foreach para 
+ informar  que, para cada aula em aulas, se faça algo (que no caso é a impressão).
 
- . Uma das maneiras de se fazer isso é utilizar a instrução foreach para informar 
- que, para cada aula em aulas, se faça algo (que no caso é a impressão).
+	string[] aulas = new string[3];
+	aulas[0] = aulaIntro;
+	aulas[1] = aulaModelando;
+	aulas[2] = aulaSets;
 
-string[] aulas = new string[3];
-aulas[0] = aulaIntro;
-aulas[1] = aulaModelando;
-aulas[2] = aulaSets;
+	Console.WriteLine(aulas);
 
-Console.WriteLine(aulas);
+	foreach (var aula in aulas)
+	{
+		Console.WriteLine(aula);
+	}
 
-foreach (var aula in aulas)
-{
-    Console.WriteLine(aula);
-}
+ . Resultado da impressão: 
 
- . Rodando novamente o código, obteremos como Output o seguinte:
+   Introdução às Coleções
+   Modelando a Classe Aula
+   Trabalhando com Conjuntos
+  
+ . Criar um método para impressão. Atalho: Selecionar o código desejado e
+ "Ctrl + . (ponto)" - Extrair, nomear o método para Imprimir().
 
- . Introdução às Coleções
- . Modelando a Classe Aula
- . Trabalhando com Conjuntos
- . Pegaremos esta instrução e a jogaremos a outro método para a reutilização 
- conforme nossa necessidade. Utilizando "Ctrl + . (ponto)" extrairemos o método
- denominado Imprimir(). Nele, teremos nosso laço foreach.
-
- . Como segunda forma de imprimirmos estes elementos, utilizaremos outro laço o 
- for que varrerá o comprimento do nosso array de um índice até a posição final. 
- Comentaremos o código do laço foreach
-
-{
-// strings omitidos
-
-    Console.WriteLine(aulas);
-
-    Imprimir(aulas);
-}
+ . Imprimir o array utilizando um FOR:
 
 private static void Imprimir(string[] aulas)
 {
@@ -124,32 +88,18 @@ private static void Imprimir(string[] aulas)
     }
 }
 
- . Feito isto, podemos rodar a aplicação mais uma vez. O resultado é exatamente 
- o mesmo que o anterior, embora a forma de chegarmos a ele seja outra.
+ . O resultado da impressão será o mesmo.
 
- . Com o laço foreach não precisávamos de muitas informações, bastando passar o nome
- do array. Com o for, conseguimos controlar o avanço do índice. Neste caso, é 
- necessário sabermos seu comprimento e o índice que está sendo impresso.
+ . O foreach não precisa de tantas informações!
 
- . Para imprimirmos o primeiro elemento do nosso array, usaremos Console.WriteLine();
- novamente, acessando este elemento, cujo índice é 0.
+ . Acessando o primeiro elemento (indice 0): ----------------
 
 {
-// strings omitidos
-
-    Console.WriteLine(aulas);
-
-    Imprimir(aulas);
-
     Console.WriteLine(aulas[0]);
 }
 
- . Rodando a app, veremos a impressão de "Introdução às Coleções" na tela. Para 
- acessarmos o último elemento, precisaremos realizar uma conta:
-
+ . Acessando o último elemento: ----------------------------
 {
-// strings omitidos
-
     Console.WriteLine(aulas);
 
     Imprimir(aulas);
@@ -158,17 +108,9 @@ private static void Imprimir(string[] aulas)
     Console.WriteLine(aulas[aulas.Length - 1]);
 }
 
- . Verificaremos que tudo funciona conforme esperado, quando rodamos a app vemos 
- "Trabalhando com Conjuntos" no Output. Se quisermos trocar um elemento deste array,
- como faremos?
+ . Trocar um elemento do array! -------------------------------
 
 {
-// strings omitidos
-
-    Console.WriteLine(aulas);
-
-    Imprimir(aulas);
-
     Console.WriteLine(aulas[0]);
     Console.WriteLine(aulas[aulas.Length - 1]);
 
@@ -176,49 +118,27 @@ private static void Imprimir(string[] aulas)
     Imprimir(aulas);
 }
 
- . Rodaremos a aplicação e não teremos nenhuma mudança! Isso ocorre pois aulaIntro
- não está sendo armazenado no nosso array de aulas. O que armazenamos ali foi o 
- valor copiado de aulaIntro, portanto não adianta mudarmos seu valor.
+  . Neste caso, aulaIntro não diz respeito ao array AULAS, e para realmente alterar
+  o valor, deverá ser da seguinte forma:
 
- . Precisaremos acessar diretamente a primeira posição do nosso array de aulas. 
- Para atribuirmos um valor a esta posição, de índice 0, deixaremos o código assim:
-
-{
-// strings omitidos
-
-    Console.WriteLine(aulas);
-
-    Imprimir(aulas);
-
-    Console.WriteLine(aulas[0]);
-    Console.WriteLine(aulas[aulas.Length - 1]);
-
-    aulaIntro = "Trabalhando com Arrays";
-    Imprimir(aulas);
-
+{ 
     aulas[0] = "Trabalhando com Arrays";
     Imprimir(aulas);
 }
-
- . Rodaremos a aplicação e veremos que conseguimos trocar com sucesso o primeiro
- elemento do nosso array.
 
  //--------------------------------------------------------------------
 
 	* 01 - Aula 06 - Operações com Arrays
 
- . Agora vamos procurar um elemento no array, a aula "Modelando a Classe Aula", 
- por exemplo. Para isso, imprimiremos o texto "Aula modelando está no índice " 
- concatenado com o índice onde ele foi encontrado, mostrando onde teve a ocorrência 
- da nossa string.
-
- . Utilizaremos um método estático IndexOf da classe Array que buscará a primeira 
+ . Procurar um elemento no array: a aula "Modelando a Classe Aula", utilizando o
+ método estático IndexOf da classe Array que buscará a primeira 
  ocorrência de uma string, retornando o índice onde foi encontrado:
 
-aulas[0] = "Trabalhando com Arrays";
-Imprimir(aulas);
+	aulas[0] = "Trabalhando com Arrays";
+	Imprimir(aulas);
 
-Console.WriteLine("Aula modelando está no índice " + Array.IndexOf(aulas, aulaModelando));
+	Console.WriteLine("Aula modelando está no índice " + 
+	Array.IndexOf(aulas, aulaModelando));
 
  . Ao rodarmos a aplicação, será exibido o texto "A aula modelando está no índice 1".
  É a primeira ocorrência desta string no array de strings. Digamos que este texto se
@@ -384,10 +304,640 @@ Imprimir(clone);
 
 
  //--------------------------------------------------------------------
+ //--------------------------------------------------------------------
+ //--------------------------------------------------------------------
+
+	* 02 - Aula 01 - Introdução às Listas
+
+ . Faremos algo muito parecido com o que fizemos na aula de arrays, porém utilizando
+ outro tipo de coleção do .NET Framework, a Lista. Começaremos colando o código 
+ inicial dessa aula, com aquelas três strings usadas na criação da primeira coleção.
+
+ . A forma de declarar uma lista é bem diferente de um array. Primeiro colocamos o 
+ nome da classe List, em seguida o tipo do elemento que ela irá conter, entre os 
+ símbolos de <string>. A instância segue o mesmo padrão new List<string>. Assim, 
+ teremos a primeira declaração de uma coleção Lista no nosso código, podemos iniciá-la
+ com as string's que já deixamos preparada. Vamos imprimi-la e rodar a aplicação.
+
+static void Main(string[] args)
+{
+    string aulaIntro = "Introdução às Coleções";
+    string aulaModelando = "Modelando a Classe Aula";
+    string aulaSets = "Trabalhando com Conjuntos";
+
+    List<string> aulas = new List<string>
+    {
+        aulaIntro,
+        aulaModelando,
+        aulaSets
+    };
+
+    Console.WriteLine(aulas);
+}
+Na impressão, obtereremos o seguinte:
+
+System.Collections.Generic.List`1[System.String]
+
+ . Não temos a listagem de elementos pois, como vimos com os arrays, com 
+ Console.WriteLine(), o nome da classe será pego no método do string, e não seu 
+ conteúdo. Os elementos da lista de strings serão exibidos.
+
+ . Precisaremos imprimir cada um dos elementos individualmente, extraindo o método 
+ Console.WriteLine(), optando pelo uso de um laço.
+
+static void Main(string[] args)
+{
+    string aulaIntro = "Introdução às Coleções";
+    string aulaModelando = "Modelando a Classe Aula";
+    string aulaSets = "Trabalhando com Conjuntos";
+
+    List<string> aulas = new List<string>
+    {
+        aulaIntro,
+        aulaModelando,
+        aulaSets
+    };
+    Imprimir(aulas);
+}
+
+private static void Imprimir(List<string> aulas)
+{
+    foreach (var aula in aulas)
+    {
+        Console.WriteLine(aula);
+    }
+}
+
+ . Feito isso, rodaremos a app e obteremos a impressão das três aulas:
+
+Introdução às Coleções
+Modelando a Classe Aula
+Trabalhando com Conjuntos
+
+ . Poderemos obter a declaração de aulas de outra forma, pois neste caso já conhecemos
+ os elementos iniciais da nossa lista. No entanto, pode ser que não conheçamos. 
+ Deixaremos o código assim:
+
+static void Main(string[] args)
+{
+    string aulaIntro = "Introdução às Coleções";
+    string aulaModelando = "Modelando a Classe Aula";
+    string aulaSets = "Trabalhando com Conjuntos";
+
+    //List<string> aulas = new List<string>
+    //{
+    //    aulaIntro,
+    //    aulaModelando,
+    //    aulaSets
+    //};
+
+    List<string> aulas = new List<string>();
+
+    Imprimir(aulas);
+}
+
+private static void Imprimir(List<string> aulas)
+{
+    foreach (var aula in aulas)
+    {
+        Console.WriteLine(aula);
+    }
+}
+
+ . Investigaremos o conteúdo da lista colocando um breakpoint no momento da impressão 
+ de aulas. Quando colocamos a lupa em cima dela, veremos que a lista de aulas possui 
+ uma quantidade 0 de elementos, ou seja, está vazia.
+
+ . Vimos uma lista com 3 elementos e depois uma com nenhum elemento. Uma lista contém
+ internamente um array, sendo assim chamada também de array dinâmico por "se acomodar"
+ conforme a quantidade de elementos contidos.
+
+ . Caso se trabalhe com um array com 10 elementos, é possível eliminar alguns, porém 
+ suas posições ficam vazias (nulas). No caso de uma lista, isto não acontece; 
+ conforme o acréscimo ou eliminação de elementos, a lista vai expandindo ou reduzindo.
+
+ . Já declaramos a lista, vazia, então adicionaremos cada um dos elementos 
+ necessários, o que significa que isso pode ser feito aos poucos, sem a declaração 
+ dos elementos iniciais:
+
+List<string> aulas = new List<string>();
+aulas[0] = aulaIntro;
+
+Imprimir(aulas);
+
+ . Ao rodarmos a aplicação, teremos um erro! Um 
+ System.ArgumentOutOfRangeException ("O índice estava fora do intervalo. 
+ Ele deve ser não-negativo e menor que o tamanho da coleção"). O que acontece 
+ é que estamos acessando o índice, mas ele é inexistente na lista, pois está vazia.
+ É necessário fazermos isto de outra forma.
+
+ . Em se tratando de listas, não a atribuímos desta maneira para acrescentarmos 
+ elementos. Para isto, na variável de aulas, acessaremos o método de adicionar Add():
+
+List<string> aulas = new List<string>();
+aulas.Add(aulaIntro);
+aulas.Add(aulaModelando);
+aulas.Add(AulaSets);
+
+Imprimir(aulas);
+
+ . Rodaremos a app de novo para vermos o resultado... Muito bem, conseguimos enxergar
+ os três elementos adicionados! Faremos uma modificação no método Imprimir(), por 
+ conta do laço foreach, feito com base em uma lista. Poderemos usar o for, assim 
+ como fizemos com o array.
+
+ . Varreremos a lista a partir do índice 0 até a quantidade total de seus elementos
+ e acessaremos a variável aulas e a propriedade length. No entanto, quando digitamos,
+ esta palavra não é encontrada, pois não faz parte do objeto List<string>. 
+ Utilizaremos Count em seu lugar, que é seu equivalente no uso de listas:
+
+private static void Imprimir(List<string> aulas)
+{
+    //foreach (var aula in aulas)
+    //{
+    //    Console.WriteLine(aula);
+    //}
+
+    for (int i = 0; i < aulas.Count; i++)
+    {
+        Console.WriteLine(aulas[i]);
+    }
+}
+
+ . Rodaremos e imprimiremos mais uma vez, e tudo ocorrerá sem problemas. Há ainda 
+ uma terceira forma de fazermos isso: em vez de utilizarmos uma instrução como 
+ foreach ou for, usaremos um método (ForEach()).
+
+private static void Imprimir(List<string> aulas)
+{
+    //foreach (var aula in aulas)
+    //{
+    //    Console.WriteLine(aula);
+    //}
+
+    //for (int i = 0; i < aulas.Count; i++)
+    //{
+    //    Console.WriteLine(aulas[i]);
+    //}
+
+    aulas.ForEach(aula => 
+    {
+        Console.WriteLine(aula);
+    });
+}
+
+ . Rodaremos o código para verificar se o resultado é o mesmo, o que se confirma. 
+ Neste momento, acessaremos o primeiro elemento das aulas, o que significa imprimir 
+ a primeira aula. Colocaremos um Console.WriteLine("A primeira aula é " + aula[0]);.
+
+List<string> aulas = new List<string>();
+aulas.Add(aulaIntro);
+aulas.Add(aulaModelando);
+aulas.Add(AulaSets);
+
+Imprimir(aulas);
+
+Console.WriteLine("A primeira aula é " + aulas[0]);
+Rodando a aplicação, teremos o resultado:
+
+A primeira aula é Introdução às Coleções
+ 
+ . Caso queiramos a última aula, copiaremos a linha que acabamos de criar, 
+ trocaremos "primeira" por "última" e, no lugar do índice 0, colocaremos o 
+ último índice que, como vimos anteriormente, será aulas.Count - 1:
+
+Console.WriteLine("A primeira aula é " + aulas[0]);
+Console.WriteLine("A última aula é " + aulas[aulas.Count - 1]);
+
+ . Rodando a app novamente, teremos:
+
+A última aula é Trabalhando com Conjuntos
+
+ . Outra maneira de acessarmos estes elementos - o último e o primeiro - se dá 
+ por meio de Last e First ("último" e "primeiro" em inglês), respectivamente:
+
+Console.WriteLine("A primeira aula é " + aulas.First());
+Console.WriteLine("A última aula é " + aulas.Last());
+Rodaremos o código para confirmar esta alteração.
+
+ . Neste vídeo, vimos alguns métodos interessantes da classe List, declarando-a 
+ de modos diferentes. E também aprendemos a visualizar impressões pelo método 
+ ForEach().
+
+  //--------------------------------------------------------------------
+  
+	* 02 - Aula 02 - Operações com Listas
+
+ . Desta vez queremos trocar o nome da primeira aula acessando a lista de aulas e 
+ a primeira posição, de índice 0. Atribuiremos a ela um novo valor string.
+
+Console.WriteLine("A última aula é " + aulas[aulas.Count - 1]);
+Console.WriteLine("A última aula é " + aulas.Last());
+
+aulas[0] = "Trabalhando com Listas";
+Imprimir(aulas);
+
+ . Rodaremos a aplicação e verificaremos que a alteração foi feita corretamente.
+
+ . Para exemplificarmos uma busca por determinada palavra nesta lista, pesquisaremos
+ pela primeira que contiver a palavra "trabalhando". Já vimos que First() retornará 
+ o primeiro elemento independentemente do conteúdo. No entanto, este método possui 
+ sobrecarga ("overload"), o que é bastante útil.
+
+ . Existe a opção de passarmos um parâmetro para First(), um predicado possível de 
+ ser utilizado por meio de uma expressão lambda, a qual define, neste caso, uma 
+ função anônima. Utilizaremos também o método Contains(), que trará true ou false 
+ dependendo do resultado da busca.
+
+Console.WriteLine("A primeira aula 'Trabalhando' é:" + aulas.First(aula => 
+aula.Contains("Trabalhando")));
+
+Vamos rodar a aplicação. Obteremos o seguinte:
+
+ . A primeira aula 'Trabalhando' é: Trabalhando com Listas
+
+ . Faremos algo parecido para buscarmos a última aula. Copiaremos as linhas de código 
+ recém criadas e substituiremos "primeira" por "última" e "First" por "Last":
+
+ . Console.WriteLine("A primeira aula 'Trabalhando' é:" + aulas.First(aula =>  
+ aula.Contains("Trabalhando")));
+
+ . Console.WriteLine("A última aula 'Trabalhando' é:" + aulas.Last(aula =>  
+ aula.Contains("Trabalhando")));
+
+Feito isto, obteremos a mensagem:
+
+ A última aula 'Trabalhando' é: Trabalhando com Conjuntos
+
+ . Para buscarmos a palavra "Conclusão", copiaremos e colaremos o código novamente,
+ trocando "Trabalhando" por "Conclusão":
+
+Console.WriteLine("A primeira aula 'Trabalhando' é:" + aulas.First(aula =>  aula.Contains("Trabalhando")));
+
+Console.WriteLine("A última aula 'Trabalhando' é:" + aulas.Last(aula =>  aula.Contains("Trabalhando")));
+
+Console.WriteLine("A primeira aula 'Conclusão' é:" + aulas.First(aula =>  aula.Contains("Conclusão")));
+
+ . Obteremos um erro de InvalidOperationException: "A sequência não contém elementos 
+ de correspondência". Muito cuidado quando for fazer uma busca deste tipo, cujo
+ resultado não é encontrado, pois será necessário estar preparado para tratar este 
+ tipo de situação.
+
+ . Neste caso, em vez de First(), usaremos um método similar, FirstOrDefault(), o 
+ qual retorna o primeiro elemento de uma sequência ou valor default, se a sequência
+ não contém elementos. Ou seja, quando nada é encontrado, o valor será substituído 
+ por um "null", ou "nulo".
+
+Console.WriteLine("A primeira aula 'Conclusão' é:" + aulas.FirstOrDefault(aula =>  aula.Contains("Conclusão")));
+Ao rodarmos este novo código, nenhum erro aparece, e sim o seguinte texto:
+
+A primeira aula 'Conclusão' é:
+
+ . Se quisermos reverter esta lista para trocarmos sua ordem, assim como fizemos 
+ com os arrays, utilizaremos aulas.Reverse(); sem termos que acessar o método da 
+ classe Array como fazíamos anteriormente. A reversão é feita diretamente no objeto
+ aulas.
+
+aulas.Reverse();
+Imprimir(aulas);
+
+ . Teremos o que queríamos e, para voltarmos ao estado inicial, basta copiarmos e 
+ colarmos estas mesmas linhas.
+
+ . Assim como fizemos com os arrays, que tal removermos o último elemento da lista?
+ Acessaremos o objeto aulas e usaremos o método Remove(), que nos traz outras opções,
+ como RemoveAt() (remoção de uma parte específica), para o qual também precisaremos 
+ passar o índice desejado.
+
+ . Neste caso, precisaremos saber o tamanho da nossa lista por meio de aulas.Count, 
+ imprimindo-a em seguida:
+
+aulas.RemoveAt(aulas.Count - 1);
+Imprimir(aulas);
+Obteremos:
+
+Trabalhando com Listas
+Modelando a Classe Aula
+O "Trabalhando com Conjuntos" sumiu, pois foi removido. Temos dois elementos, diferentemente de um array, cuja remoção do último elemento se dá pelo Resize() e, ao redimensionarmos de volta, a lista fica com valor nulo.
+
+ . Aqui, quando removemos elementos, a lista vai diminuindo e expandindo, conforme 
+ se vai adicionando ou removendo itens. Para acrescentarmos mais uma aula à nossa 
+ lista, poderemos utilizar o método Add():
+
+aulas.Add("Conclusão");
+Imprimir(aulas);
+
+ . Para ordenar a lista de forma alfabética, precisaremos do método Sort(), como 
+ visto com arrays, porém sem o método estático na classe List, acessando-se 
+ diretamente pelo objeto aulas:
+
+aulas.Sort();
+Imprimir(aulas);
+
+ . Para copiarmos os dois últimos elementos da lista de aulas, escreveremos o 
+ seguinte código:
+
+List<string> copia = aulas.GetRange(aulas.Count - 2, 2)
+Imprimir(copia);
+
+ . Agora faremos o equivalente à clonagem do array. Aqui, não temos um método para
+ isto. Declararemos a lista denominada clone, uma nova lista, não mais do tipo string.
+ Simplesmente obteremos uma lista a partir da nossa lista original, acessando um 
+ construtor diferente, já que o padrão não possui parâmetros.
+
+ . Há outra variação, com capacidade (o tamanho) da lista inicial, que também não 
+ nos interessa. A terceira variação do construtor recebe uma coleção possível de ser 
+ nossa lista original:
+
+List<string> clone = new List<string>(aulas);
+Imprimir(clone);
+
+ . Com isto, instanciaremos nosso clone a partir dos elementos contidos em aulas e 
+ teremos sua cópia exata.
+
+ . Para finalizar, removeremos os dois últimos elementos do nosso clone, 
+ mencionando-o e escolhendo a opção RemoveRange (remover uma faixa de elementos), 
+ passando o índice da primeira posição que queremos remover como primeiro parâmetro e, 
+ como segundo, a quantidade que queremos remover, que é 2.
+
+clone.RemoveRange(clone.Count - 2, 2);
+Imprimir(clone);
+
+ . Como critério para o desenvolvimento de uma aplicação, sempre que pensar em 
+ coleções, pense primeiro em listas, partindo para outro tipo de coleção apenas 
+ se ela não for o suficiente.
+  
+  //--------------------------------------------------------------------
+
+	* 02 - Aula 03 - Listas de Objetos
+
+	Neste vídeo estamos trabalhando com um novo projeto, um Console Application, e veremos as três strings do vídeo anterior, aquelas três aulas:
+
+namespace A23ListasDeObjetos
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string aulaIntro = "Introdução às Coleções";
+            string aulaModelando = "Modelando a Classe Aula";
+            string aulaSets = "Trabalhando com Conjuntos";
+        }
+    }
+}
+Além destes nomes (as strings), precisaremos trabalhar com a duração destas aulas, uma lista que as armazene. Trata-se de uma lista de objetos do tipo Aula. Vamos declarar a classe:
+
+class Aula
+{
+    private string titulo;
+    private int tempo;
+}
+A partir destes dois campos, criaremos propriedades com o atalho "Ctrl + . [ponto]", selecionando "Encapsular campo: 'titulo'" para o Visual Studio gerar uma propriedade homônima. Faremos o mesmo para tempo.
+
+Feito isto, selecionaremos os dois campos, titulo e tempo, clicando em "Ctrl + ." e selecionando "Gerar construtor 'Aula(string, int)'".
+
+class Aula
+{
+    private string titulo;
+    private int tempo;
+
+    public Aula(string titulo, int tempo)
+    {
+        this.titulo = titulo;
+        this.tempo = tempo;
+    }
+
+    public string Titulo { get => titulo; set => titulo = value; }
+    public int Tempo { get => tempo; set => tempo = value; }
+}
+Trocaremos as strings por instâncias da classe Aula, substituindo todas elas por var, passando também o tempo de duração de cada aula em minutos.
+
+Criaremos também a instância da nossa listagem utilizando List, uma classe genérica de tipo Aula. Declararemos a variável aulas, que armazenará a lista com todas as aulas declaradas anteriormente.
+
+Supondo que queiramos acrescentar mais uma aula ("Conclusão") em nossa lista, desta vez uma string, digitaremos:
+
+static void Main(string[] args)
+  {
+    var aulaIntro = new Aula("Introdução às Coleções", 20);
+    var aulaModelando = new Aula("Modelando a Classe Aula", 18);
+    var aulaSets = new Aula("Trabalhando com Conjuntos", 16);
+
+    List<Aula> aulas = new List<Aula>();
+    aulas.Add(aulaIntro);
+    aulas.Add(aulaModelando);
+    aulas.Add(aulaSets);
+    aulas.Add("Conclusão");
+  }
+Porém, ao fazermos isto, o Visual Studio nos informa que não é possível converter uma string para uma instância da classe Aula. Quando se define uma lista como sendo de um determinado tipo, só é possível adicionar elementos cujo tipo seja daquela instância, a menos que seja uma herança - ou derivada - daquele tipo utilizado como elemento.
+
+Portanto, por ora, comentaremos esta linha. Continuando, para imprimirmos chamaremos um método, passando como argumento a nossa lista de aulas. Como Imprimir() ainda não existe, solicitaremos ao Visual Studio a criação deste método.
+
+static void Main(string[] args)
+  {
+    var aulaIntro = new Aula("Introdução às Coleções", 20);
+    var aulaModelando = new Aula("Modelando a Classe Aula", 18);
+    var aulaSets = new Aula("Trabalhando com Conjuntos", 16);
+
+    List<Aula> aulas = new List<Aula>();
+    aulas.Add(aulaIntro);
+    aulas.Add(aulaModelando);
+    aulas.Add(aulaSets);
+    //aulas.Add("Conclusão");
+
+    Imprimir(aulas);
+  }
+
+private static void Imprimir(List<Aula> aulas)
+{
+    Console.Clear();
+    foreach (var aula in aulas)
+    {
+        Console.WriteLine(aula);
+    }
+}
+Com "Ctrl + F5", rodaremos a aplicação. Obteremos não os nomes das aulas, e sim três linhas contendo o namespace do objeto Aula. Não é o que gostaríamos! Isso ocorre porque quando pedimos a impressão, o Console.WriteLine() vai até o objeto Aula, em busca de um método chamado ToString(), inexistente na classe Aula.
+
+No entanto, como a classe Aula naturalmente herda da classe Object, o método ToString() é buscado na classe Object, que é de onde vem a impressão final, o resultado. Precisaremos sobrepor este método da classe Object para que se imprima aquilo que queremos.
+
+Para realizar este override, implementaremos um método ToString() na classe Aula. Digitando override e dando espaço, obtém-se a opção ToString. Clicando nele, o programa já nos cria este método.
+
+Para concatenarmos as informações provenientes da classe Aula, utilizaremos a sintaxe interpolação de strings, que faz parte do C#, marcada pelo uso de $ e chaves ({}).
+
+public override string ToString()
+{
+    return $"[título: {titulo}, tempo: {tempo} minutos]";
+}
+Rodaremos a aplicação novamente, e obteremos o seguinte:
+
+[título: Introdução às Coleções, tempo: 20 minutos]
+[título: Modelando a Classe Aula, tempo: 18 minutos]
+[título: Trabalhando com Conjuntos, tempo: 16 minutos]
+Prosseguindo, faremos outra operação com a listagem de aulas, a ordenação alfabética. Para isso, chamaremos o método Sort() pois, como vimos anteriormente, serve bem para este propósito.
+
+aulas.Sort();
+Imprimir(aulas);
+Rodando a aplicação, teremos um erro, de falha ao comparar dois elementos na matriz, pois pelo menos um deles deve implementar IComparable. Isto significa que a classe Aula não está implementando a interface necessária para realizar esta operação, que exige uma interface chamada IComparable.
+
+Clicando em cima disto e apertando "Ctrl + .", a interface é de fato implementada.
+
+class Aula : IComparable
+{
+    //...
+}
+O método CompareTo() foi gerado para comparar dois elementos que fazem parte da classe Aula, uma vez que o método Sort() precisa chamar CompareTo() para saber que algoritmo precisará ser usado para a ordenação.
+
+Acrescentaremos um return para que o título seja comparado com o nome do outro objeto, o parâmetro object obj. O CompareTo() recebe como parâmetro este objeto da classe Aula, e poderíamos passar obj chamando obj.titulo.
+
+No entanto, isto não existe, pois object é um objeto, sendo necessário, então, fazermos um cast, uma conversão para que isso possa ser trabalhado.
+
+O código ficará assim:
+
+public int CompareTo(object obj)
+{
+    Aula that = obj as Aula;
+    return this.titulo.CompareTo(that.titulo);
+}
+Vamos rodar a aplicação de novo para verificar se tudo funciona corretamente. Muito bem, as aulas aparecem listadas em ordem alfabética.
+
+Agora, de que forma poderemos, sem que a classe Aulas seja alterada, mudar a forma de ordenação? Ordenando-se não pelo título, mas pelo tempo de duração, por exemplo? Ao tentarmos utilizar o método Sort() verificaremos que há um overload, que pode receber parâmetros.
+
+É possível, assim, compararmos dois elementos ou instâncias de uma mesma classe. No método Sort(), usaremos uma expressão lambda, a receber dois parâmetros, elementos iniciais e finais, com nomes que você quiser, como este e outro.
+
+Iremos usar CompareTo() mais uma vez, para compararmos este com outro:
+
+aulas.Sort();
+Imprimir(aulas);
+
+aulas.Sort((este, outro) => este.Tempo.CompareTo(outro.Tempo));
+Imprimir(aulas);
+Rodaremos o código e veremos que a listagem de aulas foi ordenada do menor para o maior tempo de duração com sucesso!
+
+	 
+ //--------------------------------------------------------------------
+  
+  * 2 - Aula 05 - Lista Somente Leitura
+
+  Para este vídeo criamos um novo projeto Console Application, mantendo a classe Aula, contida em um arquivo separado (Aula.cs). Em Program.cs, mantivemos nosso método Imprimir():
+
+private static void Imprimir(List<Aula> aulas)
+{
+    Console.Clear();
+    foreach (var aula in aulas)
+    {
+        Console.WriteLine(aula);
+    }
+}
+Neste vídeo aumentaremos um pouco mais a arquitetura para criarmos uma nova classe com os cursos cujas aulas serão incluídas.
+
+Esta classe se chamará Curso.cs e terá três propriedades: a lista de aulas (como visto anteriormente), o nome do curso e instrutor.
+
+Utilizaremos o atalho "propfull + TAB + TAB" para criar a estrutura da propriedade necessária, com get e set. Declararemos seu tipo, e a propriedade será pública, denominada Aulas. Faremos o mesmo para o nome do curso e instrutor.
+
+namespace A24ListaSomenteLeitura
+{
+    class Curso
+    {
+        private List<Aula> aulas;
+
+        public List<Aula> Aulas
+        {
+            get { return aulas; }
+            set { aulas = value; }
+        }
+
+        private string nome;
+
+        public string Nome
+        {
+            get { return nome; }
+            set { nome = value; }
+        }
+
+        private string instrutor;
+
+        public string Instrutor
+        {
+            get { return instrutor; }
+            set { instrutor = value; }
+        }
+    }
+}
+Criaremos também o construtor da classe recém criada. Para fazê-lo de maneira mais prática, usando as teclas "Alt + seta para cima", deixaremos a linha private string instrutor; logo abaixo de private string nome;.
+
+Então selecionaremos estas duas linhas para que o construtor seja gerado. Com "Ctrl + ." clicaremos em Generate constructor 'Curso(string, string)', no qual instanciaremos a lista de aulas, pois inicialmente ela estará nula.
+
+Inicialmente, definiremos esta lista como nova, a qual, a partir de agora, poderemos acessar sem problema algum em relação à referência nula.
+
+private string nome;
+private string instrutor;
+
+public Curso(string nome, string instrutor)
+{
+    this.nome = nome;
+    this.instrutor = instrutor;
+    this.aulas = new List<Aula>();
+}
+Voltando a Program.cs, declararemos uma variável Curso de nome csharpColecoes, pelo qual acessaremos a propriedade pública Aulas. Adicionaremos uma nova aula a esta lista com o método Add(), passando como parâmetro uma nova instância da classe Aula.
+
+static void Main(string[] args)
+{
+    Curso csharpColecoes = new Curso("C# Collections", "Marcelo Oliveira");
+    csharpColecoes.Aulas.Add(new Aula("Trabalhando com Listas", 21));
+    Imprimir(csharpColecoes.Aulas);
+}
+Imprimiremos o resultado no console e rodaremos a aplicação com "Ctrl + F5". Obteremos o seguinte:
+
+[título: Trabalhando com Listas, tempo: 21 minutos]
+Conseguimos criar a classe Curso com sucesso, populando e imprimindo as aulas. No entanto, há um problema não muito evidente, conhecido por code smell na programação, ou "mau cheiro no código", que neste caso implica no fato de acessarmos csharpColecoes.Aulas e a lista de aulas da classe Curso adicionando elementos nela.
+
+Isso significa que estamos "passando por cima" da responsabilidade da classe Curso de manter suas propriedades, e estamos manipulando diretamente esta lista de aulas.
+
+O correto seria chamarmos um método da classe Curso para podermos adicionar estes elementos. Caso contrário, esta classe não tem nenhum controle sobre as suas aulas, pois esta listagem está exposta.
+
+Trata-se de um code smell por ser uma "exposição indecente". Para evitarmos que uma propriedade fique exposta à manipulações externas, é necessário encapsularmos esta funcionalidade de adicionar elementos na lista.
+
+Então, primeiramente, teremos que bloquear esta lista interna para evitar a possibilidade de manipulação por código externo. Acessando-se a classe Curso, modificaremos a propriedade Aulas, em que encontramos get e set.
+
+Removeremos o set, pois do jeito que está, qualquer um pode alterá-lo para um valor nulo, e a classe Curso perde qualquer chance de barrar esta modificação. Feito isso, retornaremos não mais uma lista de aulas (List<Aula>) em get, mas outro tipo de objeto, uma coleção somente leitura (read only collection).
+
+ReadOnlyCollection se localiza no .NET com namespace System.Collections.ObjectModel, e é uma classe genérica, portanto necessita também do tipo de elemento (no caso, a classe Aula). Precisaremos passar no construtor um parâmetro que é uma lista, a própria referência das aulas.
+
+Aulas é o campo privado que está sendo protegido, porém o Visual Studio não consegue converter ReadOnlyCollection para um List<Aula>, declarado na propriedade. Portanto, precisaremos trocá-lo por um IList<Aula>, que é o que o ReadOnlyCollection implementa. O código ficará desta forma:
+
+class Curso
+{
+    private IList<Aula> aulas;
+
+    public IList<Aula> Aulas
+    {
+        get { return new ReadOnlyCollection<Aula>(aulas); }
+    }
+}
+Veremos outro problema, desta vez na hora de chamarmos o método Imprimir(), pois estamos passando uma propriedade de tipo IList<>, e nosso método recebe List<>. Precisaremos fazer a devida alteração.
+
+Feito isso, rodaremos a aplicação! Há um erro: System.NotSupportedException "Coleção é somente leitura". Protegemos nossa coleção para que ela fosse somente leitura, e assim, o código externo fica impedido de modificar esta coleção.
+
+É preciso encapsularmos esta funcionalidade de adicionar algum elemento na lista de aulas em algum método da classe Curso, porque aí sim, ela terá o poder de controlar esta funcionalidade.
+
+Para facilitar, como temos csharpColecoes.Aulas.Add(), poderemos trocar por csharpColecoes.Adiciona(). No entanto, este novo método ainda não existe. Com "Ctrl + .", clicaremos no atalho Generate method 'Curso.Adiciona'.
+
+Com F12, entraremos no método para o implementarmos:
+
+internal void Adiciona (Aula aula)
+{
+    this.aulas.Add(aula);
+}
+Rodando novamente a aplicação, teremos:
+
+[título: Trabalhando com Listas, tempo: 21 minutos]
+
+  //--------------------------------------------------------------------
 
 
 
 
+
+  //--------------------------------------------------------------------
   //--------------------------------------------------------------------
 
 

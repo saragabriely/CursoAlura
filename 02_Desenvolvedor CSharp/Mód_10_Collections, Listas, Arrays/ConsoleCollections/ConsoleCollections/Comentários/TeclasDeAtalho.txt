@@ -7,3 +7,14 @@ Ctrl + . (ponto): Extrair método - Cria um método com o código selecionado.
 
 cw + tab + tab: Console.WriteLine(); 
 
+propfull + tab + tab: cria a propriedade, get e set também (abaixo);
+
+		private int myVar;
+
+        public int MyProperty
+        {
+            get { return myVar; }
+            set { myVar = value; }
+        }
+
+
