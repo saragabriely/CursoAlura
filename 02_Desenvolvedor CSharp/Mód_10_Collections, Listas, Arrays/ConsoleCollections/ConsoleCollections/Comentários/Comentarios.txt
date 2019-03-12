@@ -933,15 +933,652 @@ Rodando novamente a aplicação, teremos:
 
   //--------------------------------------------------------------------
 
+	* 2 - Aula 07 - Ordenando e Totalizando
+
+	No último vídeo aprendemos a proteger a coleção de aulas do curso, modificando o retorno como sendo de coleção somente leitura, ou read only collection. O que faremos agora são algumas operações em cima desta lista de aulas.
+
+Inicialmente, adicionaremos duas aulas novas neste curso:
+
+static void Main(string[] args)
+{
+    Curso csharpColecoes = new Curso("C# Collections", "Marcelo Oliveira");
+    csharpColecoes.Aulas.Add(new Aula("Trabalhando com Listas", 21));
+    Imprimir(csharpColecoes.Aulas);
+
+    //adicionar 2 aulas
+    csharpColecoes.Adiciona(new Aula("Criando uma Aula", 20));
+    csharpColecoes.Adiciona(new Aula("Modelando com Coleções", 19));
+
+    //imprimir
+    Imprimir(csharpColecoes.Aulas);
+}
+Rodaremos com "Ctrl + F5" e obteremos como resultado:
+
+[título: Trabalhando com Listas, tempo: 21 minutos]
+[título: Criando uma Aula, tempo: 20 minutos]
+[título: Modelando com Coleções, tempo: 19 minutos]
+Em seguida, colocaremos estas aulas em ordem alfabética:
+
+static void Main(string[] args)
+{
+    Curso csharpColecoes = new Curso("C# Collections", "Marcelo Oliveira");
+    csharpColecoes.Aulas.Add(new Aula("Trabalhando com Listas", 21));
+    Imprimir(csharpColecoes.Aulas);
+
+    //adicionar 2 aulas
+    csharpColecoes.Adiciona(new Aula("Criando uma Aula", 20));
+    csharpColecoes.Adiciona(new Aula("Modelando com Coleções", 19));
+
+    //imprimir
+    Imprimir(csharpColecoes.Aulas);
+
+    //ordenar a lista de aulas
+    csharpColecoes.Aulas.Sort();
+}
+Ao rodarmos o código acima, ocorre um erro que indica que IList<Aula> não contém a definição para Sort(), pois quando vamos à definição de csharpColecoes.Aulas com a tecla F12, veremos que ela foi declarada como um IList<>, interface que não dá suporte ao método de ordenação.
+
+Em Program.cs, tentaremos ordenar de outra maneira, copiando a lista para outra, por exemplo. Só que desta vez não usaremos uma lista somente leitura, e sim alguma que permita, além da ordenação, outros tipos de modificação.
+
+Esta definição de aulas copiadas irá trazer uma lista vazia, e não é isto que queremos. Queremos instanciar uma lista com todas as aulas existentes no curso. Para criar uma lista previamente populada com estas aulas, passaremos a listagem no construtor. Feito isso, poderemos ordená-la propriamente:
+
+//ordenar a lista de aulas
+//csharpColecoes.Aulas.Sort();
+
+//copiar a lista para outra lista
+List<Aula> aulasCopiadas = new List<Aula>(csharpColecoes.Aulas);
+
+//ordenar a cópia
+aulasCopiadas.Sort();
+
+Imprimir(aulasCopiadas);
+Rodaremos com "Ctrl + F5" e veremos que tudo foi feito como gostaríamos. A próxima tarefa será totalizar o tempo do curso. Em Curso.cs, acrescentaremos o seguinte:
+
+public string Instrutor
+{
+    get { return instrutor; }
+    set { instrutor = value; }
+}
+
+public int TempoTotal
+{
+    get
+    {
+        int total = 0;
+        foreach (var aula in aulas)
+        {
+            total += aula.Tempo;
+        }
+        return total;
+    }
+}
+E em Program.cs teremos:
+
+//totalizar o tempo do curso
+Console.WriteLine(csharpColecoes.TempoTotal);
+Rodando a aplicação, o resultado da soma é 60, como total do curso. Poderemos consegui-lo de outra forma: há um conjunto de técnicas chamado LINQ, criado pela Microsoft como um conjunto de extensões que dá suporte a uma série de consultas que podem ser feitas em cima de coleções, possibilitando também o trabalho com banco de dados, XML, e outros.
+
+O que fazemos com nosso acumulador para totalizar o tempo do curso, na verdade, é uma consulta, que pode ser feita de modo completamente diverso, mais simples e elegante.
+
+O método Sum() exige que passemos um seletor, uma expressão lambda e a propriedade da aula que nos interessa, Tempo. Em Curso.cs, então:
+
+get
+{
+    //int total = 0;
+    //foreach (var aula in aulas)
+    //{
+    //  total += aula.Tempo;
+    //}
+    //return total;
+
+    //LINQ = Language Integrated Query
+    //Consulta Integrada à Linguagem
+
+    return aulas.Sum(aula => aula.Tempo);
+}
+Voltaremos a Program.cs e rodaremos novamente para confirmar o mesmo resultado que já tínhamos (60). Para finalizar, imprimiremos este curso, acrescentando a variável csharpColecoes:
+
+//totalizar o tempo do curso
+Console.WriteLine(csharpColecoes.TempoTotal);
+
+Console.WriteLine(csharpColecoes);
+Rodando, teremos como resultado o namespace A25OrdenandoESomando.Curso, porém queremos o nome, duração e demais especificidades do curso. Neste caso, teremos que implementar um método, o ToString().
+
+Quando imprimimos um objeto qualquer que ainda não implementou esta propriedade, chamamos o método ToString() do Object do .NET, que imprimirá o namespace e o nome da classe.
+
+Utilizaremos override, uma operação de sobrescrita de um método cuja classe base já existe (no caso, Object). Para as aulas, usaremos o string.Join juntará as strings da coleção, separando-as por vírgulas. Teremos:
+
+public override string ToString()
+{
+    return $"Curso: {nome}, Tempo: {TempoTotal}, Aulas: {string.Join(",", aulas)}";
+}
+Em Program.cs, rodaremos novamente a aplicação. O resultado é:
+
+Curso: C# Collections, Tempo: 60, Aulas: [título: Trabalhando com Listas, tempo: 21 minutos],[título: Criando uma Aula, tempo: 20 minutos],[título: Modelando com Coleções, tempo: 19 minutos]
+Conseguimos o que gostaríamos!
+
+  //--------------------------------------------------------------------
+
+	* 2 - Aula 09 - Mão na massa
+
+	Começando deste ponto? Você pode fazer o DOWNLOAD completo do projeto do capítulo anterior e continuar seus estudos a partir deste capítulo.
+
+Vamos botar a mão na massa mais uma vez, desta vez para trabalhar com o tipo de coleção mais poderosa e flexível .NET Framework: a classe List<T>, também conhecida como array dinâmico.
+
+Declarando uma lista
+Lembra daquelas 3 variáveis de strings da última aula? Vamos usá-las novamente:
+
+string aulaIntro = "Introdução às Coleções";
+string aulaModelando = "Modelando a Classe Aula";
+string aulaSets = "Trabalhando com Conjuntos";
 
 
+Agora vamos declarar nossa lista.
+
+A sintaxe de uma lista de strings em C
+Diferente de um array, uma lista (List<T>) não possui uma sintaxe especial em C#. Na declaração, usamos a classe genérica List<T>, onde o tipo T especifica a natureza dos seus elementos.
+
+Declarando e inicializando uma lista
+
+
+Pode ser que você queira criar uma vazia. Mas também pode ser que você queira declarar E preencher de uma vez só. Nesse caso, usamos a sintaxe com as chaves {...} incluindo uma lista de itens iniciais.
+
+List<string> aulas = new List<string>
+{
+    aulaIntro,
+    aulaModelando,
+    aulaSets
+};
+Inicializando uma lista vazia
+
+
+Já uma lista vazia tem a sintaxe normal de uma declaração de objeto em C#:
+
+List<string> aulas = new List<string>();
+A lista como um array dinâmico
+Como assim, array dinâmico?
+
+Simples: um array é uma coleção de tamanho fixo, com número estático de elementos, certo?
+
+Então a lista (List<T>) é parecida, só que quando você adiciona/remove elementos dela, o tamanho da lista aumenta ou diminui, respectivamente.
+
+E é por isso mesmo que podemos iniciar uma lista vazia, com tamanho zero, adicionando elementos posteriormente conforme desejado.
+
+Adicionando elementos
+
+
+O jeito mais fácil de alimentar uma lista é adicionando elementos. E isso fazemos com o método Add(), que significa "adicionar" em inglês.
+
+aulas.Add(aulaIntro);
+aulas.Add(aulaModelando);
+aulas.Add(aulaSets);
+Com esse método, um elemento é sempre adicionado ao final da lista.
+
+Ou seja, a lista funciona como uma sequência.
+
+Imprimindo listas
+Lembra de quando tentamos imprimir um array no console?
+
+Que tal fazer o mesmo com uma lista?
+
+Console.WriteLine(aulas);
+Como antes, esse código não imprime os elementos da lista individualmente. Em vez disso, ele só imprime o namespace seguido do nome da classe:
+
+System.Collections.Generic.List`1[System.String]
+Então, novamente, precisamos imprimir os elementos da lista um a um. Vamos criar o método Imprimir() para isso:
+
+private static void Imprimir(List<string> aulas)
+{
+    foreach (var aula in aulas)
+    {
+        Console.WriteLine(aula);
+    }
+
+    Console.WriteLine();
+}
+O código acima utiliza um laço com a instrução foreach. Assim como com arrays, podemos também usar um laço com instrução for:
+
+private static void Imprimir(List<string> aulas)
+{
+    for (int i = 0; i < aulas.Count; i++)
+    {
+        Console.WriteLine(aulas[i]);
+    }
+    Console.WriteLine();
+}
+Mas uma List<T> ainda possui mais uma maneira de varrer a coleção: o método ForEach():
+
+private static void Imprimir(List<string> aulas)
+{
+    aulas.ForEach(aula => 
+    {
+        Console.WriteLine(aula);
+    });
+    Console.WriteLine();
+}
+O que esse método faz?
+
+Ele recebe uma Action, que é um delegate, ou delegado, que encapsula um método que não retorna valor (método void).
+
+Note que, acima, a Action é declarada como expressão lambda:
+
+aula => 
+{
+    Console.WriteLine(aula);
+}
+Uma expressão lambda é uma função anônima (isto é, um método sem nome) que permite criar uma expressão inline, ou em linha, sem a necessidade de referenciar um método externo.
+
+Uma expressão lambda contém três partes:
+
+o parâmetro (aula)
+o operador lambda (=>)
+o corpo do método anônimo ({ Console.WriteLine(aula); })
+Índices
+
+
+Uma List<T> também possui indexador, e é por isso que podemos usar a sintaxe que vimos em arrays:
+
+Console.WriteLine("A primeira aula é " + aulas[0]);
+Note que a mesma sintaxe de índice pode ser usada tanto para ler quanto para modificar items:
+
+aulas[0] = "Trabalhando com Listas";
+Acessando elementos de uma lista
+Para pegar o primeiro elemento da lista (posição 1, índice 0), basta acessar o índice adequado:
+
+Console.WriteLine("A primeira aula é " + aulas[0]);
+Mas também há um outro jeito de fazer isso, utilizando o método First():
+
+Console.WriteLine("A primeira aula é " + aulas.First());
+Note que o método First() não faz parte da classe List<T>: ele é fornecido pela extensão LINQ (Language INtegrated Queries, ou Consultas Integradas à Linguagem), que existe num namespace separado, o namespace System.Linq.
+
+Mas não há muita diferença entre usar índice ou usar First para acessar o primeiro item, não é verdade? Mas o mesmo não podemos dizer quando queremos pegar o último elemento:
+
+Na sintaxe de índice temos:
+
+Console.WriteLine("A última aula é " + aulas[aulas.Count - 1]);
+Já usando LINQ, o método Last() se torna bem mais legível!
+
+Console.WriteLine("A última aula é " + aulas.Last());
+Gostou do LINQ? Aprenda o que há por trás dessa tecnologia de consultas de coleções, fazendo nossos cursos LinQ parte 1 e LinQ parte 2 aqui na Alura!
+
+Procurando elementos
+
+
+Aproveitando um pouco mais das extensões do LINQ, vamos procurar agora algums elementos pelo seu conteúdo.
+
+Encontrando a primeira ocorrência
+"Qual é a primeira aula da lista que contém a palavra 'Trabalhando'"?
+
+Pra responder essa pergunta vamos usar o método First() (lembra dele)?
+
+aulas.First()
+Mas desta vez, vamos utilizar uma sobrecarga, ou overload, ou seja, uma variação deste método, uma que aceita como parâmetro um predicate (predicado) que descreve qual condição deve ser satisfeita nessa busca.
+
+aulas.First(aula => ...))
+E acima, de novo, usamos expressão lambda... melhor você se acostumar com ela!
+
+A condição é: que contém a palavra 'Trabalhando'.
+
+Traduzindo isso para a nossa querida linguagem C#, fica assim:
+
+aulas.First(aula => aula.Contains("Trabalhando"))
+Colocando tudo junto, imprimimos o resultado no console:
+
+Console.WriteLine("A primeira aula 'Trabalhando' é: "
+    + aulas.First(aula => aula.Contains("Trabalhando")));
+Encontrando a última ocorrência
+E pra pegar a última aula da lista com a palavra "Trabalhando"?
+
+Mesma coisa, só que usamos agora o método Last():
+
+Console.WriteLine("A última aula 'Trabalhando' é: "
+    + aulas.Last(aula => aula.Contains("Trabalhando")));
+Mas há um problema nesses métodos: se nenhum elemento for encontrado, tomaremos um erro!
+
+System.InvalidOperationException: 'A sequência não contém elementos de correspondência'
+Então, nesse caso, podemos resolver o problema com um método similar, que devolve o valor default caso não haja ocorrências:
+
+Console.WriteLine("A primeira aula 'Conclusão' é: "
+    + aulas.FirstOrDefault(aula => aula.Contains("Conclusão")));
+E o que seria, exatamente, esse valor default? Depende. Em um objeto ou string, seria um null. Em um decimal, double, etc. seria um zero. E assim por diante.
+
+Revertendo lista
+
+
+Para reverter a ordem de uma lista, usamos o método conhecido, Reverse:
+
+aulas.Reverse();
+Imprimir(aulas);
+Mas qual a diferença para o método que usamos em arrays? Apenas o fato de que esse método não é estático.
+
+E se quisermos voltar a lista para sua ordem original, basta executar o método novamente:
+
+aulas.Reverse();
+Imprimir(aulas);
+Removendo um elemento
+
+
+Podemos remover o elemento de uma lista pela sua posição.
+
+Nesse caso, passando o índice desejado. Se é o último, então índice = aulas.Count - 1.
+
+aulas.RemoveAt(aulas.Count - 1);
+Imprimir(aulas);
+Se você precisar remover uma região de uma lista, o caminho é o método RemoveRange.
+
+Vamos mostrar um exemplo de remoção da última e penúltima aulas da lista:
+
+aulas.RemoveRange(aulas.Count - 2, 2);
+Imprimir(clone);
+O método acima remove uma região (range) que começa no penúltimo elemento (aulas.Count - 2) e abrange 2 elementos.
+
+Mas também podemos remover elemento pelo seu conteúdo. Se nossa lista é de strings, temos que passar uma string como parâmetro:
+
+aulas.Remove("Conclusão");
+Imprimir(aulas);
+Lembre-se de que uma lista é uma coleção dinâmica! Perceba que todos esses métodos para remover elementos acabam afetando o tamanho da lista.
+
+Ordenando lista
+
+
+Listas podem ser ordenadas com o método Sort. Uma lista de strings será posta em ordem alfabética:
+
+aulas.Sort();
+Imprimir(aulas);
+Mas o método Sort tem um outro overload ("sobrecarga") que recebe um IComparison (comparação), que que define o critério de ordenação entre os elementos.
+
+Num exemplo maluco, podemos ordenar nossa lista de aulas por ordem de tamanho da string:
+
+aulas.Sort((a, b) => a.Length.CompareTo(b.Length));
+Imprimir(aulas);
+Copiando lista
+
+
+Para copiar uma lista, a abordagem é bem diferente daquela que vimos com arrays.
+
+A classe List<T> possui um método chamado GetRange(), para "pegar uma região" de uma lista original e assim gerar uma nova lista com esses elementos copiados:
+
+List<string> copia = aulas.GetRange(aulas.Count - 2, 2);
+Imprimir(copia);
+Clonando lista
+
+
+Mas assim como em arrays, se o que você precisa é apenas uma cópia de todos os elementos de uma lista, em vez de usar o método Clone(), você pode clonar criando uma nota instância de List<T> passando como parâmetro do construtor a lista a ser clonada:
+
+List<string> clone = new List<string>(aulas);
+Imprimir(clone);
+Ufa, quanta coisa!
+
+Listas são coleções importantíssimas em .NET Framework. Dominar os fundamentos dessa coleção é vital para um bom aproveitamento da programação com C#.
+
+E sobre o LINQ? Você pode turbinar suas aplicações com essa incrível ferramenta de consultas em C#, fazendo os cursos LinQ parte 1 e LinQ parte 2 aqui na Alura!
+
+A seguir, vamos começar a estudar um outro tipo de coleção: os conjuntos. Até à próxima!
 
 
   //--------------------------------------------------------------------
-  //--------------------------------------------------------------------
+
+	* 2 - Aulaa 12 - Para Saber Mais
+
+	Trabalhando com listas
+Se quisermos armazenar muitas contas na memória, podemos fazer o uso de arrays, o qual já estudamos nos capítulos anteriores. Arrays nos possibilitam guardar uma quantidade de elementos e depois acessá-los de forma fácil.
+
+Mas o problema é que manipular um array não é fácil. Por exemplo, imagine um array com 5 contas guardadas. Se quisermos remover a posição 1, como fazemos? Pois, se apagarmos, precisaremos reordenar todo nosso array. E para inserir um elemento no meio do array? Precisamos "abrir um buraco" no array, empurrando elementos pra baixo, para aí sim colocar o novo elemento no meio.
 
 
 
+Facilitando o trabalho com coleções através das listas
+Para resolver os problemas do array, podemos trabalhar com uma classe do C# chamada List. Para utilizarmos uma lista dentro do código precisamos informar qual é o tipo de elemento que a lista armazenará:
 
+// cria uma lista que armazena o tipo Conta
+List<Conta> lista = new List<Conta>();
+Da mesma forma que criamos a lista de contas, também poderíamos criar uma lista de números inteiros ou de qualquer outro tipo do C#. Essa lista do C# armazena seus elementos dentro de um array.
+
+PARA SABER MAIS:
+
+APOSTILA C# E ORIENTAÇÃO A OBJETOS - Caelum Ensino e Inovação
+https://www.caelum.com.br/apostila-csharp-orientacao-objetos
+
+   //--------------------------------------------------------------------
+   //--------------------------------------------------------------------
+   //--------------------------------------------------------------------
+   //--------------------------------------------------------------------
+
+   * 3 - Aula 01 - O Poder dos Sets
+   
+   No último vídeo vimos bastante sobre listas, e agora começaremos a explorar outros tipos de coleções. Aprenderemos sobre conjuntos (ou "sets" em inglês). No .NET conseguimos implementar conjuntos e, agora que temos Cursos e Aulas, criaremos também Alunos, como sets.
+
+Há duas principais propriedades do set, sendo que a primeira é não permitir duplicidade, ou seja, um elemento não será contido mais de uma vez em um mesmo conjunto. A segunda característica implica nos elementos não serem mantidos em ordem específica quando os incluímos ou removemos.
+
+Para declararmos os alunos como conjuntos, utilizaremos ISet<>, uma interface genérica do .NET que exige que se passe o tipo do elemento deste conjunto (neste caso, string, pois armazenaremos os nomes dos alunos).
+
+Usaremos implementação HashSet<>, também uma classe genérica, com mesmo tipo string. Por termos alunos como conjuntos vazios, começaremos a adicionar elementos:
+
+//declarando set de alunos
+ISet<string> alunos = new HashSet<string>();
+//adicionando: vanessa, ana, rafael
+alunos.Add("Vanessa Tonini");
+alunos.Add("Ana Losnak");
+alunos.Add("Rafael Nercessian");
+
+//imprimindo
+Console.WriteLine(alunos);
+Utilizando o atalho "Ctrl + F5", rodaremos a aplicação. Como já era esperado, obteremos o seguinte:
+
+System.Collections.Generic.HashSet`1[System.String]
+Não conseguimos imprimir cada um dos alunos, então precisaremos do string.Join:
+
+//imprimindo
+Console.WriteLine(alunos);
+Console.WriteLine(string.Join(",", alunos));
+Podemos rodar a aplicação novamente. Obteremos os nomes impressos como gostaríamos.
+
+Qual a diferença entre um conjunto e uma lista?
+Para entendermos isso melhor, adicionaremos mais três alunos a este conjunto:
+
+//adicionando: priscila, rollo, fabio
+alunos.Add("Priscila Stuani");
+alunos.Add("Rafael Rollo");
+alunos.Add("Fabio Gushiken");
+Console.WriteLine(string.Join(",", alunos));
+Rodaremos o código e teremos os alunos novos acrescentados como gostaríamos. Ok, e a ordem? Como vimos, a segunda propriedade dos conjuntos é não sabermos exatamente em que posição estes alunos irão parar. Se voltarmos à tela de impressão, veremos que aparentemente segue-se a ordem de elementos conforme são colocados. Será que isso vale para todos os casos?
+
+Vamos testar remover um aluno e substituir por outro:
+
+//remover ana, adicionando marcelo
+alunos.Remove("Ana Losnak");
+alunos.Add("Marcelo Oliveira");
+//imprimindo de novo
+Console.WriteLine(string.Join(",", alunos));
+Veremos que a aluna Ana foi removida tendo o Marcelo adicionado exatamente em sua posição, o que confirma que o conjunto não garante o posicionamento dos elementos.
+
+Vamos testar a primeira propriedade agora, de não permitir duplicidade, adicionando um aluno já existente ao conjunto:
+
+//adicionando gushiken de novo
+alunos.Add("Fabio Gushiken");
+Console.WriteLine(string.Join(",", alunos));
+Será que isto gerará um erro? Ou conseguiremos adicioná-lo? Rodaremos novamente, e confirmamos que o Fabio não aparece duplicado, aparecendo exatamente onde estava anteriormente. Isto é, quando tentamos acrescentar um elemento que já existia no conjunto, não acontece nada.
+
+Qual a vantagem de se usar um conjunto e não uma lista?
+A maior diferença em relação às listas é que o conjunto é mais rápido na busca de elementos. No Stack Overflow é possível encontrar questões em relação às performances entre HashSet e uma lista, com gráficos e outros exemplos.
+
+Neles, vê-se que quanto mais elementos existem em uma coleção do tipo lista, maior será o tempo de busca por um elemento. O HashSet, por sua vez, tem um tempo de busca constante, independentemente desta quantidade.
+
+Isto ocorre pois, diferentemente de uma lista, que faz uma varredura do primeiro ao último elemento, o HashSet, na busca de um elemento, utiliza uma tabela de espalhamento, que ocupa um lugar com memória muito maior, no entanto direcionando à posição que o elemento irá ocupar.
+
+Então, com relação ao desempenho, podemos dizer que um HashSet possui grande escalabilidade, permitindo que em uma grande escala de elementos, haja bom desempenho. A memória, porém, é um ponto fraco do HashSet: com grande quantidade de elementos, há consumo bem maior de memória.
+
+Voltando ao nosso código, será que é possível ordenar nosso conjunto de alunos por meio do método Sort(), como em uma lista?
+
+A partir do conjunto de alunos, chamaremos este método e tentaremos rodar o código, que gera um erro indicando que o ISet, tipo de alunos, não contém uma definição para Sort. Já tínhamos visto este problema anteriormente com a lista somente leitura.
+
+Utilizaremos uma técnica similar ao que já foi feito, que é copiar o conjunto para uma lista para podermos ordená-lo, já que a lista possui a implementação do método de ordenação Sort. Criaremos uma nova lista de string denominada alunosEmLista. Como argumento no construtor, passaremos nossa coleção de alunos:
+
+//ordenando: sort
+//alunos.Sort();
+//copiando: alunosEmLista
+List<string> alunosEmLista = new List<string>(alunos);
+//ordenando cópia
+alunosEmLista.Sort();
+//imprimindo cópia
+Console.WriteLine(string.Join(",", alunosEmLista));
+Com "Ctrl + F5", rodaremos o código de novo, e veremos que conseguimos ordenar os alunos alfabeticamente!
+
+
+   //--------------------------------------------------------------------
+   
+	* 3 - Aula 03 - Usando Set Dentro do Modelo
+
+	No último vídeo aprendemos a criar uma coleção de alunos como um conjunto, por meio do HashSet. Para colocá-lo em nosso curso, criaremos um projeto Console Application, mantendo-se as classes do projeto original.
+
+Declararemos o curso chamado "C# Colecoes" em main de Program, e também seu instrutor, "Marcelo Oliveira". Em seguida, adicionaremos as aulas:
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        //vamos declarar o curso
+        Curso csharpColecoes = new Curso("C# Colecoes", "Marcelo Oliveira");
+        //... e adicionar 3 aulas a esse curso
+        //Trabalhando com Listas - 21 minutos;
+        //Criando uma Aula - 20 minutos;
+        //Modelando com Coleções - 24 minutos
+        csharpColecoes.Adiciona(new Aula("Trabalhando com Listas", 21));
+        csharpColecoes.Adiciona(new Aula("Criando uma Aula", 20));
+        csharpColecoes.Adiciona(new Aula("Modelando com Coleções", 24));
+    }
+}
+O que vimos até então é um conjunto de strings, sendo que um aluno pode, também, ter uma matrícula. Para trabalharmos com estas duas informações, criaremos uma classe Aluno, para o qual definiremos duas propriedades com o atalho "propfull + TAB + TAB".
+
+Faremos o mesmo para a matrícula, após o qual criaremos o construtor para esta classe.
+
+namespace A32SetNoModelo
+{
+    class Aluno
+    {
+        private string nome;
+
+        public string Nome
+        {
+            get { return nome; }
+            set { nome = value; }
+        }
+
+        private int numeroMatricula;
+
+        public int NumeroMatricula
+        {
+            get { return numeroMatricula; }
+            set { numeroMatricula = value; }
+        }
+    }
+}
+Colocaremos a linha private int numeroMatricula; logo abaixo de private string nome;, selecionaremos ambas e, com "Ctrl + .", escolheremos "Generate constructor 'Aluno(string, int)'".
+
+Voltando à classe Program.cs, instanciaremos três alunos:
+
+//um aluno também tem matrícula!
+//vamos criar a classe Aluno com Nome e NumeroMatricula
+
+//Instanciando 3 alunos com suas matrículas:
+//Vanessa Tonini - 34672
+//Ana Losnak - 5617
+//Rafael Nercessian - 17645
+Aluno a1 = new Aluno("Vanessa Tonini", 34672);
+Aluno a2 = new Aluno("Ana Losnak", 5617);
+Aluno a3 = new Aluno("Rafael Nercessian", 17645);
+Precisaremos matriculá-los em nosso curso, portanto chamaremos um método da classe Curso, denominado Matricula(), ainda inexistente. Vamos adicioná-lo por meio de "Ctrl + ." e "Generate method 'Curso.Matricula'".
+
+//Precisamos matricular os alunos no curso, criando um método
+csharpColecoes.Matricula(a1);
+csharpColecoes.Matricula(a2);
+csharpColecoes.Matricula(a3);
+Navegaremos a este método, que precisaremos implementar, pela tecla F12. Assim, trocaremos Aluno a1 por Aluno aluno. Feito isto, referenciaremos a coleção de alunos chamando um método de adição, Add():
+
+internal void Matricula(Aluno aluno)
+{
+    alunos.Add(aluno);
+}
+O Visual Studio nos informa que alunos não existe na classe Curso, portanto iremos declará-la. Continuaremos trabalhando com conjuntos, porém, desta vez serão de classe Alunos, não mais de strings.
+
+A coleção ReadOnlyCollection receberá o tipo genérico Aluno, e precisaremos resolver a referência utilizando "Ctrl + .", clicando em "using System.Collections.ObjectModel;".
+
+class Curso
+{
+    //alunos deve ser um ISet. Alunos deve retornar ReadOnlyCollection
+    private ISet<Aluno> alunos = new HashSet<Aluno>();
+    public IList<Aluno> Alunos
+    {
+        get
+        {
+            return new ReadOnlyCollection<Aluno>(alunos);
+        }
+    }
+}
+Ao fazermos isto, o programa nos informa que alunos não pode ser convertido para um ISet<>, pois estamos trabalhando com IList<>. Faremos uma conversão de um HashSet para uma lista chamando o método ToList().
+
+get
+{
+    return new ReadOnlyCollection<Aluno>(alunos.ToList());
+}
+Pronto! Agora poderemos voltar ao Program.cs e imprimir os alunos matriculados no curso. Para isso, usaremos um laço foreach, mas antes disso imprimiremos um texto com Console.WriteLine();:
+
+//imprimindo os alunos matriculados
+Console.WriteLine("Imprimindo os alunos matriculados");
+foreach (var aluno in csharpColecoes.Alunos)
+{
+    Console.WriteLine(aluno);
+}
+Vamos rodar o programa e verificar seu funcionamento. Obteremos o seguinte, que não é exatamente o que gostaríamos:
+
+Imprimindo os alunos matriculados
+A32SetModelo.Aluno
+A32SetModelo.Aluno
+A32SetModelo.Aluno
+Como visto anteriormente, para imprimirmos informações sobre um determinado objeto, é preciso sobrescrever o método ToString(), que vem da classe Object, de onde todos os objetos herdam. Acrescentaremos informações como nome e matrícula do aluno. Na classe Aluno.cs, digitaremos:
+
+public override string ToString()
+{
+    return $"[Nome: {nome}, Matrícula: {numeroMatricula}]";
+}
+Rodando-se a aplicação, obteremos a impressão dos três alunos e suas respectivas matrículas conforme desejado, colocando o set dentro do modelo:
+
+Imprimindo os alunos matriculados
+[Nome: Vanessa Tonini, Matrícula: 34672]
+[Nome: Ana Losnak, Matrícula: 5617]
+[Nome: Rafael Nercessian, Matrícula: 17645]
+
+   
+   //--------------------------------------------------------------------
+   
+
+
+   
+   //--------------------------------------------------------------------
+   
+   
+   //--------------------------------------------------------------------
+   
+   
+   //--------------------------------------------------------------------
+   
+   
+   //--------------------------------------------------------------------
+   
+   
+   //--------------------------------------------------------------------
+   
+   
+   //--------------------------------------------------------------------
+   
+   
+   //--------------------------------------------------------------------
+   
+   
+   //--------------------------------------------------------------------
+   
+   
+   //--------------------------------------------------------------------
+   
+   
    //--------------------------------------------------------------------
 
