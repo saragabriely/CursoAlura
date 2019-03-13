@@ -9,6 +9,11 @@ namespace ConsoleCollections
 {
     public class Curso
     {
+
+        // Implementando um dicionário de alunos
+        private IDictionary<int, Aluno> dicionarioAlunos = 
+            new Dictionary<int, Aluno>();
+
         // Alunos deve ser um ISet. Alunos deve retornar um ReadOnlyCollection
         private ISet<Aluno> alunos = new HashSet<Aluno>();
 
@@ -47,7 +52,11 @@ namespace ConsoleCollections
 
         internal void Matricula(Aluno aluno)
         {
-            alunos.Add(aluno);
+            this.alunos.Add(aluno);
+
+            // cada aluno adicionado, será adicionado também no dicionário de alunos
+            this.dicionarioAlunos.Add(aluno.NumeroMatricula, aluno);
+            // será necessário alterar o método de busca (de HashSet, para Dicionario)
         }
 
         public string Nome
@@ -96,6 +105,8 @@ namespace ConsoleCollections
 
         internal Aluno BuscaMatriculado(int numeroMatricula)
         {
+            #region Corpo do método antes de usar o Dicionário de Alunos
+            /* 
             // Varrer a lista de alunos, até encontrar aquele que possui a mtricula 
             // desejada
 
@@ -108,6 +119,26 @@ namespace ConsoleCollections
             }
             // Exceção caso não econtre
             throw new Exception($"Matrícula não encontrada: {numeroMatricula}");
+            */
+            #endregion
+
+            // Consulta através do dicionário
+            //return this.dicionarioAlunos[numeroMatricula];
+
+            // Tentar obter o valor - TryGetValue(entrada, parametro de saída)
+            // Saída - Valor buscado
+
+            Aluno aluno = null;
+
+            this.dicionarioAlunos.TryGetValue(numeroMatricula, 
+                out aluno);
+
+            return aluno;
+        }
+
+        internal void SubstituiAluno(Aluno aluno)
+        {
+            this.dicionarioAlunos[aluno.NumeroMatricula] = aluno;
         }
     }
 }

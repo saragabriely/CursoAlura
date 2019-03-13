@@ -8,6 +8,228 @@ namespace ConsoleCollections
 {
     partial class Program
     {
+        #region 05 - 03 - LinkedList
+        private static void LinkedList_()
+        {
+            // LINKEDLIST
+
+            // Lista de frutas
+            var frutas = new List<string>()
+            {
+                "abacate", "banana", "caqui", "damasco", "figo"
+            };
+
+            // Imprimindo
+            foreach (var fruta in frutas)
+            {
+                Console.WriteLine(fruta);
+            }
+
+            // As frutas são armazenadas no array interno da lista
+            // Adicionar um valor no final da lista, é rápido!
+
+            // Inserir um elemento no meio da lista: é mais complicado.
+            // Pois os elementos têm que ser deslocados para darem espaço ao novo
+            // elemento.
+
+            // Quanto maior a lista, mais ineficiente é a inserção e remoção
+            // de elementos no meio dela!
+
+            // Lista/coleção mais adequada
+
+            // LISTA LIGADA - 
+            // Os elementos da lista ligada não preciam estar em sequencia na´
+            // memória para representar.
+
+            // - Elementos não precisam estar em uma sequencia em memória;
+            // - Cada elemento sabe quem é o anterior e o próximo;
+            // - Cada elemento é um nó que contém um valor.
+
+            // Instanciando uma nova lista ligada: dias da semana
+            LinkedList<string> dias = new LinkedList<string>();
+
+            // Adicionando um dia qualquer: "quarta"
+            var d4 = dias.AddFirst("quarta");
+
+            // "quarta" é o primeiro elemento da lista ligada
+            // cada elemento é um nó: LinkedListNode<T> e não uma string(pois 
+            // não possui informações de ponteiros)
+
+            // Valor da variável d4 ("quarta")
+            Console.WriteLine($"\n d4.Value: {d4.Value}");
+
+            // O linkedList não tem o método Add, porém tem 4 opções:
+            // 1. AddFirst - Como primeiro nó;
+            // 2. AddLast - Ultimo 
+            // 3. AddBefore - Antes de um nó conhecido
+            // 4. AddAfter - Depois de um nó conhecido
+
+            // Vamos adicionar 'segunda', antes de quarta
+            var d2 = dias.AddBefore(d4, "segunda"); // d2 <-> d4
+
+            // Obter o próximo nó: d2.Next
+            // Obter o nó anterior: d4.Previous
+
+            // Adicionar 'terça' depois da segunda
+            var d3 = dias.AddAfter(d2, "terça");    // d2 <-> d3 <-> d4
+
+            // Adicionar 'sexta' depois de 'quarta'
+            var d6 = dias.AddAfter(d4, "sexta");   // d2 <-> d3 <-> d4 <-> d6
+
+            // Adicionar 'sabado' depois de 'sexta'
+            var d7 = dias.AddAfter(d6, "sábado");   // d2 <> d3 <> d4 <> d6 <> d7
+
+            // Adicionar 'quinta' antes de 'sexta'
+            var d5 = dias.AddBefore(d6, "quinta");
+            // d2 <> d3 <> d4 <> d5 <> d6 <> d7
+
+            // Adicionar 'domingo' antes da 'segunda'
+            var d1 = dias.AddBefore(d2, "domingo");
+            // d1 <> d2 <> d3 <> d4 <> d5 <> d6 <> d7
+
+            Console.WriteLine("");
+
+            foreach (var dia in dias)
+            {
+                Console.WriteLine(dia);
+            }
+
+            // LinkedList não dá suporte através de indice! dias[0]
+            // Por isso podemos fazer um laço foreach mas não um for!
+
+            // Para encontrar algum elemento, deverá ser usado o método FIND!
+            var quarta = dias.Find("quarta");
+
+            // Em caso de muitas buscas, o LinkedList não é eficiente.
+
+            // Para removermos um elemento, podemos tanto 
+            // remover pelo valor quanto pela referência do LinkedListNode
+            // dias.Remove("quarta") ou dias.Remove(d4);
+            dias.Remove("quarta");
+
+            Console.WriteLine("");
+
+            foreach (var dia in dias)
+            {
+                Console.WriteLine(dia);
+            }
+
+        }
+        #endregion
+
+        #region 03 e 04 - Conjuntos e Dicionários
+        static void Conjuntos_E_Dicionarios()
+        {
+            #region 03 - Conjuntos
+
+            // Declarando o curso
+            Curso csharpColecoes = new Curso("C# Coleções", "Marcelo Oliveira");
+
+            // Adicionar 3 aulas a esse curso
+            csharpColecoes.Adiciona(new Aula("Trabalhando com Listas", 21));
+            csharpColecoes.Adiciona(new Aula("Criando uma aula", 20));
+            csharpColecoes.Adiciona(new Aula("Modelando com Coleções", 24));
+
+            // Um aluno também tem matricula - Criar classe
+
+            // Instanciando 3 alunos com suas matriculas
+            Aluno a1 = new Aluno("Vanessa Tonini", 34672);
+            Aluno a2 = new Aluno("Ana Losnak", 5617);
+            Aluno a3 = new Aluno("Rafael Nercessian", 17645);
+
+            // Matriculando os alunos no curso - Criando um método
+            csharpColecoes.Matricula(a1);
+            csharpColecoes.Matricula(a2);
+            csharpColecoes.Matricula(a3);
+            //--------------------------------------------
+
+            // Imprimindo os alunos matriculados
+            Console.WriteLine("Imprimindo os alunos matriculados: \n");
+
+            foreach (var aluno in csharpColecoes.Alunos)
+            {
+                Console.WriteLine(aluno);
+            }
+
+            // Imprimir: "O aluno a1 está matriculado?"
+
+            Console.WriteLine($"\n O aluno a1 {a1.Nome} está matriculado? ");
+
+            // Criar método EstaMatriculado
+            Console.WriteLine(csharpColecoes.EstaMatriculado(a1));
+
+            // Vamos instanciar uma aluna (Vanessa Tonini)
+            Aluno tonini = new Aluno("Vanessa Tonini", 34672);
+
+            // Verificar se Tonini está matriculada ou não
+            Console.WriteLine($"\n Tonini está matriculada? " +
+                $"{csharpColecoes.EstaMatriculado(tonini)}"); // Retorna false!
+
+            // Verificar se a1 é igual a tonini
+            Console.WriteLine($"a1 == a Tonini?");
+            Console.WriteLine(a1 == tonini);            // Retorna false!
+
+            // O que ocorreu? a1 é equals a Tonini
+            Console.WriteLine("\n 'a1' é equals a Tonini?");
+            Console.WriteLine(a1.Equals(tonini));
+            // Continua dando como false! Logo, será necessário sobreescrever o 
+            // método do object (que está acima da hierarquia da classe aluno).
+            // São diferentes! Precisamos então implementar o método Equals()
+            #endregion
+
+            //---------------------------------------------------------------
+            //---------------------------------------------------------------
+
+            // 04 - Aula 01 - Introdução a dicionários
+
+            // Limpando o console
+            Console.Clear();
+
+            // Já temos a verificação de alunos matriculados;
+            // Agora a busca será feita pelo número de matricula
+
+            // Pergunta: Quem é o aluno com a matricula 5617?
+            Console.WriteLine("Quem é o aluno com a matricula 5617?");
+
+            // Implementando Curso.BuscaMatriculado
+            Aluno aluno5617 = csharpColecoes.BuscaMatriculado(5617);
+
+            // Imprimindo o aluno5617 encontrado
+            Console.WriteLine($"aluno5617: {aluno5617}");
+            // Funciona! Mas essa busca é eficiente?
+
+            // Introduzindo uma nova coleção: Dicionário
+            // Um dicionário permite associar uma chave (no caso, matricula) a
+            // um valor (o aluno)
+
+            // Implementar um dicionário de alunos em Curso
+
+            // Pergunta: Quem é o aluno 5618?
+            Console.WriteLine("\nQuem é o aluno 5618?");
+
+            Console.WriteLine(csharpColecoes.BuscaMatriculado(5618));
+
+            //-----------------------------------------------------------
+
+            // Tentativa de adicionar um aluno com uma chave existente - ERRO
+            Aluno fabio = new Aluno("Fabio Gushiken", 5617);
+
+            //csharpColecoes.Matricula(fabio);
+
+            // A CHAVE EM UM DICIONÁRIO É ÚNICA!
+
+            // Substituir alunos
+            csharpColecoes.SubstituiAluno(fabio);
+
+            // verificar a substituição
+            Console.WriteLine("\nQuem é o aluno 5617?");
+            Console.WriteLine(csharpColecoes.BuscaMatriculado(5617));
+
+            //-----------------------------------------------------------
+
+        }
+        #endregion
+
         #region Sets - 3 - Aula 01
         private static void PoderDosSets()
         {
@@ -91,6 +313,26 @@ namespace ConsoleCollections
             Console.WriteLine(""); // Pula linha
         }
 
+        #endregion
+
+        #region ImprimirListaAulas
+        // (List<Aula> aulas)
+        private static void ImprimirListaAulas(IList<Aula> aulas)
+        {
+            Console.Clear();
+
+            // Para cada aula em aulas, faça ...
+            foreach (var aula in aulas)
+            {
+                Console.WriteLine(aula); // Imprima no console
+            }
+
+            // Ao tentar imprimir dessa forma, sem declarar o ToString()
+            // na classe Aula, sairá no console apenas:
+            // ConsoleCollections.Program+Aula
+            // Pois, essa classe herda da Object, o padrão de saída será
+            // ConsoleCollections.Program+Aula!
+        }
         #endregion
 
         #region Classe Aula

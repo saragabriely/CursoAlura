@@ -12,13 +12,469 @@ namespace ConsoleCollections
         // Todo o conteúdo abaixo irá ser ajustado/diminuido, para conter apenas
         // algumas explicações dadas nos vídeos!
 
-        #region 04
+        #region 05 - LinkedList
 
 
+
+        #region 05 - 04 - Stack
+        /*
+         Neste vídeo trabalharemos com outro projeto novo, em que implementaremos a solução de um problema de navegação de browser, ou navegador Web. Abrindo o site da Alura no Google Chrome como exemplo, veremos as páginas navegadas anteriormente por meio do botão "Voltar" (a seta para a esquerda localizada ao lado do campo de endereço). Do mesmo modo, se clicarmos no botão de "Avançar" (a seta para a direita), faremos o caminho inverso.
+
+Neste momento veremos como implementar um novo tipo de coleção do .NET Framework, criando inicialmente uma instância de um navegador, sendo que a classe ainda não existe. Utilizaremos "Ctrl + ." e selecionaremos "Generate class 'Navegador'":
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        var navegador = new Navegador();
+    }
+}
+
+internal class Navegador
+{
+    private string atual = "vazia";
+
+    public Navegador()
+    {
+        Console.WriteLine(atual);
+    }
+}
+Rodaremos este código com "Ctrl + F5" e obteremos a impressão:
+
+vazia
+Vamos melhorar isto imprimindo assim:
+
+internal class Navegador
+{
+    private string atual = "vazia";
+
+    public Navegador()
+    {
+        Console.WriteLine("Página atual: " + atual);
+    }
+}
+Ao que será retornado
+
+Página atual: vazia
+Agora simularemos o processo de navegação entre páginas anteriores e posteriores a partir do método NavegarPara(), ainda inexistente, que será extraído, redefinindo-se a página atual da navegação:
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        var navegador = new Navegador();
+
+        navegador.NavegarPara("google.com");
+    }
+}
+
+internal class Navegador
+{
+    private string atual = "vazia";
+
+    public Navegador()
+    {
+        Console.WriteLine("Página atual: " + atual);
+    }
+
+    internal void NavegarPara(string url)
+    {
+        atual = url;
+        Console.WriteLine("Página atual: " + atual);
+    }
+}
+Rodaremos novamente a aplicação e teremos:
+
+Página atual: google.com
+Faremos o mesmo processo para sermos redirecionados aos sites da Caelum e da Alura:
+
+var navegador = new Navegador();
+
+navegador.NavegarPara("google.com");
+navegador.NavegarPara("caelum.com.br");
+navegador.NavegarPara("alura.com.br");
+Desta vez, navegaremos à página anterior criando um método Anterior() e utilizando "Ctrl + .".
+
+internal void Anterior()
+{
+}
+No entanto, quando navegamos a outras páginas, perdemos o valor da página atual.
+
+navegador.NavegarPara("alura.com.br");
+
+navegador.Anterior();
+Portanto, é necessário alterarmos o método NavegarPara() para salvar a página atual a ser substituída. Para isto, criaremos uma coleção denominada Pilha, ou Stack, em inglês.
+
+No escopo da classe Navegador, digitaremos:
+
+private readonly Stack<string> historicoAnterior = new Stack<string>();
+Salvaremos em historicoAnterior a página que deixou de ser a atual, e não poderemos usar Add() para adicioná-la em nosso histórico, pois este método não funciona neste caso de coleção especializada.
+
+Chamaremos outro método, Push(), que receberá nossa página atual.
+
+internal void NavegarPara(string url)
+{
+    historicoAnterior.Push(atual);
+    atual = url;
+    Console.WriteLine("Página atual: " + atual);
+}
+Feito isso, poderemos implementar o método Anterior() para obtenção da página contida no histórico, utilizando Pop(), responsável por pegar o próximo elemento de uma pilha. Ele retorna uma string, portanto precisaremos armazená-la em algum lugar.
+
+internal void Anterior()
+{
+    atual = historicoAnterior.Pop();
+    Console.WriteLine("Página atual: " + atual);
+}
+Rodaremos a aplicação e verificaremos que passamos de uma página atual vazia para google.com, depois para caelum.com.br, alura.com.br e por fim caelum.com.br, o que quer dizer que conseguimos voltar com sucesso.
+
+Navegaremos à página anterior para chegar à página do Google:
+
+var navegador = new Navegador();
+
+navegador.NavegarPara("google.com");
+navegador.NavegarPara("caelum.com.br");
+navegador.NavegarPara("alura.com.br");
+
+navegador.Anterior();
+navegador.Anterior();
+Com "Ctrl + F5", obteremos a sequência de visitações da seguinte forma:
+
+Página atual: vazia
+Página atual: google.com
+Página atual: caelum.com.br
+Página atual: alura.com.br
+Página atual: caelum.com.br
+Página atual: google.com
+Repetindo o procedimento, voltaremos à página vazia. Nosso histórico está funcionando! No entanto, se tentarmos voltar mais uma vez, ocorrerá um erro de exceção sem tratamento, pois a pilha está vazia. Neste caso, não poderemos utilizar o método Pop() pois não existe nada ali para ser removido.
+
+Portanto, colocaremos uma proteção verificando se há algum elemento na pilha, acrescentando uma condição no método Anterior():
+
+internal void Anterior()
+{
+    if(historicoAnterior.Any())
+    {
+        atual = historicoAnterior.Pop();
+        Console.WriteLine("Página atual: " + atual);
+    }
+}
+Rodando o código, o programa não dá mais erro. Continuando, vamos tentar navegar para a frente agora.
+
+var navegador = new Navegador();
+
+navegador.NavegarPara("google.com");
+navegador.NavegarPara("caelum.com.br");
+navegador.NavegarPara("alura.com.br");
+
+navegador.Anterior();
+navegador.Anterior();
+navegador.Anterior();
+navegador.Anterior();
+
+navegador.Proximo();
+No método Main(), implementaremos Proximo(), assim como fizemos com Anterior(). Desta vez, pegaremos o histórico do próximo, ou seja, teremos dois tipos de históricos. Na classe Navegador criaremos uma nova pilha para este novo histórico:
+
+private readonly Stack<string> historicoAnterior = new Stack<string>();
+private readonly Stack<string> historicoProximo = new Stack<string>();
+E o código referente ao novo método ficará assim:
+
+internal void Proximo()
+{
+    atual = historicoProximo.Pop();
+    Console.WriteLine("Página atual: " + atual);
+}
+Vamos rodar e ver o que acontece?
+
+Deu erro! Somos informados de que a pilha está vazia, precisaremos alimentá-la. Isto é, ao navegarmos a uma página anterior, precisaremos alimentar a pilha do historicoProximo.
+
+Voltando ao método Anterior(), faremos algumas alterações:
+
+if(historicoAnterior.Any())
+{
+    historicoProximo.Push(atual);
+    atual = historicoAnterior.Pop();
+    Console.WriteLine("Página atual: " + atual);
+}
+Rodando o código de novo, teremos que, após voltarmos à página vazia, acessamos google.com com sucesso. Ao seguirmos à próxima página, alimentaremos o histórico anterior, pois elas se complementam.
+
+Caso nosso historicoProximo possuir algum elemento, aí sim será possível navegarmos adiante. Caso contrário obteremos o mesmo erro de pilha vazia.
+
+internal void Proximo()
+{
+    if(historicoProximo.Any())
+    {
+        historicoAnterior.Push(atual);
+        atual = historicoProximo.Pop();
+        Console.WriteLine("Página atual: " + atual);
+    }
+}
+A aplicação roda com sucesso, e conseguimos implementar estas duas funcionalidades, os dois botões do navegador. Vimos como funciona a pilha, com a prioridade de que "o último elemento que entra é o primeiro que sai", o que chamamos de LIFO, em inglês, "Last in, first out".
+         */
+        #endregion
+
+        #region 05 - 01 - LinkedList
+        /*
+         * Isso mesmo! Cada elemento de um LinkedList é um nó, ou seja, um objeto LinkedListNode, que mantém duas referências, apontando para o nó anterior e outra apontando para o próximo nó, e essa lista pode ser navegada pela ordem definida pela associação entre esses nós.
+         * 
+         Neste vídeo trabalharemos com um novo projeto Console Application, e um tipo de coleção do .NET Framework. Antes, revisaremos o que foi visto até aqui criando uma lista de frutas, que inicializaremos com alguns valores (frutas).
+
+List<string> frutas = new List<string>
+{
+    "abacate", "banana", "caqui", "damasco", "figo"
+};
+//vamos imprimir essa lista
+foreach (var fruta in frutas)
+{
+    Console.WriteLine(fruta);
+}
+Rodando a aplicação, teremos:
+
+abacate
+banana
+caqui
+damasco
+figo
+Esta lista é armazenada em memória em um array interno, com posições sequenciais. Caso queiramos adicionar um elemento ao fim da lista, apenas a última posição será alterada, sendo possível removê-lo posteriormente, e redimensionar a lista.
+
+Para inserirmos um elemento no meio da lista, algo que exige mais esforço computacional, usaremos como exemplo a imagem abaixo, com caju ocupando a posição após banana, antes ocupada por caqui. damasco e figo, que estavam na sequência, também serão deslocados à direita.
+
+frutas ocupando retângulos alinhados horizontalmente e representando a memória, e setas vermelhas indicando deslocamento de elementos
+
+Por causa dos deslocamentos, há necessidade de maior processamento. Se quisermos remover caju, o que acontecerá? Não poderemos ter um "buraco" no meio do array de listagem. Neste caso, os elementos seguintes precisarão ser realocados.
+
+Para uma lista pequena, este processo é relativamente rápido, porém o desempenho será afetado conforme o tamanho da lista, sendo portanto ineficiente para listas maiores. Para estes casos, em que inserções ou remoções ocorrem frequentemente, é necessário utilizar outro tipo de coleção do .NET Framework, a Lista Ligada (ou linked list).
+
+Com ela, poderemos esquecer a organização em memória sequenciada, já que seus elementos não precisam estar memorizados em sequência para representar a ordem desejada. Cada elemento contém sua posição anterior, atual e seguinte, e chamamos isto de nó. Ou seja, cada elemento é um nó que contém um valor.
+
+Na imagem abaixo, temos em memória uma lista ligada com cada valor representando um dia da semana. d1 é domingo, e aparece ao fim da lista; d5 é quinta-feira, aparece antes de domingo e depois de d7, que é sábado. Como se mantém uma ordem em uma lista dessas?
+
+memória sendo representada com uma lista alinhada horizontalmente, com os valores dentro de círculos coloridos
+
+No diagrama abaixo, veremos as ligações entre os elementos (ou nós) desta lista ligada:
+
+a mesma memória com os valores dentro de círculos coloridos, agora com setas apontando um elemento a outro em ordem numérica
+
+O elemento inicial, d1 (domingo), aponta ao d2 (segunda-feira), que por sua vez aponta para d3 (terça), e assim por diante. Neste momento, instanciaremos uma lista ligada cujos elementos precisarão ser incluídos um a um.
+
+Como a lista ainda está vazia, adicionaremos o primeiro elemento (AddFirst()) passando uma string com o valor quarta.
+
+//instanciando uma nova lista ligada: dias da semana
+LinkedList<string> dias = new LinkedList<string>();
+//adicionando um dia qualquer: "quarta"
+var d4 = dias.AddFirst("quarta");
+Quando passamos o mouse em cima de AddFirst(), vê-se que é retornado um nó chamado LinkedListNode. É ele que irá armazenar o valor quarta, agora o primeiro elemento da nossa lista ligada. Cada elemento desta lista é um nó LinkedListNode<T>, e não uma string, como poderíamos imaginar.
+
+Isto é necessário pois uma string é um objeto que não contém informações de ponteiros, então, para a implementação desta lista ligada, a Microsoft precisou de um tipo de objeto que encapsulasse o valor - neste caso a string -, sendo que LinkedListNode é o objeto com os ponteiros referentes a posições anteriores e posteriores.
+
+Para alcançarmos o valor de d4, acessaremos a propriedade d4.Value:
+
+//mas e o valor "quarta"? está na propriedade d4.Value
+Console.WriteLine("d4.Value: " + d4.Value);
+Com "Ctrl + F5", rodaremos a aplicação. O resultado impresso é:
+
+d4.Value: quarta
+E se quisermos adicionar mais itens? É importante notar que o LinkedList não possui Add, como vimos em outras coleções! Na verdade, ele possui estas quatro formas de adição:
+
+como primeiro nó (AddFirst());
+como último nó (AddLast());
+antes de um nó previamente conhecido (AddBefore());
+depois de um nó previamente conhecido (AddAfter()).
+Vamos adicionar, então, um novo valor (segunda-feira), antes de quarta-feira:
+
+var d2 = dias.AddBefore(d4, "segunda");
+Com d2 e d4 ligados entre si, como acessaremos um nó através do outro? Para pegar o nó seguinte a partir de d2, por exemplo, teremos que d2.Next é igual a d4. Em relação a d4, colocaremos que d4.Previous é igual a d2.
+
+Continuando com nossa lista ligada, adicionaremos terça depois de segunda-feira:
+
+var d3 = dias.AddAfter(d2, "terça");
+Neste momento d3 se encontra entre dois elementos, d2 e d4. Perceba que os "ponteiros", ou referências de ambos os elementos foram redirecionados para d3!
+
+Em seguida, adicionaremos sexta depois de quarta-feira:
+
+var d6 = dias.AddAfter(d4, "sexta");
+d6 agora aparece na última posição da fila. Continuando, acrescentaremos sábado após sexta:
+
+var d7 = dias.AddAfter(d6, "sábado");
+Colocando quinta antes de sexta, teremos:
+
+var d5 = dias.AddBefore(d6, "quinta");
+Para domingo antes de segunda, digitaremos:
+
+var d1 = dias.AddBefore(d2, "domingo");
+Visualmente, a memória ficará assim:
+
+memória com valores dentro de círculos coloridos, com setas apontando um elemento a outro nas dois sentidos
+
+Imprimiremos a lista ligada da mesma forma que fazemos com uma lista qualquer, por meio do foreach, que a varrerá.
+
+foreach (var dia in dias)
+{
+    Console.WriteLine(dia);
+}
+Rodando o código, teremos com sucesso a impressão:
+
+domingo
+segunda
+terça
+quarta
+quinta
+sexta
+sábado
+No entanto, não conseguiremos imprimir utilizando o laço for, pois o LinkedList não dá suporte ao acesso por meio de índices. No caso de querermos usar dias[0], por exemplo, teremos uma sintaxe inválida.
+
+Como já foi dito, LinkedList facilita muito o acesso à inserção e remoção rápidas, porém, ele não é tão eficiente na realização de buscas. Para isto, utilizaremos o método Find(), como neste exemplo:
+
+var quarta = dias.Find("quarta");
+Poderemos remover um elemento através do nome do nó, como também pela referência do LinkedListNode. Para removermos quarta-feira, existem as opções dias.Remove("quarta") ou dias.Remove(d4).
+
+Rodaremos a aplicação após escolhermos uma delas, imprimindo novamente a lista com o laço foreach:
+
+dias.Remove("quarta");
+foreach (var dia in dias)
+{
+    Console.WriteLine(dia);
+}
+Obteremos o seguinte:
+
+domingo
+segunda
+terça
+quinta
+sexta
+sábado
+Neste vídeo vimos os prós e os contras de implementarmos listas ligadas!
+         */
+        #endregion
 
         #endregion
 
-        #region 03
+        #region 04 Dicionários
+
+        #region 04 - Aul 04 - Funcionamento de um dicionário 
+        /*
+         O que acontecerá se tentarmos adicionar ao nosso dicionário um aluno com uma chave preexistente? Vamos fazer um teste cadastrando e rodando a aplicação com um novo aluno cujo número de matrícula é 5617:
+
+Aluno fabio = new Aluno("Fabio Gushiken", 5617);
+csharpColecoes.Matricula(fabio);
+Aparece um erro: "Já foi adicionado um item com a mesma chave"!!
+
+Uma das características de um dicionário é justamente esta: a chave é única. Não é possível armazenar mais de um valor em uma chave. Vamos comentar a linha que acabamos de criar e testar o que acontece ao substituirmos o aluno com a chave 5617 pelo valor do aluno fabio.
+
+Na classe Curso, teremos:
+
+//e se quisermos trocar o aluno que tem a mesma chave?
+csharpColecoes.SubstituiAluno(fabio);
+Criaremos o método SubstituiAluno() com o cursor em cima e usando "Ctrl + .". Com F12, navegaremos a ele e o implementaremos. Este código de substituição precisará atribuir um novo valor àquele preexistente na chave que estamos verificando. Para isto, referenciaremos o dicionário e usaremos uma sintaxe muito similar àquela de arrays, com colchetes.
+
+internal void SubstituiAluno(Aluno aluno)
+{
+    this.dicionarioAlunos[aluno.NumeroMatricula] = aluno;
+}
+Voltaremos a Program.cs e faremos uma pergunta para verificar qual aluno possui a matrícula 5617.
+
+//pergunta: "Quem é o Aluno 5617 agora?"
+Console.WriteLine("Quem é o Aluno 5617 agora?");
+Console.WriteLine(csharpColecoes.BuscaMatriculado(5617));
+Rodaremos a aplicação mais uma vez, e obteremos:
+
+Quem é o Aluno 5617 agora?
+[Aluno: Fabio Gushiken, matricula: 5617]
+Deste modo conseguimos substituir um aluno para uma matrícula que já existia antes. Para terminar, veremos como um dicionário é implementado internamente. Assim como o HashSet, ele também faz uso de um código de dispersão. No diagrama abaixo veremos que de um lado há as chaves e, do outro, os valores.
+
+esquema de tabela de dispersão, com os valores no centro, as chaves (nomes dos alunos à esquerda) e os valores (nomes e matrículas) à direita
+
+Ao buscarmos pela chave, o .NET Framework irá pegá-la internamente e rodar um algoritmo para a obtenção do código de dispersão, que indicará o grupo de valores em que cairá o valor que estamos armazenando, como se fossem gavetas ou caixas que os armazenam.
+
+A busca pode ser mais ou menos eficiente de acordo com o código de dispersão. Na grande maioria dos casos, como no do dicionário, é possível confiar no algoritmo gerado no GetHashCode do próprio programa. Observando o diagrama, para obtermos o valor Rafael Rollo ou Rafael Nercessian, ambos caíram no mesmo grupo, pois seus valores foram calculados para o mesmo hash code (código de dispersão) do dicionário.
+
+No próximo vídeo veremos como trabalhar com listas ligadas, pilhas e filas. Até lá!
+         */
+        #endregion
+
+        #region 04 - Aula 01 - Introdução a dicionários
+        /*
+         Continuando com o nosso projeto, trabalharemos com dicionários e, para começar, limparemos o console. Sabemos que existe um mecanismo para a verificação da existência do aluno no curso por meio do HashSet, agora utilizaremos o método de busca para saber que aluno possui determinado número de matrícula. Perguntaremos isto ao console e implementaremos um novo método chamado BuscaMatriculado(), a ser chamado na classe Curso.
+
+//limpando o console
+Console.Clear();
+
+//já temos método para saber se o aluno está matriculado.
+//mas agora precisamos buscar aluno por número de matrícula
+
+//pergunta: "Quem é o aluno com matrícula 5617?"
+Console.WriteLine("Quem é o aluno com matrícula 5617?");
+//implementando Curso.BuscaMatriculado
+Aluno aluno5617 = csharpColecoes.BuscaMatriculado(5617);
+Como o método ainda não existe, posicionaremos o mouse em cima dele e, com "Ctrl + .", geraremos o método, para o qual navegaremos por meio do F12 e o implementaremos. Varreremos a coleção até encontrarmos o aluno cujo número de matrícula é 5617. Caso isto não ocorra, será lançada uma exceção:
+
+internal Aluno BuscaMatriculado(int numeroMatricula)
+{
+    foreach (var aluno in alunos)
+    {
+        if (aluno.NumeroMatricula == numeroMatricula)
+        {
+            return aluno;
+        }
+    }
+    throw new Exception("Matrícula não encontrada: " + numeroMatricula);
+}
+Voltando a Program.cs, imprimiremos o resultado (o aluno encontrado):
+
+//imprimindo o aluno5617 encontrado
+Console.WriteLine("aluno5617: " + aluno5617);
+Vamos rodar a aplicação e ver o que acontece? Obteremos o seguinte:
+
+Quem é o aluno com matrícula 5617?
+aluno5617: [Aluno: Ana Losnak, matricula: 5617]
+Será que esta busca pode ser melhorada?
+
+O .NET Framework felizmente possui um tipo de coleção específico, o dicionário, que permite associar uma chave (no caso, a matrícula) a um valor (o nome do aluno).
+
+No início da classe Curso, em que já temos o conjunto (HashSet) declarado, implementaremos um dicionário para trabalho paralelo, bem como a interface privada IDictionary<>:
+
+class Curso
+{
+    //implementando um dicionário de alunos
+    private IDictionary<int, Aluno> dicionarioAlunos = new Dictionary<int, Aluno>();
+
+    //...
+}
+Por ora, o dicionário está vazio, tendo sua utilidade assim que for alimentada, a partir do método de matricular os alunos.
+
+internal void Matricula(Aluno aluno)
+{
+    this.alunos.Add(aluno);
+    this.dicionarioAlunos.Add(aluno.NumeroMatricula, aluno);
+}
+Agora é necessário modificarmos o método de busca para que ela seja feita não mais no HashSet e sim no dicionário. Vamos navegar ao método BuscaMatriculado() e trocar seu corpo por outro tipo de busca:
+
+internal Aluno BuscaMatriculado(int numeroMatricula)
+{
+    return this.dicionarioAlunos[numeroMatricula];
+}
+Indo a Program.cs, rodaremos a aplicação e obteremos o mesmo resultado anterior, com a aluna Ana Losnak. A troca foi efetuada com sucesso! No entanto, pode ser que busquemos uma chave inexistente, como 5618, por exemplo. O que ocorrerá neste caso?
+
+//quem é o aluno 5618?
+Console.WriteLine("Quem é o aluno 5618?");
+Console.WriteLine(csharpColecoes.BuscaMatriculado(5618));
+Ao rodarmos a aplicação, ocorre um erro que diz: a chave fornecida não estava presente no dicionário. Talvez tenhamos que tenhamos que tratar isto para que o erro não apareça ao usuário final. Poderemos retornar um valor nulo, por exemplo. Para isso, modificaremos o método BuscaMatriculado(), para o qual iremos utilizando a tecla F12.
+
+Em vez de utilizarmos a sintaxe dos colchetes, chamaremos outro método em dicionarioAlunos para "tentarmos a obtenção do valor" (TryGetValue), passando a mesma chave que estávamos buscando anteriormente, juntamente com um parâmetro de saída, retornando exatamente o valor que buscamos.
+
+Como aluno ainda não existe no escopo deste método, precisaremos declará-lo, e ele será preenchido pelo TryGetValue caso seja encontrado no dicionário, neste caso, retornando:
+
+internal Aluno BuscaMatriculado(int numeroMatricula)
+{
+    Aluno aluno = null;
+    this.dicionarioAlunos.TryGetValue(numeroMatricula, out aluno);
+    return aluno;
+}
+Feita esta implementação, voltaremos a Program.cs e rodaremos a aplicação. Veremos que a pergunta "Quem é o aluno 5618" é feita, seguida de uma linha em branco, ou seja, concatenando-se nulo.
+         */
+        #endregion
+
+        #endregion
+
+        #region 03 - Sets, HashCode, Equals
 
         #region 03 - Aula 10 - Para saber mais
         /*
