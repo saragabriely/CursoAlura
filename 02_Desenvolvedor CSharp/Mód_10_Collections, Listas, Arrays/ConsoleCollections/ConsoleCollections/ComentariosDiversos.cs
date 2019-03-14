@@ -12,9 +12,792 @@ namespace ConsoleCollections
         // Todo o conteúdo abaixo irá ser ajustado/diminuido, para conter apenas
         // algumas explicações dadas nos vídeos!
 
-        #region 05 - LinkedList
+        #region Comentários - Qual collection usar?
+        /*
+         *  QUEUE (FILA) - Coleção genérica
+            . O primeiro que entra é o primeiro que sai?
+            - Remoção na mesma ordem de entrada
+            - Adição: Enqueue;
+            - Remoção: Dequeue;
+
+          STACK (PILHA)
+          . O último a entrar, será o primeiro a sair.
+          . Adição: Push;
+          . Remoção: Pop;
+
+        LIST<T> - Coleção mais flexivel e mais poderosa
+        . É possível trocar a ordem de entrada dos elementos;
+        . É possível ordenar a lista;
+
+        ARRAY
+        . Lidar com arquivos de baixo nível (bytes, numeros inteiros) e 
+        coleções de tamanho fixo;
+        . O problema é manipular o tamanho do array - o melhor seria converter 
+        e trabalhar com uma lista;
+
+        LINKED LIST (LISTA LIGADA)
+        . Inserção e/ou remoção de muitos dados;
+        . É possível inserir um elemento em qualquer posição da coleção;
+        . cada elemento é chamado de nó - que possui dois ponteiros/referencias
+        que mostra o nó anterior e o próximo nó;
+        . O unico porém é que o acesso a um elemento de forma indexada, é 
+        impossível.
+
+        HASH SET
+        . Verificar se um elemento está contido ou não em uma coleção;
+        . Verificar se um elemento está em um outro conjunto;
+
+        DICTIONARY<TKey, TValue>
+        . Ideal para buscar um valor a partir de uma chave: buscar um elemento
+        através do CPF ou do CNPJ - trabalha com chave e valor;
+        . è necessário fornecer o tipo da chave e o tipo do valor.
 
 
+         */
+        #endregion
+
+        #region 06 - 01 - Qual collection usar?
+        /*
+         * Apresentaremos um pequeno guia para ajudarmos na escolha da coleção adequada para determinadas situações. Vamos imaginar uma coleção em que sempre iremos remover o primeiro elemento colocado, isto é, a remoção será feita na mesma ordem da entrada dos elementos.
+
+Como exemplo, usaremos uma fila de pedágio, ou uma fila de carros em um estacionamento, em que é necessário manter-se a ordem de prioridade. Assim, a coleção adequada é uma fila, ou Queue<T>, em inglês.
+
+Trata-se de uma coleção genérica que receberá os elementos adicionados na fila pelo método Enqueue(). Os mesmos serão removidos usando-se Dequeue() e, ao fazermos isto, os elementos são reposicionados de forma que o segundo passa a ser o primeiro, e assim sucessivamente.
+
+Há também situações em que o elemento removido será sempre o último que foi adicionado. Isto ocorre com a coleção genérica pilha, ou Stack<T>, em inglês. Nela, os elementos são adicionados usando-se Push(), e removidos com o método Pop().
+
+Existe um tipo de coleção, a mais flexível e poderosa de todas: a List<T>, uma implementação do .NET Framework que permite a inserção de um elemento em qualquer posição da coleção (Insert()), ou especificamente no fim (Add() e AddRange()). É possível também remover elementos do meio da coleção, com Remove() ou RemoveRange(), limpar a coleção (Clear()) ou reverter sua ordem (Reverse()). Pode-se também ordená-la por um critério qualquer, com Sort().
+
+Caso tenhamos que lidar com arquivos de baixo nível (bytes, números inteiros, por exemplo) ou tamanho fixo, quase sempre utilizamos uma matriz, ou array, em inglês, uma coleção de tamanho fixo que facilita o uso através do índice da coleção.
+
+data[27] = #9EA3A7
+Tomando como exemplo um array cujas informações gráficas, no caso, uma cor, um pixel sendo lido em uma determinada posição, são mantidas, é bastante simples acessar os dados de forma indexada. No entanto, quando precisamos alterar sua dimensão, é mais recomendado convertê-lo para uma lista.
+
+Ainda, há situações em que é necessário inserir ou remover muitos dados em uma coleção, de forma rápida. Nestes casos, pode-se considerar utilizar uma lista ligada, ou LinkedList<T>. Com ele, é possível adicionar um elemento no início (AddFirst()), no fim (AddLast()), antes (AddBefore()) ou depois (AddAfter()) de outro elemento da mesma coleção.
+
+O que caracteriza uma lista ligada é que cada elemento é chamado de nó, remetendo à classe do .NET Framework denominada LinkedListNode. Estes nós possuem dois ponteiros (ou duas referências) que apontam tanto para o elemento anterior quanto para o próximo, de forma a manter a ordem de entrada dos elementos nesta lista, o que possibilida a inserção ou remoção independentemente de sua posição.
+
+As desvantagens de uma lista ligada implicam no acesso a um elemento de forma indexada, o que é impossível, e na busca de elementos em uma lista, causando um processo bastante demorado. Nestes casos, recomenda-se o uso de List<T>.
+
+Em uma situação de operações com conjuntos matemáticos, para saber se um elemento está contido em uma coleção ou não, ou para saber se duas coleções possuem um ou mais elementos em comum, utilizaremos HashSet<T>.
+
+Outro tipo de coleção ideal para a busca de um valor a partir de uma chave a ser armazenada (um cliente por um CPF, por exemplo, ou uma empresa através do CNPJ) é o dicionário, ou Dictionary<TKey, TValue>, para o qual forneceremos o tipo da chave e do valor.
+
+Para saber mais
+Alguns cursos complementares:
+
+Curso Algoritmos II: MergeSort, QuickSort, Busca Binária e Análise de Algoritmo
+https://cursos.alura.com.br/course/projetos-de-algoritmos-2
+
+Curso C# III: Tópicos Avançados
+https://cursos.alura.com.br/course/csharp-topicos-avancados
+
+Curso Entity LinQ parte 1: Crie queries poderosas em C#
+https://cursos.alura.com.br/course/linq-c-sharp
+         */
+        #endregion
+
+        /* IList é uma sequência e aceita elementos duplicados. ISet não aceita
+         duplicados e não define ordem.
+         */
+
+        #region 05 - LinkedList, Queue, Stack (fila, pilha e lista ligada)
+
+        #region 05 - 09 - Mão na Massa: Filas
+        /*
+         E vamos agora começar nosso último Mão na Massa do curso!
+
+Em muitas situações do dia-a-dia, nos deparamos com o tipo de coleção que veremos agora: as filas, que em inglês são chamadas de queues.
+
+No .NET Framework, esse tipo de coleção é implementada pela classe Queue<T>, onde T é o tipo de dado armazenado nos elementos.
+
+Vamos criar um novo projeto Console Application para lidar com as filas em C#.Nosso programa fará a implementação de uma fila de carros passando pelo pedágio.
+
+Na classe Program, colocamos uma variável estática chamada pedagio, que conterá os nomes dos carros enfileirados.
+
+static Queue<string> pedagio = new Queue<string>();
+O primeiro veículo a entrar na fila será uma van. Para isso, armazenamos seu nome numa variável
+
+string veiculo = "van";
+E para deixar registrado na tela, colocamos o código que imprime o nome do carro que entrou na fila.
+
+Console.WriteLine($"Entrou na fila: {veiculo}");
+Agora vamos adicionar esse primeiro carro à fila do pedágio. Note que a classe Queue não possui método Add, pois o elemento não está simplesmente sendo adicionado a uma fila. O elemento está sendo enfileirado, o que em inglês é chamado de enqueued. Logo, o método adequado é Enqueue, ou “enfileirar”:
+
+pedagio.Enqueue(veiculo);
+Quando um elemento é enfileirado, ele assume a posição “no final da fila”. Vamos adicionar um método local, chamado Enfileirar, para encapsular essa funcionalidade e ainda exibir os veículos da fila no console:
+
+string veiculo = "van";
+Enfileirar(veiculo);
+private static void Enfileirar(string veiculo)
+{
+    Console.WriteLine($"Entrou na fila: {veiculo}");
+    pedagio.Enqueue(veiculo);
+    foreach (var v in pedagio)
+    {
+        Console.WriteLine(v);
+    }
+}
+Refatorando um pouco mais, vamos extrair o método que imprime a fila de veículos:
+
+private static void Enfileirar(string veiculo)
+{
+    Console.WriteLine($"Entrou na fila: {veiculo}");
+    pedagio.Enqueue(veiculo);
+    ImprimirFila();
+}
+private static void ImprimirFila()
+{
+    Console.WriteLine("FILA:");
+    foreach (var v in pedagio)
+    {
+        Console.WriteLine(v);
+    }
+}
+Voltando à nossa fila, vamos começar a chamar o método Enfileirar, visualizando o primeiro elemento da coleção pedagio.
+
+Enfileirar("van");
+
+
+Entrou na fila: van
+FILA:
+van
+Pressione qualquer tecla para continuar. . .
+Ao enfileirarmos o segundo veículo, ele assumirá a posição após o último carro.
+
+Enfileirar("kombi");
+
+
+Entrou na fila: kombi
+FILA:
+van
+kombi
+E assim prosseguimos enfileirando veículos até que o último seja adicionado.
+
+Enfileirar("guincho");
+
+
+Entrou na fila: guincho
+FILA:
+van
+kombi
+guincho
+Enfileirar("pickup");
+
+
+Entrou na fila: pickup
+FILA:
+van
+kombi
+guincho
+pickup
+Por outro lado, temos que liberar os carros que estão esperando no pedágio. Mais uma vez, temos que lembrar que uma fila tem regras de prioridade não só para entrada, mas também saída. O primeiro carro a sair é o primeiro que entrou.
+
+Vamos chamar o método que remove elementos da fila, ou seja, que “desenfileira” os carros.
+
+string veiculo = pedagio.Dequeue();
+Note que, ao desenfileirar, não estamos apenas “eliminando” um elemento da fila. Estamos também obtendo esse elemento. Precisamos saber qual foi o carro que saiu da fila, logo armazenamos seu valor na variável veiculo.
+
+Vamos encapsular essa funcionalidade criando o novo método estático Desenfileirar, que não só remove o elemento da fila, mas também imprime esse elemento e também imprime os carros restantes na fila do pedágio.
+
+private static void Desenfileirar()
+{
+    string veiculo = pedagio.Dequeue();
+    Console.WriteLine($"Saiu da fila: {veiculo}");
+    ImprimirFila();
+}
+Então podemos chamar esse método, sem parâmetro nenhum:
+
+Desenfileirar();
+
+
+Saiu da fila: van
+FILA:
+kombi
+guincho
+pickup
+Note como foi o primeiro veículo que saiu da fila do pedágio.
+
+Vamos proceder desenfileirando os demais carros da fila:
+Desenfileirar();
+
+
+Saiu da fila: kombi
+FILA:
+guincho
+pickup
+E se quisermos ver o próximo elemento da fila, porém sem removê-lo? Podemos “dar uma olhada” no elemento sem desenfileirar. Em inglês, “dar uma espiada” é “peek”, logo vamos usar o método Peek(), que retorna o próximo elemento a sair da fila:
+
+if (pedagio.Peek() == "guincho")
+{
+    Console.WriteLine("guincho está fazendo o pagamento.");
+}
+Desenfileirar();
+
+
+guincho está fazendo o pagamento.
+Saiu da fila: guincho
+FILA:
+pickup
+E assim sobrou apenas um veículo para passar pelo pedágio: pickup.
+
+E o que acontece se tentarmos desenfileirar depois do último elemento ter sido removido?
+
+Desenfileirar();
+Desenfileirar();
+Exceção Sem Tratamento: System.InvalidOperationException: Fila vazia.
+   em System.ThrowHelper.ThrowInvalidOperationException(ExceptionResource resource)
+   em System.Collections.Generic.Queue`1.Peek()
+Obviamente, tomamos uma exceção!
+
+Então, se precisarmos colocar uma proteção na nossa fila contra esse tipo de exceção, podemos usar o método Any() para saber se há pelo menos um carro na fila do pedágio:
+
+if (pedagio.Any())
+{
+    if (pedagio.Peek() == "guincho")
+    {
+        Console.WriteLine("guincho está fazendo o pagamento.");
+    }
+
+    string veiculo = pedagio.Dequeue();
+    Console.WriteLine($"Saiu da fila: {veiculo}");
+    ImprimirFila();
+}
+Resumindo, uma fila é uma coleção protegida contra inserção e remoção aleatória de elementos: em vez disso, uma fila possui regra de prioridade, em que o primeiro que entre é o primeiro que sai (PEPS), também chamada em inglês de first-in-first-out (FIFO).
+
+E assim terminamos nosso Mão na Massa! Obrigado e até a próxima!
+         */
+        #endregion
+
+        #region 05 - 08 - Mão na Massa: Pilhas
+        /*
+         * Uma “Stack” é uma coleção que funciona exatamente como uma pilha na vida real: por exemplo, numa pilha de pratos para serviço de um buffet de um restaurante, os últimos pratos colocados na pilha são os primeiros a serem retirados dela.
+
+Vamos usar um outro tipo de metáfora para aprender como funcionam pilhas: um navegador web começa a navegar pelas páginas, seguindo os links e abrindo novas páginas. Nesse percurso, os botões anterior e próximo nos auxiliam a navegar para os itens navegados anteriormente. Essa funcionalidade é implementada internamente como duas pilhas de urls: a primeira pilha permite acessar as páginas anteriores e a segunda as próximas páginas.
+
+Na implementação dessa funcionalidade, vamos criar um projeto Console Application que irá consumir uma nova classe, que chamaremos de Navegador.
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        var navegador = new Navegador();
+    }
+}
+internal class Navegador
+{
+    public Navegador()
+    {
+
+    }
+}
+Assim que o navegador é instanciado, queremos saber qual a página atual que está sendo exibida. Vamos imprimir a página atual, que no início da navegação é vazia.
+
+internal class Navegador
+{
+    public Navegador()
+    {
+        Console.WriteLine("vazia");
+    }
+}
+porém, queremos que essa url seja armazenada numa variável. Agora precisamos criar a variável que chamaremos de atual
+
+private string atual = "vazia";
+public Navegador()
+{
+    Console.WriteLine(atual);
+}
+vazia
+Pressione qualquer tecla para continuar. . .
+O primeiro site que queremos acessar é o google.com. Vamos implementar o método para navegar para esse site
+
+var navegador = new Navegador();
+navegador.NavegarPara("google.com");
+internal void NavegarPara(string v)
+{
+    throw new NotImplementedException();
+}
+O que esse método faz? Primeiro, ele deve definir a página atual como a url que está sendo recebida como parâmetro pelo método.
+
+internal void NavegarPara(string url)
+{
+    atual = url;
+}
+Mas note que, se fizermos isso, perderemos o valor da variável atual. Precisamos guardar seu valor para ser acessado posteriormente. Mas onde iremos guardá-lo?
+
+Numa coleção, obviamente. Mas qual coleção? Como mencionamos antes, o navegador funciona com duas pilhas de navegação, tanto para frente quanto para trás. Vamos criar a pilha de navegação anterior:
+
+private readonly Stack<string> historicoAnterior = new Stack<string>();
+Agora sim, vamos guardar o valor da url atual nessa pilha. Mas note que um Stack não possui o método Add. Em vez disso, o método usado para “empilhar” numa pilha é Push, que sempre adiciona o elemento no topo da pilha:
+
+internal void NavegarPara(string url)
+{
+    historicoAnterior.Push(atual);
+    atual = url;
+}
+Também vamos imprimir a página atual ao final do método
+
+internal void NavegarPara(string url)
+{
+    historicoAnterior.Push(atual);
+    atual = url;
+    Console.WriteLine(atual);
+}
+vazia
+google.com
+Pressione qualquer tecla para continuar. . .
+A partir do site google.com, nosso usuário procura por “ensino de tecnologia” e encontra o site da Caelum. A partir dele, ele clica num link para o site da alura:
+
+var navegador = new Navegador();
+navegador.NavegarPara("google.com");
+navegador.NavegarPara("caelum.com.br");
+navegador.NavegarPara("alura.com.br");
+vazia
+google.com
+caelum.com.br
+alura.com.br
+Pressione qualquer tecla para continuar. . .
+Agora que já navegou para os 3 sites, nosso usuário decide voltar para o site anterior. Ou seja, precisamos implementar uma navegação para trás. Faremos isso criando um método na classe Navegador chamado Anterior():
+
+var navegador = new Navegador();
+navegador.NavegarPara("google.com");
+navegador.NavegarPara("caelum.com.br");
+navegador.NavegarPara("alura.com.br");
+navegador.Anterior();
+internal void Anterior()
+{
+    throw new NotImplementedException();
+}
+Esse método deve pegar o valor da última url navegada e defini-lo como url atual.
+
+Quando trabalhamos com pilhas, o método para obter elemento na verdade é o que “desempilha”, logo o nome do método é Pop:
+
+internal void Anterior()
+{
+    atual = historicoAnterior.Pop();
+}
+Mas perceba que, fazendo isso, estaremos perdendo o valor da url atual. Então precisamos guardá-lo em algum lugar. Mas onde?
+
+A resposta é: na pilha de urls “à frente”, que poderão ser navegadas com o botão “próximo” do navegador. vamos chamar essa segunda pilha de historicoProximo:
+
+private readonly Stack<string> historicoProximo = new Stack<string>();
+Para guardar o valor da url atual, incluiremos o valor em historicoProximo através do método `Push`.
+internal void Anterior()
+{
+    historicoProximo.Push(atual);
+    atual = historicoAnterior.Pop();
+    Console.WriteLine(atual);
+}
+Assim, quando desempilhamos um valor de uma pilha, empilhamos esse mesmo valor em outra. E vice-versa!
+
+vazia
+google.com
+caelum.com.br
+alura.com.br
+caelum.com.br
+google.com
+Pressione qualquer tecla para continuar. . .
+Perceba como conseguimos voltar ao site anterior, caelum.com.br!
+
+Vamos voltar mais duas vezes a navegaçao:
+
+var navegador = new Navegador();
+navegador.NavegarPara("google.com");
+navegador.NavegarPara("caelum.com.br");
+navegador.NavegarPara("alura.com.br");
+navegador.Anterior();
+navegador.Anterior();
+navegador.Anterior();
+vazia
+google.com
+caelum.com.br
+alura.com.br
+caelum.com.br
+google.com
+vazia
+Pressione qualquer tecla para continuar. . .
+Agora sim, conseguimos voltar ao início da nossa navegação, até a url vazia. Mas e se tentarmos voltar mais uma vez?
+
+navegador.Anterior();
+vazia
+google.com
+caelum.com.br
+alura.com.br
+caelum.com.br
+google.com
+vazia
+
+Exceção Sem Tratamento: System.InvalidOperationException: Pilha vazia.
+   em System.ThrowHelper.ThrowInvalidOperationException(ExceptionResource resource)
+Tomamos uma exceção de pilha vazia!
+
+Precisamos então de uma proteção. Vamos verificar se há elementos na pilha, com o método Any():
+
+internal void Anterior()
+{
+    if (historicoAnterior.Any())
+    {
+        historicoProximo.Push(atual);
+        atual = historicoAnterior.Pop();
+        Console.WriteLine(atual);
+    }
+}
+vazia
+google.com
+caelum.com.br
+alura.com.br
+caelum.com.br
+google.com
+vazia
+Pressione qualquer tecla para continuar. . .
+Então nos resta implementar a navegação para a frente. Vamos criar o método Proximo na classe Navegador:
+
+var navegador = new Navegador();
+navegador.NavegarPara("google.com");
+navegador.NavegarPara("caelum.com.br");
+navegador.NavegarPara("alura.com.br");
+navegador.Anterior();
+navegador.Anterior();
+navegador.Anterior();
+navegador.Anterior();
+navegador.Proximo();
+internal void Proximo()
+{
+    throw new NotImplementedException();
+}
+Seguindo o mesmo raciocínio do método Anterior, temos que primeiro proteger o método e verificar se há elementos na pilha historicoProximo, com o método Any:
+
+internal void Proximo()
+{
+    if (historicoProximo.Any())
+    {
+
+    }
+}
+E agora guardamos o valor da url atual na pilha anterior:
+
+internal void Proximo()
+{
+    if (historicoProximo.Any())
+    {
+        historicoAnterior.Push(atual);
+    }
+}
+Por fim, desempilhamos um valor da pilha historicoProximo e atribuimos ele à variavel atual.
+
+internal void Proximo()
+{
+    if (historicoProximo.Any())
+    {
+        historicoAnterior.Push(atual);
+        atual = historicoProximo.Pop();
+        Console.WriteLine(atual);
+    }
+}
+Rodando a aplicação, temos a navegação para a próxima url, que é “google.com”:
+
+vazia
+google.com
+caelum.com.br
+alura.com.br
+caelum.com.br
+google.com
+vazia
+google.com
+Pressione qualquer tecla para continuar. . .
+E assim concluímos nosso Mão na Massa sobre Pilhas. Até à próxima!
+         */
+        #endregion
+
+        #region 05 - 07 - Mão na Massa - Lista Ligada
+        /*
+         * Vamos iniciar esse Mão na Massa para aprender um pouco mais e implentar uma lista ligada.
+
+As listas do .NET Framework (List<T>) oferecem diversas funcionalidades e são bastante poderosas. Mas como elas são baseadas em arrays (uma lista pode ser imaginada como um array dinâmico), elas possuem um ponto fraco dos arrays: o custo de adicionar ou remover elementos no meio da lista.
+
+Imagine uma lista que armazena nomes de frutas. Essas frutas ficam armazenadas no array interno da lista, e os elementos desse array ocupam posições sequenciais na memória:
+
+
+
+//Imagine uma lista de frutas
+List<string> frutas = new List<string>
+{
+    "abacate", "banana", "caqui", "damasco", "figo"
+};
+//Vamos imprimir essa lista
+foreach (var fruta in frutas)
+{
+    Console.WriteLine(fruta);
+}
+abacate
+banana
+caqui
+damasco
+figo
+O que acontece se quisermos inserir um elemento no meio da lista, na terceira posição (índice 2)?
+
+frutas.Insert(2, "caju");
+Com o método Insert, o elemento será adicionado, mas o que ocorrerá com os outros elementos seguintes da lista?
+
+
+
+Eles serão movidos “para a frente”, para liberar espaço para o elemento que está sendo inserido!
+
+foreach (var fruta in frutas)
+{
+    Console.WriteLine(fruta);
+}
+abacate
+banana
+caju
+caqui
+damasco
+figo
+Por esse motivo, uma coleção List é ineficiente para inserir ou remover elementos no início da coleção, porque os elementos precisam ser reposicionados com frequência.
+
+Se quisermos adicionar ou remover elementos com muita frequência, podemos considerar um LinkedList.
+
+Um LinkedList consegue armazenar elementos numa determinada ordem, porém, na memória, os elementos de um LinkedList não precisam ocupar uma posição sequencial. Imagine um LinkedList com os dias da semana, sendo d1 “domingo” e d7 “sábado”:
+
+
+
+Perceba que d4 é “quarta-feira”, porém está posicionado na memória antes de d2 “segunda”. Como o LinkedList consegue manter a ordem?
+
+Simples: No LinkedList, cada elemento possui 2 links: o before e o after:
+
+
+
+Agora vamos ver como esse LinkedList foi montado. Vamos instanciar uma variável dias que armazenará nossa lista ligada de dias da semana:
+
+LinkedList<string> dias = new LinkedList<string>();
+O primeiro elemento a ser inserido é “quarta”.
+
+var d4 = dias.AddFirst("quarta");
+
+
+Note que o método AddFirst precisa ser obrigatoriamente chamado para adicionar o primeiro elemento. Note também que ele está sozinho na lista, portanto as ligações “antes” e “depois” desse elemento estão vazias, isto é, nulas.
+
+Mas aí resta a dúvida: se estamos armazenando strings nesse LinkedList, de onde vêm as ligações before e after? Uma string não possui essas propriedades…
+
+É importante notar que o que estamos armazenando na verdade não são as strings diretamente, mas sim um objeto especial que contém a string. Esse objeto especial é da classe LinkedListNode, e ele representa os nós da lista ligada.
+
+Agora vamos proceder com o segundo elemento (o segundo nó). Mas não podemos simplesmente adicionar com Add, como fazemos com o List<T>. Um nó só pode ser adicionado “sozinho” se for o primeiro da lista ligada. A partir do segundo nó, todos precisam ser adicionados antes ou depois de um nó preexistente.
+
+O segundo nó d2 será adicionado antes de d4, logo o uso do método AddBefore.
+
+var d2 = dias.AddBefore(d4, "segunda");
+
+
+E o nó d3 é adicionado depois de d2:
+
+var d3 = dias.AddAfter(d2, "terça");
+
+
+Note que antes d2 era ligado diretamente a d4. Mas como d3 foi adicionado depois de d2, as ligações que ficariam soltas foram redirecionadas para d3!
+
+Agora adicionamos d6 depois de d4:
+
+var d6 = dias.AddAfter(d4, "sexta");
+
+
+Perceba que d6 agora é o último nó da lista ligada. Vamos adicionar agora o d7...
+
+var d7 =dias.AddAfter(d6, "sábado");
+
+
+E adicionando o d5 antes de d6, as ligações entre d4 e d6 foram redirecionadas para o nó d5:
+
+var d5 = dias.AddBefore(d6, "quinta");
+
+
+Restando apenas adicionar o nó d1 antes de d2.
+
+var d1 = dias.AddBefore(d2, "domingo");
+
+
+Agora que adicionamos todos os nós, vamos percorrer a lista, imprimindo todos os elementos:
+
+foreach (var dia in dias)
+{
+    Console.WriteLine(dia);
+}
+domingo
+segunda
+terça
+quarta
+quinta
+sexta
+sábado
+domingo
+E se quisermos remover um nó?
+
+Vamos remover o nó “quarta-feira” (d4):
+
+var quarta = dias.Find("quarta");
+dias.Remove("quarta");
+IMPORTANTE: LinkedList NÃO DÁ suporte ao acesso de índice, por isso podemos fazer um laço foreach mas não um laço for!
+
+Para removermos um elemento, podemos tanto remover pelo valor quanto pela referência do LinkedListNode:
+
+dias.Remove("quarta") ou dias.Remove(quarta);
+
+Automaticamente, os elementos d3 e d5, que apontavam para d4, acabam apontando para eles mesmos, assim “fazendo a ponte” para ocupar o espaço que ficou vazio:
+
+
+
+Mas note que, assim como a inclusão de nós, a remoção desse nó também não necessitou de um redimensionamento do array, nem a realocação dos nós em memória. Os elementos continuaram em memória como antes, a única mudança foi entre os ponteiros “before” e “after” desses nós!
+
+Vamos imprimir então nossa lista ligada novamente para ver as alterações:
+
+foreach (var dia in dias)
+{
+    Console.WriteLine(dia);
+}
+domingo
+segunda
+terça
+quinta
+sexta
+sábado
+E assim aprendemos na prática que uma lista ligada é um tipo de coleção especializada e otimizada para adicionar e remover muitos elementos com bastante frequência!
+
+A seguir vamos ver como trabalhar com pilhas. Até à próxima!
+         */
+        #endregion
+
+        #region 05 - 05 - Queue
+        /*
+         * Neste vídeo veremos outro problema de vida real em um projeto, implementando uma fila de pedágio para veículos. Declararemos no escopo da classe Program uma variável estática que será uma coleção que representará a fila (Queue).
+
+static Queue<string> pedagio = new Queue<string>();
+
+static void Main(string[] args)
+{
+    //entrou: van
+    string veiculo = "van";
+    Console.WriteLine(veiculo);
+}
+Rodando a aplicação, obteremos a impressão de van, como gostaríamos. No entanto, queremos descrever melhor o que está acontecendo. Acrescentaremos:
+
+static Queue<string> pedagio = new Queue<string>();
+
+static void Main(string[] args)
+{
+    //entrou: van
+    string veiculo = "van";
+    Console.WriteLine($"Entrou na fila: {veiculo}");
+}
+Rodando a app novamente, o resultado impresso será Entrou na fila: van. Para realmente adicionarmos um elemento na fila, utilizaremos a variável pedagio e chamaremos um método de adição. Caso existisse como opção em filas .NET Framework, poderíamos pensar em usar o Add(), mas optaremos por Enqueue(), a receber a variável veiculo.
+
+Em seguida, para sabermos o estado atual da fila, varreremos os veículos, com sendo v o representante de um deles:
+
+static Queue<string> pedagio = new Queue<string>();
+
+static void Main(string[] args)
+{
+    //entrou: van
+    string veiculo = "van";
+    Console.WriteLine($"Entrou na fila: {veiculo}");
+    pedagio.Enqueue(veiculo);
+    Console.WriteLine("FILA:");
+    foreach (var v in pedagio)
+    {
+        Console.WriteLine(v);
+    }
+}
+Com "Ctrl + F5" rodaremos novamente o código. Obteremos:
+
+Entrou na fila: van
+FILA:
+van
+Legal! Conforme adicionamos mais veículos, não queremos que o código fique duplicado. Por isto, selecionaremos parte do que digitamos e a extrairemos em um método (Enfileirar()) por meio de "Ctrl + .":
+
+static void Main(string[] args)
+{
+    //entrou: van
+    string veiculo = "van";
+    Enfileirar(veiculo);
+}
+Refatorando mais um pouco, é possível simplesmente removermos a linha string veiculo = "van";, trocando o local com a referência para veiculo pelo nome van:
+
+//entrou: van
+Enfileirar("van");
+Vamos rodar para ver se esta alteração não afetou negativamente o código. Tendo tudo funcionado conforme esperado, seguiremos adicionando mais veículos à fila:
+
+//entrou: kombi
+Enfileirar("kombi");
+//entrou: guincho
+Enfileirar("guincho");
+//entrou: pickup
+Enfileirar("pickup");
+Agora faremos o caminho inverso, pois os carros passarão pela cancela do pedágio e irão embora. Percebam que uma fila não é uma coleção qualquer, portanto temos que seguir algumas regras, e uma delas é: ao entrar na fila, o carro vai para o fim dela e, em relação à saída, é sempre aquele que está lá na frente que irá sair primeiro.
+
+Faremos esta liberação para os carros começarem a sair, ou seja, chamando o processo inverso do Enqueue, o método para desenfileirar, ou Dequeue() em inglês. Ele não recebe nenhum parâmetro, porém retorna o nome do carro que acabou de sair.
+
+//carro liberado
+pedagio.Dequeue();
+Extrairemos a chamada para um novo método, que denominaremos Desenfileirar(). Apertando F12, começaremos a trabalhar neste método. Ao tirarmos um elemento de uma fila, ele retorna como uma string, que é o tipo de elemento contido. Atribuiremos este valor a uma variável veiculo. Para exibirmos quem sai, usaremos Console.WriteLine():
+
+private static void Desenfileirar()
+{
+    string veiculo = pedagio.Dequeue();
+    Console.WriteLine($"Saiu da fila: {veiculo}");
+}
+Rodaremos este código com "Ctrl + F5", e obteremos Saiu da fila: van. Como também queremos ver a situação atual da fila, vamos imprimir os veículos. Já temos este processo no método Enfileirar(), e não queremos copiar e colá-lo no método recém criado, pois com isto teríamos uma duplicação de código.
+
+O que faremos, então, é extrair o método que imprime a fila para podermos reutilizá-lo. O nome deste método será ImprimirFila(), e também o chamaremos no momento de desenfileirarmos o veículo:
+
+private static void Desenfileirar()
+{
+    string veiculo = pedagio.Dequeue();
+    Console.WriteLine($"Saiu da fila: {veiculo}");
+    ImprimirFila();
+}
+Vamos rodar a aplicação e ver o que ocorre. Teremos o seguinte:
+
+Saiu da fila: van
+FILA:
+kombi
+guincho
+pickup
+Do mesmo modo, liberaremos outro carro e teremos a informação de que a kombi (o veículo seguinte na nossa lista) saiu da fila, permanecendo apenas o guincho e a pickup. É interessante notar que ao descobrirmos qual carro está sendo liberado (com o método Dequeue()), já o removemos. Para sabermos qual veículo está para sair da fila, não poderemos utilizar o Dequeue(), já que assim o removeremos.
+
+Para verificarmos este veículo seguinte sem que ele seja removido, chamaremos outro método! Digamos que queremos saber se quem está esperando na fila é o guincho. Como faríamos? Poderíamos utilizar uma condição if:
+
+private static void Desenfileirar()
+{
+    if (pedagio.Peek() == "guincho")
+    {
+        Console.WriteLine("guincho está fazendo o pagamento.");
+    }
+}
+Feito isso, usando Desenfileirar(); liberaremos mais um veículo, rodando a aplicação em seguida. Teremos a impressão:
+
+guincho está fazendo o pagamento.
+Saiu da fila: guincho
+FILA:
+pickup
+Faremos o mesmo procedimento para liberarmos a pickup. Agora que não há nada na fila, caso tentemos desenfileirar novamente, ocorre um erro de exceção sem tratamento alegando-se que a fila está vazia. Para evitarmos situações do tipo, é necessário fazermos uma proteção. No método Desenfileirar(), colocaremos uma condição para verificação de existência de pelo menos um elemento na fila.
+
+private static void Desenfileirar()
+{
+    if (pedagio.Any())
+    {
+        if (pedagio.Peek() == "guincho")
+        {
+            Console.WriteLine("guincho está fazendo o pagamento.");
+        }
+
+        string veiculo = pedagio.Dequeue();
+        Console.WriteLine($"Saiu da fila: {veiculo}");
+        ImprimirFila();
+    }
+}
+Rodando a aplicação de novo, não teremos nenhum erro, nenhuma exceção será lançada. Portanto, aprendemos como implementar uma solução para um problema prático, que também poderia ser uma fila de mercado ou atendimento médico, por exemplo.
+
+Lembrando que filas normalmente são utilizadas juntamente com pilhas. Estas possuem uma prioridade distinta: o primeiro elemento que entra é o último que sai, enquanto numa fila o primeiro que entra é, também, o primeiro que sai.
+         */
+        #endregion
 
         #region 05 - 04 - Stack
         /*

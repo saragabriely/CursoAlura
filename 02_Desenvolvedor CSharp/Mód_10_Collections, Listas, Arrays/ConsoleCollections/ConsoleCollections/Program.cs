@@ -8,91 +8,79 @@ namespace ConsoleCollections
 {
     partial class Program
     {
+        static Queue<string> pedagio = new Queue<string>();
+
         static void Main(string[] args)
         {
-            // ... implementaremos a solução de um problema de navegação 
-            // de browser, ou navegador Web
+            // FILA - PRIMEIRO QUE ENTRA, É O PRIMEIRO QUE SAI
 
-            // PILHA!
+            // Entrou: Van
+            Enfileirar("van");
 
-            // O PRIMEIRO QUE ENTRA É O ÚLTIMO QUE SAI!
+            // Entrou: Kombi
+            Enfileirar("kombi");
 
-            var navegador = new Navegador();
+            // Entrou: Guincho
+            Enfileirar("guincho");
 
-            navegador.NavegarPara("google.com");
+            // Entrou: pickup
+            Enfileirar("pickup");
 
-            navegador.NavegarPara("caelum.com.br");
+            // Liberação dos carros ------------------------
+            Desinfileirar(); 
 
-            navegador.NavegarPara("alura.com.br");
+            Desinfileirar();
 
-            Console.WriteLine("----------------------------------");
+            Desinfileirar();
 
-            navegador.Anterior();   // google
-            navegador.Anterior();   // caelum 
-            navegador.Anterior();   // vazia
+            Desinfileirar();
 
-            Console.WriteLine("----------------------------------");
+            Desinfileirar();
 
-            navegador.Proximo();
+            
 
 
             //--------------------------------------------
             Console.ReadLine();
         }
-    }
 
-    internal class Navegador
-    {
-        // Anterior: salvar a página atual que será substituida
-        // criar uma coleção (pilha/STACK) para isso
-
-        private readonly Stack<string> historicoAnterior = new Stack<string>();
-        private readonly Stack<string> historicoProximo  = new Stack<string>();
-        
-        private string atual = "vazia";
-
-        public Navegador()
+        private static void Desinfileirar()
         {
-            Console.WriteLine($"Página atual: {atual}");
-        }
-
-        internal void Anterior()
-        {
-            if (historicoAnterior.Any()) // Verifica se tem algum valor
+            if (pedagio.Any()) // Verifica se a fila está vazia
             {
-                historicoProximo.Push(atual); // alimentando o historico Proximo
+                if (pedagio.Peek() == "guincho")
+                {
+                    Console.WriteLine("Guincho está fazendo o pagamento");
+                }
 
-                // POP: Obter o valor 
-                atual = historicoAnterior.Pop(); // Retorna uma string
-                Console.WriteLine($"Página atual: {atual}");
+                string veiculo = pedagio.Dequeue();
+
+                Console.WriteLine($"\nSaiu da fila: {veiculo}");
+
+                ImprimirFila();
             }
-            
-            // Para acessar a página anterior, a página atual irá assumir 
-            // o valor da página anterior
-            
-        }
-        
-        internal void NavegarPara(string url)
-        {
-            // PUSH: Colocar em pilha
-            historicoAnterior.Push(atual); // salvar a página que será trocada
 
-            atual = url;
-
-            Console.WriteLine($"Página atual: {atual}");
         }
 
-        internal void Proximo()
+        private static void Enfileirar(string veiculo)
         {
-            if (historicoProximo.Any())
+            Console.WriteLine($"Entrou na fila: {veiculo}");
+
+            pedagio.Enqueue(veiculo); // Variavel de enfileiramento = ENQUEUE
+
+            ImprimirFila();
+        }
+
+        private static void ImprimirFila()
+        {
+            Console.WriteLine("\nFILA: ");
+
+            foreach (var v in pedagio)
             {
-                historicoAnterior.Push(atual); // alimentando o histórico anterior
-
-                atual = historicoProximo.Pop();
-
-                Console.WriteLine($"Página atual: {atual}");
-
+                Console.WriteLine(v);
             }
         }
     }
+
+    
 }
