@@ -1,0 +1,195 @@
+﻿
+-- 01_A05 - Nossa aplicação na Web ------------------------------
+
+ . O que significa expôr essa lista no navegador? Significa que, ao invés de ler 
+ as informações no terminal, iria acessá-las pelo navegador. Então eu vou abrir 
+ um navegador. As informações já estão aqui? Não né. O que eu preciso fazer? 
+ Colocar o endereço de onde espero encontrar essas informações. Por exemplo se 
+ eu quisesse conhecer quais os cursos disponíveis na Alura, eu escreveria o endereço
+ alura.com.br aqui na barra, certo?
+
+Percebam que o navegador está utilizando o modelo HTTP. Nesse modelo, toda comunicação começa com um pedido, e quem fez o pedido fica esperando uma resposta. Só que pro navegador não interessa saber quem vai responder a ele. A única coisa que ele precisa saber é o endereço do pedido. Na especificação HTTP, esse endereço é chamado de URI.
+
+Então para mostrar a lista de leitura basta eu saber qual o endereço que devo colocar no navegador. Mas peraí, eu ainda não mudei minha aplicação para exibir a lista no navegador. Minha aplicação ainda exibe as informações no terminal. Relembrando a especificação HTTP, a parte que responde uma requisição é chamada de servidor. E a parte que faz o pedido é chamada de cliente.
+
+Para transformar minha aplicação atual em um servidor HTTP usando o AspNet.Core, vou ter que criar um objeto que vai hospedar todos os pedidos da aplicação. Vou criar uma variável para esse objeto e vou chamá-la de host. E a gente sabe que todo objeto no C# é de algum tipo. Qual é o tipo de um objeto que hospeda chamadas web? WebHost! Só que vamos usar sua interface. Então o tipo que queremos é IWebHost.
+
+Perceba que o compilador não reconhece esse tipo, e mesmo o VS não consegue achar o namespace para esse tipo. Veja que todas as suas sugestões são para criar uma classe chamada IWebHost. Isso acontece porque nosso projeto não tem o pacote com a referência para esse tipo. E que pacote é esse? Ganhou um doce quem respondeu AspNet Core. Vamos instalá-lo usando o Nuget. Então vou abrir o console do gerenciador de pacotes clicando em Ferramentas, Gerenciador de Pacotes, Console do …, e vou colocar o comando que copiei da área de transferência. O comando é esse aqui:
+
+Install-Package Microsoft.AspNetCore -Version 2.0.1
+Pressiono Enter e o VS vai começar a instalar o pacote no projeto. Lembre-se que você precisa estar conectado na internet para instalar. Pronto! Agora podemos usar o Quick Fix para usar o namespace referente ao tipo IWebHost, que é o ... A construção de um host web é bastante complexa porque podemos definir uma série de opções (para esse host). Uma das opções será o servidor web adotado pela sua aplicação, que no caso será o Kestrel, que é um servidor web já implementado pela galera do AspNet.Core.
+
+Quando a construção de um objeto é complexo, isolamos essa complexidade em uma classe, seguindo um padrão famoso chamado Builder. Então usaremos um objeto da classe WebHostBuilder para criar esse objeto IWebHost pra gente. Então fazemos new WebHostBuilder. Em seguida podemos construir o host usando o método Build(). Se você quiser economizar linhas de código pode fazer diretamente assim (mostrando o uso desnecessário da váriavel builder). Por fim, subimos o servidor usando o método Run().
+
+Mas se fosse só isso a gente não precisaria de um builder não é? A documentação sobre essa parte de hosting é bastante completa (mostrar neste momento), com todas as possibilidades de configuração do seu servidor de host. Pra gente rodar nossa aplicação na web agora, o mínimo que precisaremos configurar é 1) dizer qual a implementação do servidor web utilizado (novamente, Kestrel), e 2) o que o servidor vai fazer quando chegarem as requisições. Ou seja, como responder as requisições que chegarem nele.
+
+Vamos lá.
+
+Para dizer que usaremos o Kestrel, chamamos um método de extensão UseKestrel(). Quando executarmos o programa, o Kestrel já estará quase pronto para atender pedidos HTTP. Mas ainda vai dar erro. Vamos analisar com calma. Repare na pilha de erros o método que está sendo chamado.
+
+O que está acontecendo é que o AspNet.Core chama um estágio de inicialização do servidor. No inglês, Startup. E por enquanto não fizemos qualquer implementação. A implementação disso é através de uma classe. Essa classe não precisa herdar de ninguém ou mesmo implementar qualquer interface. Basta que informemos qual é a classe durante a construção do objeto-host usando o método de extensão UseStartup<>(), passando por generics a classe a ser utilizada. Por convenção, o nome da classe é Startup, mas você pode escolher o nome que achar melhor.
+
+Se eu rodar a aplicação agora vou tomar outro tipo de erro. Veja. Está dizendo que a classe Startup deve ter um método ConfigureProduction() ou Configure(). Então vamos criar ué.
+
+Pronto, se eu rodar a aplicação agora não vou receber mais erro. Legal! E olha só o que está escrito. Está dizendo que está escutando requisições no endereço http://localhost:5000. Vamos (no navegador) conferir! Ops, quando eu coloco esse endereço… nada. Porquê?
+
+-- 01_A06 - Uma resposta padrão -----------------------------
+
+ Já subimos um host que atende requisições web através da implementação Kestrel, que está escutando no endereço xyz. Ok. Porém, quando colocamos o endereço lá no nav nada é mostrado. Porque está faltando definir como esse servidor vai responder as requisições que chegarem!
+
+O que queremos fazer quando a requisição chegar? Nessa primeira versão da aplicação, vamos fazer com que o servidor SEMPRE retorne os livros para ler, mas logo em seguida vamos evoluir essa ideia.
+
+public void LivrosParaLer()
+{
+    var _repo = new LivroRepositorioCSV();
+    _repo.ParaLer.ToString();
+}
+Mas esse código ainda não escreve na resposta da requisição. No ASP.NET Core toda informação referente às requisições está representada na classe HttpContext e para escrever uma resposta para a requisição que chegar ao servidor, usamos o método WriteAsync() na propriedade Response.
+
+public void LivrosParaLer(HttpContext context)
+{
+    var _repo = new LivroRepositorioCSV();
+    context.Response.WriteAsync(_repo.ParaLer.ToString());
+}
+Como fazemos o vínculo entre o evento de chegada da requisição a esse o código que queremos executar? Está faltando definir qual será o fluxo requisição-resposta dentro do servidor. Esse fluxo é chamado Request Pipeline e pode ter vários estágios em aplicações web mais complexas e ele vai ser configurado justamente no método Configure(). O tipo que é utilizado para definir o fluxo requisição-resposta da aplicação é a interface IApplicationBuilder. Então para eu configurar um request pipeline na minha aplicação eu tenho que receber como argumento de entrada um objeto do tipo IApplicationBuilder.
+
+Finalizo o vínculo através do método Run() disponível na váriavel app. Esse método exige como argumento de entrada um outro método do tipo RequestDelegate. Esse tipo identifica todos os métodos que possuam como retorno um objeto do tipo Task (usado para trabalhar com paralelismo) e aceita como argumento de entrada um objeto do tipo HttpContext.
+
+Faça o curso sobre paralelismo com C#!
+
+C#: Paralelismo no mundo real
+Depois de vincularmos o método LivrosParaLer() ao pipeline de requisição, o código final da classe Startup fica assim:
+
+public class Startup
+{
+    public void Configure(IApplicationBuilder app)
+    {
+        app.Run(LivrosParaLer);
+    }
+
+    public Task LivrosParaLer(HttpContext context)
+    {
+        var _repo = new LivroRepositorioCSV();
+        return context.Response.WriteAsync(_repo.ParaLer.ToString());
+    }
+}
+Vou rodar aqui o Executar Sem Depurar. O terminal vai aparecer, a aplicação vai rodar e o servidor vai subir. Beleza! Agora ao solicitar a URL localhost:5000 no navegador recebo a lista de livros para ler, confirmando que meu código foi executado.
+
+E aí, gostaram? Agora vamos para os exercícios e a gente se encontra na próxima aula.
+
+-- 01_A07 - Atividade --------------------------------------------
+
+ . tipo que encapsula todas as informações necessárias sobre o contexto de uma 
+ requisição web: HTTPCONTEXT!
+ . Um objeto desta classe é passado como argumento de entrada do delegate RequestDelegate para escrever as respostas das requisições
+
+ -- 01_A09 - Request Pipeline ---------------------------------------
+
+ . Termo usado pelo ASP.NET Core para representar o fluxo que uma requisição HTTP percorre dentro de sua aplicação até que a resposta seja entregue ao cliente.
+
+ -- 01_A10 - O que aprendemos neste capítulo
+
+  . Vimos que para transformar a aplicação console em um servidor web, é necessário
+  instalar o ASP.NET Core e implementar a interface IWebHost. e para criar um objeto 
+  que implemente essa interface - Builder (WebHostBuilder) - Opções: UseCastrel
+  e UseStartup.  
+
+  ----------------------------------------------------------------------
+  ----------------------------------------------------------------------
+----------------------------------------------------------------------
+----------------------------------------------------------------------
+
+-- 02_A01 - A propriedade Request ---------------------------------------
+
+Até agora o que fizemos foi responder todas as requisições a nosso servidor com uma lista de livros para ler. Isso está horrível né? Queremos que nossa aplicação mostre os livros para ler, os livros que estamos lendo, os livros já lidos, e até mesmo outras funcionalidades, por exemplo o cadastro de um novo livro.
+
+Se formos olhar no site da Alura, existem várias páginas, cada uma com seu próprio endereço. Aqui eu estou vendo a página do cursos de programação, olha o endereço. Já nesta aqui estou vendo a página das carreiras. Veja que o endereço mudou. Então, recapitulando, cada requisição que o navegador faz possui um endereço, uma URI. E dependendo da URI, (vou chamar de endereço a partir de agora tá), o servidor responde de maneira diferente. Queremos o mesmo comportamento em nossa aplicação!
+
+Por exemplo se o usuário colocar o endereço http://localhost:5000/Livros/ParaLer, devo mostrar a lista que fizemos. Se ele colocar o endereço http://localhost:5000/Livros/Lendo, devo mostrar a lista de livros em leitura. E se ele colocar o endereço http://localhost:5000/livros/Lidos, mostraremos os livros já lidos.
+
+Como fazer isso?
+
+Qual é a classe que vincula o evento de chegada de requisições ao código que queremos executar? Muito bem! Uma bala pra quem respondeu a classe Startup. Vamos abrir essa classe. É aqui que vamos implementar essa distinção de código para cada endereço. Damos o nome dessa distinção de código por endereço de roteamento.
+
+Repare que para qualquer endereço estou escrevendo a lista de livros para ler. Agora quero analisar o endereço da requisição. Onde tenho essa informação? Na aula anterior eu havia falado que o argumento de um RequestDelegate é um objeto do tipo HttpContext, que contém toda a informação necessária pra tratar uma requisição. Então é aqui que vamos olhar para descobrir o endereço da requisição. Veja que no objeto context temos uma propriedade Request, que encapsula uma requisição. E dentro desta propriedade temos uma propriedade do tipo string chamada Path. É nela que vamos encontrar a informação do endereço da requisição.
+
+Não precisa acreditar em mim. Vamos testar! Vou substituir a string aqui no método WriteAsync por context.Request.Path, subir o servidor e chamar um endereço qualquer no navegador. Veja, se eu coloco X recebo X, etc. (testar para vários endereços). Repare que ele não mostra o nome do servidor e a porta. Isso é importante.
+
+Então o que eu preciso fazer é verificar se o endereço da requisição está dentro dos caminhos que o meu servidor vai atender. Quais são eles mesmo?
+
+/livros/paraler,
+/livros/lendo,
+/livros/lidos,
+Agora fica a seu critério fazer o código que vai testar essa condição. Eu cheguei em uma lógica aqui, que é a seguinte: vou criar um dicionário cuja chave é uma string com o caminho a ser atendido, e o valor será a lista de livros.
+
+var _repo = new LivroRepositorioCSV();
+var caminhosAtendidos = new Dictionary<string, RequestDelegate>
+{
+    { "/Livros/ParaLer", _repo.ParaLer.ToString() },
+    { "/Livros/Lendo", _repo.Lendo.ToString() },
+    { "/Livros/Lidos", _repo.Lidos.ToString() }
+};
+Em seguida em faço o teste se context.Request.Path está dentro das chaves do dicionário. Se a condição for verdadeira, eu retorno a lista de livros associada aquela chave do dicionário. E se a condição for falsa? Daí eu escrevo uma mensagem dizendo que o servidor não atende o caminho especificado.
+
+if (caminhosAtendidos.ContainsKey(context.Request.Path))
+{
+    return context.Response
+        .WriteAsync(caminhosAtendidos[context.Request.Path]);
+}
+
+return context.Response.WriteAsync("Caminho inexistente.");
+Vamos testar? Vou subir o servidor e testar os endereços desejados. Ok, listou os livros de cada lista. Show de bola! E se eu colocar um endereço inválido? Legal, vai mostrar a mensagem que eu defini.
+
+Tratamento de requisições diferentes a partir do seu endereço. Para isso conhecemos as propriedades Request e Path que contém o caminho da requisição a ser tratada.
+
+-- 02_A02 - Alterando código de retorno ---------------------------------
+
+É comum em sites e aplicações web, quando ela não consegue atender um endereço específico, o servidor retornar uma mensagem de Not Found. Por exemplo no site da Alura quando eu coloco o endereço http://alura.com.br/enderecoQualquer, eu recebo uma página dizendo que o endereço não foi encontrado. Olhando aqui na barra de ferramentas do desenvolvedor do Chrome, eu vejo que essa requisição teve um status de retorno com código 404. Lembram-se desse código no curso de HTTP?
+
+Se você refletirem bem, quando minha aplicação está rodando ela também tem situações de código 404, que são quando o endereço digitado não é atendido pelo servidor. Mas a minha aplicação ainda não está retornando um código de status 404 para essas situações. Olha. Código 200. Isso não está conforme o padrão para páginas não encontradas.
+
+Então como eu faço para definir o código de status de retorno? No AspNet.Core é bem fácil. Na aula anterior conhecemos o objeto Response para escrever a resposta da requisição usando o método WriteAsync(). Nesse mesmo objeto temos uma propriedade chamada StatusCode, do tipo int, para definir o código de retorno. Então aqui antes de retornar a mensagem de caminho não atendido eu defino a propriedade para 404.
+
+context.Response.StatusCode = 404;
+return context.Response.WriteAsync("Caminho inexistente.");
+Pronto. Vou testar e vejo que agora o servidor está retornando 404, como deveria.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
