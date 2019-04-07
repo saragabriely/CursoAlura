@@ -154,9 +154,160 @@ context.Response.StatusCode = 404;
 return context.Response.WriteAsync("Caminho inexistente.");
 Pronto. Vou testar e vejo que agora o servidor está retornando 404, como deveria.
 
+-- 02_A03 - Melhorando a lógica de tratamento de requisições ----------
 
+Até agora temos três tipos de requisição sendo tratadas, uma para listar os livros para ler, outra para os livros que estou lendo e mais uma para os livros já lidos. Tratei esses tipos com um dicionário onde a chave é uma string representando o caminho e o valor é uma string com a resposta, certo? Se eu quiser atender um novo tipo de requisição, basta eu ir lá no dicionário, colocar o caminho que desejo atender como chave e a resposta como string. Tranquilo e favorável né?
 
+Mas imagina se o código pra mostrar a resposta fosse um pouco mais elaborado? Se eu tivesse que fazer acesso a algum recurso, ou verificar alguma regra de negócio? Por exemplo, se eu quisesse acessar um banco de dados para recuperar ou atualizar os dados. Onde esse código iria ficar?
 
+O que está acontecendo é que essa estrutura de dados no dicionário está tornando minha implementação difícil. Vamos repensá-la aqui. Se em vez de string eu tiver como valor a própria função de tratamento da requisição seria ideal né? Que tipo de função é essa? Uma RequestDelegate! Vamos fazer a modificação.
+
+Vou definir que o dicionário vai ter o valor com o tipo RequestDelegate. O compilador vai começar a reclamar, com razão, né? Vamos mudar o código para criar métodos específicos para cada requisição.
+
+public Task LivrosParaLer(HttpContext context)
+{
+    var _repo = new LivroRepositorioCSV();
+    return context.Response.WriteAsync(_repo.ParaLer.ToString());
+}
+
+public Task LivrosLendo(HttpContext context)
+{
+    var _repo = new LivroRepositorioCSV();
+    return context.Response.WriteAsync(_repo.Lendo.ToString());
+}
+
+public Task LivrosLidos(HttpContext context)
+{
+    var _repo = new LivroRepositorioCSV();
+    return context.Response.WriteAsync(_repo.Lidos.ToString());
+}
+Agora vou colocar os métodos no lugar dos valores do dicionário. Beleza. Falta apenas eu chamar o método armazenado no dicionário, usando o método Invoke(), passando como argumento o objeto context.
+
+var caminhosAtendidos = new Dictionary<string, RequestDelegate>
+{
+    { "/Livros/ParaLer", LivrosParaLer },
+    { "/Livros/Lendo", LivrosLendo },
+    { "/Livros/Lidos", LivrosLidos }
+};
+
+if (caminhosAtendidos.ContainsKey(context.Request.Path))
+{
+    var metodo = caminhosAtendidos[context.Request.Path];
+    return metodo.Invoke(context);
+}
+Vamos testar? Subo o servidor e testo todos os caminhos, inclusive algum não atendido, e tudo certo! O que fizemos aqui foi isolar o código de tratamento de cada requisição em seu próprio método, para que, se houver alguma necessidade futura, possamos modificá-los sem influenciar nos outros.
+
+-- 02_A05 - VIP: Very Important Properties - Atividade -------------------
+
+ .  nome das duas principais propriedades presentes na classe HttpContext, responsáveis por lidar com o Request Pipeline.
+
+ * Request e Response!
+
+-- 02_A07 - Para saber mais: HttpRequest ----------------------------------
+
+ A classe HttpRequest possui várias informações sobre a requisição enviada pelo cliente, a saber:
+
+ . dados do formulário, caso exista
+ . dados da query string, caso exista
+ . dados do cabeçalho da requisição
+ . dados sobre cookies da requisição
+ . qual método HTTP foi utilizado
+ . se a requisição é segura ou não
+ . e outras!
+
+ https://docs.microsoft.com/pt-br/dotnet/api/microsoft.aspnetcore.http.httprequest
+
+-- 02_A08 - Resultado -----------------------------------------------
+
+ . A classe HttpContext possui duas propriedades: Request e Response!
+
+ . A primeira trás varias informações sobre a requisição, e a segunda possui
+ informações referentes a resposta.
+
+ . Uma das informações que tem na requisição é a propriedade Path! E ela foi
+ usada para trazer e tratar rotas diferentes.
+
+ . E na resposta, é possível alterar o StatusCode da request. 
+
+ -- 03_A01 - Incluindo um livro para ler ------------------------------
+
+ Pessoal, nossa aplicação está atendendo 3 requisições diferentes, a saber:
+
+/livros/paraler
+/livros/lendo
+/livros/lidos
+Agora eu preciso atender uma nova requisição assim:
+
+/Cadastro/NovoLivro/{nome}/{autor}
+Onde vou incluir um livro na lista Para Ler. Sendo que {nome} será o nome do livro e {autor} o nome do autor. Por exemplo, o caminho...
+
+/Cadastro/NovoLivro/Codigo Da Vinci/Dan Brown
+...deverá incluir o livro Código Da Vinci, cujo autor é Dan Brown, na lista Para Ler.
+
+Como faço isso usando a lógica que tenho atualmente? Se eu tentar colocar no dicionário a string /Cadastro/NovoLivro/{nome}/{autor}, só requisições com literalmente esse caminho serão atendidas. Não é o que desejamos. Agora essa estrutura deve possuir a flexibilidade de direcionar caminhos sob determinado padrão em um método específico. A verificação de adequação de uma string específica em determinado padrão é tarefa das expressões regulares.
+
+Mas peraí, será que o meu trabalho é ficar criando expressões regulares que se adequem aos caminhos que tiver que atender? Na verdade toda essa lógica já foi criada e pensada para nós no framework AspNet.Core e está disponível no pacote Routing.
+
+O AspNet.Core chama os caminhos de rotas. Esse é o termo que vamos passar a usar agora, beleza? Como modificamos nossa aplicação para usar a partir de agora a estrutura de rotas do AspNet Core? Você vai ver que não muda muita coisa não. Olha só.
+
+Cada requisição que precisar ser tratada deve ser encapsulada numa rota. Para montar as rotas vou precisar de um construtor de rotas, um RouteBuilder. E depois vou criar 3 rotas, um para cada tipo de requisição, livros para ler, livros lendo e livros lidos, usando o método MapRoute() do builder. Lembre-se que isso precisará ser feito no método Configure(), ok?
+
+Perceba que como argumento do método MapRoute() vou passar duas informações. Justamente o caminho que desejo atender e o um objeto do tipo RequestDelegate. Como eu já tenho isso, fica muito simples!
+
+Para finalizar eu crio a coleção de rotas usando o builder, que era o nosso dicionário anterior, através do método Build(), e uso essa coleção na minha aplicação. Também não preciso mais usar o método Run() para passar o delegate AtendeRequisicao, porque isso tudo está na coleção de rotas.
+
+Fica assim o código completo:
+
+var routeBuilder = new RouteBuilder(app);
+routeBuilder.MapRoute("/livros/paraler", LivrosParaLer);
+routeBuilder.MapRoute("/livros/lendo", LivrosLendo);
+routeBuilder.MapRoute("/livros/lidos", LivrosLidos);
+var rotas = routeBuilder.Build();
+
+app.UseRouter(rotas);
+Vamos testar pra ver se está tudo certo? Opa, deu erro! Qual?
+
+Essa mensagem está dizendo que é para adicionarmos o serviço de roteamento na aplicação. E isso é feito no método ConfigureServices() da própria classe Startup. Então vamos fazer isso. É nesse método que configuramos todos os serviços necessários para a aplicação rodar. O código fica assim:
+
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddRouting();
+}
+Vamos testar! Novo erro! Agora a mensagem é diferente: “An error occurred while creating the route with name '' and template '/livros/para-ler'. ---> System.ArgumentException: The route template cannot start with a '/' or '~' character.” Esta é uma restrição da configuração de roteamento. Vamos remover a barra invertida das rotas e testar novamente.
+
+Pronto! Agora migramos o tratamento de rotas de nossa aplicação para utilizar o serviço de roteamento do AspNet Core. Já posso inclusive apagar o método AtendeRequisicao, porque ele não será mais utilizado.
+
+-- 02_A03 - Rotas com templates -------------------------------------
+
+No vídeo anterior trocamos nosso sistema de roteamento proprietário pelo do AspNet Core justamente para facilitar essa tarefa. Agora vamos incluir uma rota que atende requisições que tenham o seguinte padrão:
+
+/cadastro/novolivro/{nome}/{autor}
+O AspNet chama esse tipo de rotas de rotas com templates. Funciona assim: você cria o template delimitando segmentos distintos com chaves. E sempre que houver uma requisição que se adeque àquele padrão de rota, o AspNet Core vai capturar o valor dentro daquele segmento e armazená-lo no nome do segmento da rota. Nos exemplos acima, “Cidade de Deus” será capturado em nome e “Paulo Lins” em autor. Vamos ver isso na prática?
+
+Vamos criar o novo mapeamento...
+
+routeBuilder.MapRoute("cadastro/novolivro/{nome}/{autor}", CadastroNovoLivro);
+... e usar o Quick Fix para gerar o delegate pra gente.
+
+private Task CadastroNovoLivro(HttpContext context)
+{
+    throw new NotImplementedException();
+}
+Vamos escrever o código de tratamento da requisição. O que preciso fazer é incluir um livro na lista para ler usando o método Incluir() do repositório. Para isso vou criar um objeto Livro. Mas peraí, qual é o nome do livro? Como pego o nome do livro que está no endereço da requisição?
+
+Você vai responder para eu procurar na propriedade Path do objeto Request, mas o AspNet tem uma maneira mais fácil ainda. Lembra que eu falei que toda a informação necessária se encontra no objeto HttpContext? Então lá vamos encontrar um método chamado GetRouteValue(), que recebe como argumento a chave que é justamente o nome do segmento que você definiu no template da rota. Ou seja, se quer recuperar o nome e autor do livro, basta fazer:
+
+private Task CadastroNovoLivro(HttpContext context)
+{
+    var livro = new Livro
+    {
+        Titulo = Convert.ToString(context.GetRouteValue("nome")),
+        Autor = Convert.ToString(context.GetRouteValue("autor")),
+    };
+    var _repo = new LivroRepositorioCSV();
+    _repo.Incluir(livro);
+    return context.Response.WriteAsync("Livro adicionado com sucesso!");
+}
 
 
 
