@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -44,13 +43,8 @@ namespace Alura.ListaLeitura.App
             builder.MapRoute("Livros/Lidos",   LivrosLidos);
 
             builder.MapRoute("Cadastro/NovoLivro/{nome}/{autor}", NovoLivroParaLer);
-            
+
             builder.MapRoute("Livros/Detalhes/{id:int}", ExibirDetalhes);
-
-            // rota sem template
-            builder.MapRoute("Cadastro/NovoLivro", ExibirFormulario);
-
-            builder.MapRoute("Cadastro/Incluir", ProcessaFormulario);
 
             // construir as rotas (construção de métod complexos - Build)
             var rotas = builder.Build();
@@ -58,62 +52,6 @@ namespace Alura.ListaLeitura.App
             app.UseRouter(rotas);
 
             // app.Run(Roteamento); // (LivrosPraLer)
-        }
-
-        #region  ProcessaFormulario(HttpContext context)
-        public Task ProcessaFormulario(HttpContext context)
-        {
-            var livro = new Livro()
-            {
-                Titulo = context.Request.Query["titulo"].First(),
-                Autor  = context.Request.Query["autor"].First()
-
-                //Titulo = context.GetRouteValue("nome").ToString(),
-                //Autor = context.GetRouteValue("autor").ToString()
-            };
-
-            var repo = new LivroRepositorioCSV();
-
-            repo.Incluir(livro);
-
-            return context.Response.WriteAsync("Um livro foi adicionado com sucesso!");
-        }
-        #endregion
-
-        public string CarregaArquivoHTML(string nomeArquivo)
-        {
-            var nomeCompletoArquivo = $"HTML/{nomeArquivo}.html";
-
-            using(var arquivo = File.OpenText(nomeCompletoArquivo))
-            {
-                return arquivo.ReadToEnd();
-            }
-        }
-
-        public Task ExibirFormulario(HttpContext context)
-        {
-            var html = CarregaArquivoHTML("Formulario");
-
-            return context.Response.WriteAsync(html);
-
-            #region Código inicial
-            /*
-             var html = @"
-                    <html>
-                         <form action='/Cadastro/Incluir'>
-                            <label>Titulo</label>
-                            <input name='titulo'/>
-                            <br/>
-                            <label>Autor</label>
-                            <input name='autor'/>
-                            <br/>
-                            <button>Gravar</button>
-                         </form>
-                    </html>";
-            return context.Response.WriteAsync(html);
-             */
-            #endregion
-
         }
 
         public Task ExibirDetalhes(HttpContext context)
@@ -154,7 +92,7 @@ namespace Alura.ListaLeitura.App
             var livro = new Livro()
             {
                 Titulo = context.GetRouteValue("nome").ToString(),
-                Autor = context.GetRouteValue("autor").ToString()
+                Autor  = context.GetRouteValue("autor").ToString()
             };
             
             var repo = new LivroRepositorioCSV();

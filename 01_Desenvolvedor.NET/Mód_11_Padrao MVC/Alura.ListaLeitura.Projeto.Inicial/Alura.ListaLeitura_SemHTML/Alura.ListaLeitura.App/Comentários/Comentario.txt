@@ -350,79 +350,7 @@ No nosso caso, queremos que apenas valores do tipo inteiro sejam atendidos na ro
 Livros/Detalhes/{id:int}
 Testo novamente a aplicação (não se esqueça de reiniciar o servidor) com a rota informando um id igual a lixo por exemplo, e verifico que agora recebo um código de status 404, indicando que o método não foi executado.
 
------------------------------------------------------------------------
------------------------------------------------------------------------
------------------------------------------------------------------------
 
--- 03_A01 - Um formulário para entrada de dados ---------------------------
-
-Gente, até agora toda a nossa interação com a aplicação é feita somente através do endereço do navegador. Você sabe que isso não é viável no mundo real. Os sites possuem milhares maneiras de obter feedback do usuário. Botões, animações, efeitos, listas, etc. Tudo é uma maneira de fazer com que o usuário se sinta bem no seu site, aumentando assim seu tempo ali. Vamos atacar esse problema nessa aula.
-
-A primeira coisa que vamos fazer é permitir que o usuário digite as informações de um livro para inclusão através de um formulário. Para renderizar controles visuais na página do navegador, usaremos uma nova linguagem, que é a famosa linguagem HTML. Essa linguagem é descrita e explorada em detalhes no curso de HTML/CSS que coloquei como pré-requisito. O principal objetivo dela é marcar o que cada parte de uma página significa, bastante parecido com um documento do Word. Essa marcação (daí o M do HTML, que vem de markup) é feita através de delimitadores de início e fim chamados tags. Em geral uma tag de início começa com o símbolo < seguido do nome da tag, terminando com o símbolo >. E uma tag de final começa com os dois caracteres </ seguido do nome da tag e por fim o caracter >. Como ficaria uma marcação HTML para renderizar um formulário?
-
-Usamos as tags <form> e </form> como delimitadores. Dentro do formulário queremos colocar 2 campos de entrada e 1 botão para enviar o formulário. O comportamento do navegador é que quando o formulário é submetido, um requisição é disparada para o servidor. Um campo de entrada é renderizado pela tag <input> (sem fechamento). E o botão é delimitado pela tag <button>. Assim:
-
-<form>
-    <input />
-    <input />
-    <button>Gravar</button>
-</form>
-Para mostrar o formulário vamos disponibilizar uma rota que mostra um formulário para o usuário. Crio o delegate e em seguida, vinculo usando o MapRoute().
-
-builder.MapRoute("Cadastro/NovoLivro", ExibeFormulario);
-Mas o que vou colocar no código desse delegate? Vamos colocar aquele HTML que mostramos anteriormente. Crio uma string do tipo html e escrevo lá.
-
-private Task ExibeFormulario(HttpContext context)
-{
-    var html = @"<form>
-        <input />
-        <input />
-        <button>Gravar</button>
-    </form>";
-    return context.Response.WriteAsync(html);
-}
-Subo servidor e testo o endereço /novo-livro. Opa, não funcionou! Mostrou as tags como se fossem texto puro. Porque? Precisamos ainda marcar o formulário como sendo um documento HTML. Então em volta dos delimitadores do formulário insiro a tag <html> e </html> que vão informar ao navegador para renderizar essa resposta como HTML. Será? Deixa eu ver...
-
-Legal! Temos agora uma página exibindo um formulário HTML!
-
--- 03_A02 - Processando o formulário -------------------------------
-
-No vídeo anterior mostramos o formulário HTML para o usuário.
-
-Mas repare que precisamos fazer mais coisas. Se eu tentar digitar aqui o título e o autor e depois clicar em Gravar, o formulário fica vazio e o endereço com uma interrogação no final. Como comportamento padrão, quando um formulário é submetido (ié, seu botão é clicado), o navegador envia uma requisição com os valores do formulário. Mas sabemos que toda requisição tem um endereço. Para onde o navegador enviou a requisição?
-
-Se eu olhar aqui na barra de ferramentas do desenvolvedor, vou descobrir que ele enviou para a própria página. Se quisermos enviar a informação para outra página, devemos explicitar isso em algum lugar né. Onde? No formulário! Como? Algumas tags HTML podem receber características para distinguí-las umas das outras. Isso é chamado no mundo HTML de atributo. Os atributos são colocados na tag de abertura, antes do caracter >. O atributo para indicar o endereço da requisição de submissão do formulário é action.
-
-E qual o endereço? Já temos uma rota que inclui livros, mas essa rota captura o título e o autor da própria rota. Então não podemos usá-la. Então vou criar a rota Cadastro/Incluir com o delegate ProcessaFormulario, que será bastante parecido com aquele que inclui um livro através da rota. Para começar vou copiar o código que está lá e testar.
-
-Executo a aplicação, insiro um livro e em seguida verifico a lista para ler. Veja que temos um livro com título e autor vazios! Porquê?
-
-Se eu olhar aqui no código do método ProcessaFormulario, vejo que as informações são recuperadas através do método GetRouteValue(), que pega os dados diretamente da rota. Mas sabemos que os dados não estão lá. Onde estão, afinal? Uma mariola pra quem pensou “na query string”. Sim! É lá que você vai encontrar os dados passados pelo formulário.
-
-Essa nova rota possui um símbolo de interrogação. Se você lembrar do curso de HTTP, vai saber que esse símbolo divide o endereço da requisição em duas partes: a rota propriamente dita e uma coisa que chamamos de Query String. A Query String contém uma série de pares chave-valor separados pelo delimitador &.
-
-Pessoal, lembre-se que para recuperar os valores via query string temos que determinar o nome de suas chaves. Veja que no endereço da requisição isso não está ocorrendo. Outra coisa importante é que quem está originando a requisição é o formulário. Então é lá que vamos configurar os nomes das chaves que serão recuperadas no servidor. Em cada campo de entrada eu defino um atributo chamado name que será usado com esse propósito: determinar o nome da chave na query string.
-
-private Task ExibeFormulario(HttpContext context)
-{
-    var html = @"<form>
-        <input name='titulo' />
-        <input name='autor' />
-        <button>Gravar</button>
-    </form>";
-    return context.Response.WriteAsync(html);
-}
-Como a query string faz parte da requisição, é lá que vamos procurar uma propriedade chamada Query, que é do tipo IQueryCollection. Essa coleção permite que você a indexe pela chave usando os colchetes, assim:
-
-context.Request.Query["titulo"]
-Pela definição do protocolo HTTP, é possível termos uma lista de valores a cada chave. Assim o AspNet retorna um objeto do tipo StringValues. Como só estamos interessados no primeiro valor, usamos o método First() e depois convertemos sua string para inteiro e armazenamos seu valor na variável id. Note o trabalho que tenho que fazer para recuperar apenas um parâmetro.
-
-var livro = new Livro()
-{
-    Titulo = context.Request.Query["titulo"].First(),
-    Autor = context.Request.Query["autor"].First(),
-};
-Vou colocar os dois nomes dos parâmetros, um em cada input e testar. Opa, show de bola! Agora temos um formulário HTML para o usuário cadastrar seu livro!
 
 
 
