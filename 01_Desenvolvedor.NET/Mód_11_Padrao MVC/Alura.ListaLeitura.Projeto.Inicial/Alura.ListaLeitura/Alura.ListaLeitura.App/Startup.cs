@@ -65,8 +65,8 @@ namespace Alura.ListaLeitura.App
         {
             var livro = new Livro()
             {
-                Titulo = context.Request.Query["titulo"].First(),
-                Autor  = context.Request.Query["autor"].First()
+                Titulo = context.Request.Form["titulo"].First(),
+                Autor  = context.Request.Form["autor"].First()
 
                 //Titulo = context.GetRouteValue("nome").ToString(),
                 //Autor = context.GetRouteValue("autor").ToString()
@@ -79,20 +79,10 @@ namespace Alura.ListaLeitura.App
             return context.Response.WriteAsync("Um livro foi adicionado com sucesso!");
         }
         #endregion
-
-        public string CarregaArquivoHTML(string nomeArquivo)
-        {
-            var nomeCompletoArquivo = $"HTML/{nomeArquivo}.html";
-
-            using(var arquivo = File.OpenText(nomeCompletoArquivo))
-            {
-                return arquivo.ReadToEnd();
-            }
-        }
-
+        
         public Task ExibirFormulario(HttpContext context)
         {
-            var html = CarregaArquivoHTML("Formulario");
+            var html = CarregaArquivoHTML("formulario");
 
             return context.Response.WriteAsync(html);
 
@@ -113,7 +103,16 @@ namespace Alura.ListaLeitura.App
             return context.Response.WriteAsync(html);
              */
             #endregion
+        }
 
+        public string CarregaArquivoHTML(string nomeArquivo)
+        {
+            var nomeCompletoArquivo = "HTML/" + nomeArquivo + ".html";
+
+            using (var arquivo = File.OpenText(nomeCompletoArquivo))
+            {
+                return arquivo.ReadToEnd();
+            }
         }
 
         public Task ExibirDetalhes(HttpContext context)
