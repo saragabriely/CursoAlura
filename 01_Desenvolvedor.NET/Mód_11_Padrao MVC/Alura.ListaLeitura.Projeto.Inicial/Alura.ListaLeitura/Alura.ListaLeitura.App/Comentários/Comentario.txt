@@ -424,6 +424,599 @@ var livro = new Livro()
 };
 Vou colocar os dois nomes dos parâmetros, um em cada input e testar. Opa, show de bola! Agora temos um formulário HTML para o usuário cadastrar seu livro!
 
+-- 03_A03 - Rotas com template --------------------------------------------
+
+No vídeo anterior trocamos nosso sistema de roteamento proprietário pelo do AspNet Core justamente para facilitar essa tarefa. Agora vamos incluir uma rota que atende requisições que tenham o seguinte padrão:
+
+/cadastro/novolivro/{nome}/{autor}
+O AspNet chama esse tipo de rotas de rotas com templates. Funciona assim: você cria o template delimitando segmentos distintos com chaves. E sempre que houver uma requisição que se adeque àquele padrão de rota, o AspNet Core vai capturar o valor dentro daquele segmento e armazená-lo no nome do segmento da rota. Nos exemplos acima, “Cidade de Deus” será capturado em nome e “Paulo Lins” em autor. Vamos ver isso na prática?
+
+Vamos criar o novo mapeamento...
+
+routeBuilder.MapRoute("cadastro/novolivro/{nome}/{autor}", CadastroNovoLivro);
+... e usar o Quick Fix para gerar o delegate pra gente.
+
+private Task CadastroNovoLivro(HttpContext context)
+{
+    throw new NotImplementedException();
+}
+Vamos escrever o código de tratamento da requisição. O que preciso fazer é incluir um livro na lista para ler usando o método Incluir() do repositório. Para isso vou criar um objeto Livro. Mas peraí, qual é o nome do livro? Como pego o nome do livro que está no endereço da requisição?
+
+Você vai responder para eu procurar na propriedade Path do objeto Request, mas o AspNet tem uma maneira mais fácil ainda. Lembra que eu falei que toda a informação necessária se encontra no objeto HttpContext? Então lá vamos encontrar um método chamado GetRouteValue(), que recebe como argumento a chave que é justamente o nome do segmento que você definiu no template da rota. Ou seja, se quer recuperar o nome e autor do livro, basta fazer:
+
+private Task CadastroNovoLivro(HttpContext context)
+{
+    var livro = new Livro
+    {
+        Titulo = Convert.ToString(context.GetRouteValue("nome")),
+        Autor = Convert.ToString(context.GetRouteValue("autor")),
+    };
+    var _repo = new LivroRepositorioCSV();
+    _repo.Incluir(livro);
+    return context.Response.WriteAsync("Livro adicionado com sucesso!");
+}
+Vamos testar! Ótimo! Tudo funcionando.
+
+-- 03_A06 - Exibindo os detalhes de um livro ------------------------------
+
+No vídeo anterior você aprendeu a enviar dados em uma requisição através do endereço usando as Routes Templates, ou rotas com templates. Do lado do servidor nós tratamos a requisição no método NovoLivroParaLer() e dentro dele criamos um objeto Livro com os valores disponíveis na rota com o método GetRouteValue().
+
+Em seguida nós testamos a inclusão e verificamos o novo livro na lista ParaLer, certo?
+
+Mas e se quisermos ver outras informações do livro? Como sei que ele foi armazenado corretamente? Vamos implementar uma funcionalidade para ver os detalhes de um livro. Informações como seu Título, Autor e a lista onde ele atualmente está registrado. Dessa maneira vou aproveitar para revisar o que aprendemos em relação às rotas com templates.
+
+Para isso vou configurar minha aplicação para atender uma requisição cujo endereço será formado pela rota Livros/Detalhes/{id}.
+
+Agora vamos implementar nossa rota.
+
+Primeiro definimos o delegate responsável por tratar a requisição. Dentro do código será necessário recuperar o valor da chave id passada via route data, lembrando que preciso converter o valor passado como um object para inteiro. Daí fica fácil. Recupero uma instância de livro a partir do repositório usando Linq e exibo seus detalhes através do método Detalhes(). O código final do delegate fica assim:
+
+public Task ExibeDetalhes(HttpContext context)
+{
+    int id = Convert.ToInt32(context.GetRouteValue("id"));
+    var _repo = new LivroRepositorioCSV();
+    var livro = _repo.Todos.First(l => l.Id == id);
+    return context.Response.WriteAsync(livro.Detalhes());
+}
+Por fim temos que amarrar esse delegate à rota especificamente. O que eu preciso fazer mesmo? Muito bem, fazemos isso através do método MapRoute do RouteBuilder.
+
+A configuração de todas rotas com a inclusão dessa nova fica assim:
+
+routeBuilder.MapRoute("Livros/ParaLer", LivrosParaLer);
+routeBuilder.MapRoute("Livros/Lendo", LivrosLendo);
+routeBuilder.MapRoute("Livros/Lidos", LivrosLidos);
+routeBuilder.MapRoute("Cadastro/NovoLivro/{nome}/{autor}", NovoLivroParaLer);
+routeBuilder.MapRoute("Livros/Detalhes/{id}", ExibeDetalhes);
+Subimos o servidor e pronto! Verificamos que a nova rota está trazendo os detalhes de cada livro.
+
+Mas tem um problema. Se eu colocar um valor que não é inteiro (lixo, por exemplo), vai acontecer um erro 500, que é justamente uma exceção lançada na tentativa de conversão do id para inteiro.
+
+Na documentação sobre o roteamento no Asp.NET também temos a possibilidade de adicionar restrições às rotas mapeadas. São as chamadas Route Constraints. As restrições limitam o mapeamento e fazem com que o ASP.NET só execute determinado request delegate se a restrição for atendida.
+
+No nosso caso, queremos que apenas valores do tipo inteiro sejam atendidos na rota de exibição de detalhes. Para implementar essa restrição modificamos o mapeamento da rota assim:
+
+Livros/Detalhes/{id:int}
+Testo novamente a aplicação (não se esqueça de reiniciar o servidor) com a rota informando um id igual a lixo por exemplo, e verifico que agora recebo um código de status 404, indicando que o método não foi executado.
+
+Vamos para os exercícios e a gente se encontra no próximo vídeo. Até lá.
+
+-- 03_A07 - O que aprendemos ------------------------------------------
+
+Nessa aula você:
+
+conheceu o serviço de roteamento nativo do AspNet Core
+criou rotas com templates
+acessou os dados das rotas através do método GetRouteValue()
+configurou restrições para suas rotas com template para
+
+-- 04_A01 - Um formulário para entrada de dados -----------------------
+
+Gente, até agora toda a nossa interação com a aplicação é feita somente através do endereço do navegador. Você sabe que isso não é viável no mundo real. Os sites possuem milhares maneiras de obter feedback do usuário. Botões, animações, efeitos, listas, etc. Tudo é uma maneira de fazer com que o usuário se sinta bem no seu site, aumentando assim seu tempo ali. Vamos atacar esse problema nessa aula.
+
+A primeira coisa que vamos fazer é permitir que o usuário digite as informações de um livro para inclusão através de um formulário. Para renderizar controles visuais na página do navegador, usaremos uma nova linguagem, que é a famosa linguagem HTML. Essa linguagem é descrita e explorada em detalhes no curso de HTML/CSS que coloquei como pré-requisito. O principal objetivo dela é marcar o que cada parte de uma página significa, bastante parecido com um documento do Word. Essa marcação (daí o M do HTML, que vem de markup) é feita através de delimitadores de início e fim chamados tags. Em geral uma tag de início começa com o símbolo < seguido do nome da tag, terminando com o símbolo >. E uma tag de final começa com os dois caracteres </ seguido do nome da tag e por fim o caracter >. Como ficaria uma marcação HTML para renderizar um formulário?
+
+Usamos as tags <form> e </form> como delimitadores. Dentro do formulário queremos colocar 2 campos de entrada e 1 botão para enviar o formulário. O comportamento do navegador é que quando o formulário é submetido, um requisição é disparada para o servidor. Um campo de entrada é renderizado pela tag <input> (sem fechamento). E o botão é delimitado pela tag <button>. Assim:
+
+<form>
+    <input />
+    <input />
+    <button>Gravar</button>
+</form>
+Para mostrar o formulário vamos disponibilizar uma rota que mostra um formulário para o usuário. Crio o delegate e em seguida, vinculo usando o MapRoute().
+
+builder.MapRoute("Cadastro/NovoLivro", ExibeFormulario);
+Mas o que vou colocar no código desse delegate? Vamos colocar aquele HTML que mostramos anteriormente. Crio uma string do tipo html e escrevo lá.
+
+private Task ExibeFormulario(HttpContext context)
+{
+    var html = @"<form>
+        <input />
+        <input />
+        <button>Gravar</button>
+    </form>";
+    return context.Response.WriteAsync(html);
+}
+Subo servidor e testo o endereço /novo-livro. Opa, não funcionou! Mostrou as tags como se fossem texto puro. Porque? Precisamos ainda marcar o formulário como sendo um documento HTML. Então em volta dos delimitadores do formulário insiro a tag <html> e </html> que vão informar ao navegador para renderizar essa resposta como HTML. Será? Deixa eu ver...
+
+-- 04_A02 - Processando o formulário --------------------------
+
+No vídeo anterior mostramos o formulário HTML para o usuário.
+
+Mas repare que precisamos fazer mais coisas. Se eu tentar digitar aqui o título e o autor e depois clicar em Gravar, o formulário fica vazio e o endereço com uma interrogação no final. Como comportamento padrão, quando um formulário é submetido (ié, seu botão é clicado), o navegador envia uma requisição com os valores do formulário. Mas sabemos que toda requisição tem um endereço. Para onde o navegador enviou a requisição?
+
+Se eu olhar aqui na barra de ferramentas do desenvolvedor, vou descobrir que ele enviou para a própria página. Se quisermos enviar a informação para outra página, devemos explicitar isso em algum lugar né. Onde? No formulário! Como? Algumas tags HTML podem receber características para distinguí-las umas das outras. Isso é chamado no mundo HTML de atributo. Os atributos são colocados na tag de abertura, antes do caracter >. O atributo para indicar o endereço da requisição de submissão do formulário é action.
+
+E qual o endereço? Já temos uma rota que inclui livros, mas essa rota captura o título e o autor da própria rota. Então não podemos usá-la. Então vou criar a rota Cadastro/Incluir com o delegate ProcessaFormulario, que será bastante parecido com aquele que inclui um livro através da rota. Para começar vou copiar o código que está lá e testar.
+
+Executo a aplicação, insiro um livro e em seguida verifico a lista para ler. Veja que temos um livro com título e autor vazios! Porquê?
+
+Se eu olhar aqui no código do método ProcessaFormulario, vejo que as informações são recuperadas através do método GetRouteValue(), que pega os dados diretamente da rota. Mas sabemos que os dados não estão lá. Onde estão, afinal? Uma mariola pra quem pensou “na query string”. Sim! É lá que você vai encontrar os dados passados pelo formulário.
+
+Essa nova rota possui um símbolo de interrogação. Se você lembrar do curso de HTTP, vai saber que esse símbolo divide o endereço da requisição em duas partes: a rota propriamente dita e uma coisa que chamamos de Query String. A Query String contém uma série de pares chave-valor separados pelo delimitador &.
+
+Pessoal, lembre-se que para recuperar os valores via query string temos que determinar o nome de suas chaves. Veja que no endereço da requisição isso não está ocorrendo. Outra coisa importante é que quem está originando a requisição é o formulário. Então é lá que vamos configurar os nomes das chaves que serão recuperadas no servidor. Em cada campo de entrada eu defino um atributo chamado name que será usado com esse propósito: determinar o nome da chave na query string.
+
+private Task ExibeFormulario(HttpContext context)
+{
+    var html = @"<form>
+        <input name='titulo' />
+        <input name='autor' />
+        <button>Gravar</button>
+    </form>";
+    return context.Response.WriteAsync(html);
+}
+Como a query string faz parte da requisição, é lá que vamos procurar uma propriedade chamada Query, que é do tipo IQueryCollection. Essa coleção permite que você a indexe pela chave usando os colchetes, assim:
+
+context.Request.Query["titulo"]
+Pela definição do protocolo HTTP, é possível termos uma lista de valores a cada chave. Assim o AspNet retorna um objeto do tipo StringValues. Como só estamos interessados no primeiro valor, usamos o método First() e depois convertemos sua string para inteiro e armazenamos seu valor na variável id. Note o trabalho que tenho que fazer para recuperar apenas um parâmetro.
+
+var livro = new Livro()
+{
+    Titulo = context.Request.Query["titulo"].First(),
+    Autor = context.Request.Query["autor"].First(),
+};
+Vou colocar os dois nomes dos parâmetros, um em cada input e testar. Opa, show de bola! Agora temos um formulário HTML para o usuário cadastrar seu livro!
+
+-- 04_A04 - Isolando o HTML em seu próprio arquivo ---------------------
+
+Só para melhorar um pouco mais a experiência do usuário, vou colocar um rótulo dizendo que o primeiro campo é para o Tìtulo e o segundo é para o Autor. Quero também pular de linha em cada campo.
+
+Mãos à obra. Para colocar um rótulo em cada campo utilizo uma tag delimitada com <label> e </label>.
+
+E para pular de linha a cada campo eu uso uma tag simples (sem fechamento) chamada <br/>. Nosso código fica assim:
+
+var html = @"<html><form>
+
+    <label>Título:</label>
+    <input name='titulo' />
+    <br/>
+
+    <label>Autor:</label>
+    <input name='autor' />
+    <br/>
+
+    <button>Gravar</button>
+</form></html>";
+Perceba que cada mudança no HTML torna mais difícil sua manipulação dentro do código C#... o que podemos fazer para melhorar isso? Reflita sobre essa questão e vamos até o próximo vídeo para debater isso.
+
+No vídeo anterior, ficou uma pulga atrás da orelha quando começamos a colocar nossas respostas com HTML. Usar o próprio código C# para gerar isso não está parecendo uma boa ideia.
+
+Até porque uma página de um site tem um código bem mais elaborado que o que fizemos até agora. Para podermos focar no formulário, nós ignoramos uma série de coisas fundamentais na montagem do HTML. Veja por exemplo o código fonte desta página da Alura. Olha quanta coisa tem aqui nesse HTML!! (abrir uma página e rolar o código fonte pra ver a qtde de coisas)
+
+E tem mais. Atualmente o fluxo de trabalho de um site ou aplicação web envolve vários profissionais. Tem o profissional de UX que faz o levantamento junto do usuário e define como o site vai ser disponibilizado. Depois aparece o profissional de design, que traduz essas necessidades em um desenho em alto nível e depois monta um wireframe a partir destes desenho. Em seguida tem o profissional de front-end que gera o HTML e suas tecnologias relacionadas para implementar esse desenho. Em paralelo o profissional de backend (você) vai implementando o código necessário para tornar as páginas dinâmicas.
+
+Repare que na maioria das vezes não é você quem vai mexer no HTML! Você vai pegar um arquivo e usá-lo para sua funcionalidade! Do jeito que está o profissional de frontend vai ter que abrir seu código e jogar lá dentro o HTML. Muito bizarro!
+
+Outro problema que posso citar é o da geração do HTML e sua sintaxe. Imagina se eu esqueço algum caracter ou coloco algo em locais diferentes? Como o código está dentro de uma string, eu não tenho qualquer auxílio do editor para ajudar a gerar uma sintaxe válida, ou pelo menos com poucos problemas.
+
+Então chega de mimimi e vamos ver o que podemos fazer para resolver esses problemas. A causa principal do problema é que estamos misturando C# com HTML aqui. Então vamos separá-los em arquivos diferentes e quando eu precisar carregar o html eu abro esse arquivo e pronto.
+
+Você já deve imaginar que uma aplicação vai ter muitos arquivos HTML. E o que costumo fazer quando tenho muitos arquivos em um mesmo diretório? Separo-os em outras pastas né? Então, para separar os arquivos HTML dos outros arquivos vou criar uma pasta chamada HTML e criar meu primeiro arquivo lá. Vou dar o nome de formulario.html, ok? Usando o VS pra criar esse arquivo html ele já me coloca uma série de tags obrigatórias. Olha só que legal!
+
+Agora copio as tags do formulário pra cá.
+
+Olha que interessante. O editor do VS já corrigiu algumas coisas pra mim! Essa é uma das vantagens da gente colocar o HTML separado. Vou corrigir algumas coisas aqui. O código final fica assim:
+
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<body>
+    <form action="/Cadastro/Incluir" method="post">
+
+        <label>Título:</label>
+        <input name="titulo" />
+        <br />
+
+        <label>Autor:</label>
+        <input name="autor" />
+        <br />
+
+        <button>Gravar</button>
+    </form>
+</body>
+</html>
+Agora preciso achar uma maneira de carregar o conteúdo desse arquivo toda vez que for usá-lo. Vamos voltar ao código. O que preciso fazer é criar um método que vai isolar a responsabilidade de abrir determinado arquivo e ler seu conteúdo e depois vou substituir no delegate ExibeFormulario().
+
+private string CarregaArquivoHTML(string nomeArquivo)
+{
+    var nomeCompletoArquivo = $"HTML/{nomeArquivo}.html";
+    using (var arquivo = File.OpenText(nomeCompletoArquivo))
+    {
+        return arquivo.ReadToEnd();
+    }
+}
+
+private Task ExibeFormulario(HttpContext context)
+{
+    var html = CarregaArquivoHTML("formulario");
+    return context.Response.WriteAsync(html);
+}
+Vamos testar e olha lá, que beleza! Agora eu tenho o código C# e o código HTML separados em arquivos diferentes. Se eu visualizar o código-fonte da página já vou ver aquelas tags que o editor criou pra mim automaticamente.
+
+-- 04_A06 - Métodos de envio da requisição ----------------------
+
+No vídeo anterior separamos o HTML do código C# para resolver vários problemas de manutenção. Então quando eu crio um livro aqui e passo as informações, cadastro o livro corretamente. Mas observa novamente comigo o endereço da rota. Os valores estão sendo informados na query string. Mas será que esse é uma maneira segura de fazer isso? O que você acha?
+
+Vamos refletir um pouco. Do jeito que estamos fazendo, todas as informações do formulário estão sendo enviadas no endereço da requisição.
+
+Agora pensa num formulário de login, onde eu passo o login e a senha. É seguro passar a senha no endereço? Quando nossa aplicação estiver hospedada em algum servidor na internet, nossa requisição vai passar por vários servidores. E o endereço com o login e a senha vai ficar visível por várias máquinas. Quem quiser “ler” sua senha vai conseguir! Péssimo né?
+
+Outro problema nesse jeito de enviar requisições é o seguinte. Imagine um formulário com um campo com muita informação. Por exemplo, um campo onde você pode escrever MUITOS caracteres, sei lá 5 mil, 8 mil. Isso vai pelo endereço né? Será que um endereço de requisição suporta essa quantidade de informações?
+
+Mas e aí, o que fazer? Nós temos escolha? A resposta é sim, temos. Qual? No curso HTTP da Alura e vai se lembrar que uma requisição pode ser enviada com métodos diferentes. Os mais comuns são o GET e o POST. O método padrão é o GET. Vamos olhar a especificação do método GET no HTTP.
+
+Beleza, então temos que usar o método POST em formulários. Como mudar? Lá no formulário HTML colocamos o método. Veja como o editor ajuda a gente a completar. E detalhe: com aquela separação que fizemos (entre HTML e C#) não precisamos parar o servidor e reiniciar!
+
+Vou testar o envio do formulário. Beleza, pelo código fonte estou vendo que o HTML mudou, ok. Agora vou cadastrar um livro e… ops, deu erro!
+
+Mas antes de analisarmos o erro no código, veja que o endereço não tem mais a query string! E esse é justamente o problema! Estamos recuperando os dados diretamente da query string. E como mudamos para POST, as informações agora são enviadas em outro lugar, e esse lugar em vez de Query é o Post. Basta substituir no código e testar.
+
+Subo o servidor e testo a inclusão. Show de bola!
+
+-- 04_A08 - Gerando HTML dinamicamente ------------------------
+
+Na aula anterior reforçamos a idéia básica do HTML, que é de marcar regiões e elementos em uma página. Reforçamos também que o navegador é especializado em renderizar HTML. No entanto, temos várias rotas implementadas em nossa aplicação que não retornam HTML. Por exemplo, as funcionalidades que mostram as listas Para Ler, Lendo e Lidos. Vou executar aqui a aplicação e repare a resposta é um texto sem nenhuma formatação!
+
+Uma aplicação que se preze deve mostrar a lista de livros formatada com HTML. Vamos ver como fazer isso nesse vídeo. A marcação HTML para indicar uma lista emprega duas tags. A primeira é usada para delimitar a lista, e seu código é <ul>. A segunda é usada em cada item da lista, e o código é <li>.
+
+Então vamos criar um arquivo HTML igual ao que fizemos para definir o formulário HTML. Vou chamar esse arquivo de para-ler.html, colocar o HTML específico para representar uma lista lá, e no atendimento da requisição associada à rota livros/paraler eu vou usar esse arquivo.
+
+E quando eu executar a aplicação, vou emitir agora uma resposta HTML! Olha só.
+
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<body>
+    <ul>
+        <li>A Arte da Procrastinação - John Perry</li>
+        <li>It, A Coisa - Stephen King</li>
+        <li>Carrie, A Estranha - Stephen King</li>
+    </ul>
+</body>
+</html>
+O problema é que esse arquivo é estático. Ou seja, ele não muda se um livro mudar de lista, ou um livro for adicionado. Continua sempre com os mesmos três livros para sempre. (Essa é a diferença entre URLs estáticas e dinâmicas. A URL estática não muda seu conteúdo sem que exista uma intervenção humana direta ou indiretamente. Já a URL dinâmica pode mudar seu conteúdo sem qualquer intervenção. O próprio software vai se encarregar de processar os dados e exibir informações diferentes para a mesma URL.)
+
+E isso não é o que a gente quer. Queremos que essa lista seja montada a partir dos livros que estão armazenados no repositório de livros! Como fazer isso?
+
+Você que é um cara observador já percebeu que cada livro deve gerar uma tag <li>, certo? Então eu posso fazer um código em meu método ListaLivrosParaLer() que vai percorrer a lista de leitura ParaLer e colocar uma tag <li> via código.
+
+Preciso indicar no HTML que vou substituir um determinado símbolo por cada livro. No nosso exemplo estou usando o símbolo #NOVO-ITEM#.
+
+Daí em cada iteração do foreach, eu uso o método Replace() da classe String para isso, não esquecendo de colocar de volta o símbolo. Depois do loop eu removo o símbolo, porque já não existem mais livros para colocar na lista. O código final do método fica assim:
+
+public Task LivrosParaLer(HttpContext context)
+{
+    var _repo = new LivroRepositorioCSV();
+    var conteudoArquivo = CarregaArquivoHTML("para-ler");
+
+    foreach (var livro in _repo.ParaLer.Livros)
+    {
+        conteudoArquivo = conteudoArquivo
+            .Replace("#NOVO-ITEM#", $"<li>{livro.Titulo} - {livro.Autor}</li>#NOVO-ITEM#");
+    }
+    conteudoArquivo = conteudoArquivo.Replace("#NOVO-ITEM#", "");
+
+    return context.Response.WriteAsync(conteudoArquivo);
+}
+Vou executar a aplicação e agora a lista está sendo exibida por completo. E reparem na característica dinâmica da URL: mesmo que eu adicione um livro o conteúdo para a mesma URL é alterado, sem nenhuma intervenção externa.
+
+Essa solução ainda não é a ideal, mas meu objetivo é demonstrar que para uma página se tornar dinâmica ela precisa ser manipulada por algum código no servidor. Beleza, pessoal? Agora você vai fazer a mesma coisa para as outras duas listas que estão faltando nos exercícios. E compara seu código com o meu para ver se ficou tudo certo.
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
+-- 05_A01 - A classe Startup e suas responsabilidades -------------------
+
+Gente, faz um favor pra mim, abra aí no seu computador a classe Startup e responde Sim ou Não: se houver uma mudança na aplicação, você acha que a classe Startup vai mudar?
+
+Sim! Basicamente qualquer alteração na aplicação vai impactar essa classe. A própria evolução do curso provou isso. Tudo aconteceu nessa classe. É quase como se essa classe fosse a aplicação.
+
+Observa aqui na região onde declaramos todas as dependências da classe Startup que ela também depende da classe Livro, LivroRepositorioCSV. Ou seja, se houver alguma mudança nessas duas classes, é possível que a classe que contém o código de inicialização da aplicação tenha que ser alterado. Portanto existe uma forte dependência entre a classe de inicialização com as classes de negócio.
+
+E isso não é legal, porque buscamos sempre uma aplicação que minimize o impacto de uma mudança. Uma maneira de fazer isso é definir nossas classes com responsabilidades bastante específicas.
+
+E qual é a responsabilidade da classe Startup?
+
+Observe que o propósito inicial desta classe era centralizar o código de inicialização do servidor. Agora, além disso, temos todo o código de implementação das funcionalidades entulhado aqui dentro. Veja alguns exemplos dessas funcionalidades: ProcessaFormulario(), ExibeFormulario(), LivrosLendo().
+
+No próximo vídeo vamos começar algumas mudanças em nossa aplicação para tentar descolar as dependências dessa classe.
+
+-- 04_A03 - Isolando as responsabilidades em classes distintas ----------
+
+Vou começar criando uma classe para mover toda a lógica de exibição das listas de livros. Não estou preocupado com o nome da classe agora. Espero que no final eu chegue a um nome representativo. Agora vou mover todos os métodos associados a exibição de listas para cá: LivrosParaLer, LivrosLendo , LivrosLidos e ExibeDetalhes, além dos métodos auxiliares CarregaArquivoHTML e CarregaLista. Como tenho nessa classe as lógicas de exibição das listas de livros, vou chamar a classe de LivrosLogica.
+
+E agora na classe Startup, na construção das rotas eu vou chamar essa classe (LeituraLogica) pra montar cada rota. Perceba que pra isso vou precisar usar métodos estáticos. Hmmmm, não ficou muito bom, mas não vou pensar nisso agora. Por enquanto estou preocupado em limpar a classe de inicialização.
+
+Vou fazer o mesmo para as lógicas de cadastro. Movo os métodos, coloco-os como estáticos e construo as rotas usando essa nova classe, que estou chamando de CadastroLogica.
+
+Note que também preciso ter o método auxiliar CarregaArquivoHTML nessa classe. Por enquanto vou copiar e colar esse método também para a classe de cadastro.
+
+Repare agora que minha classe Startup agora tem apenas os dois métodos ConfigureServices() e Configure(), cuja função é de inicialização. E outra coisa importante: diminuímos sua dependência com outras partes da aplicação, a saber a camada de negócio e a camada de acesso aos dados. Comprove isso na região using.
+
+Para resolver o código duplicado no método CarregaArquivoHTML, vou movê-lo para uma classe auxiliar chamada HtmlUtils e guardá-la na pasta HTML. Beleza?
+
+Essas duas classes, que chamei de LeituraLogica e CadastroLogica foram criadas especificamente para atender requisições. Então vou colocá-las em uma pasta chamada Logica, ok?
+
+O que eu fiz foi apenas separar as responsabilidades a fim de evitar que a classe Startup ficasse muito vulnerável a mudanças em minha aplicação.
+
+-- 04_A04 - O padrão MVC ----------------------------------------------
+
+Note que agora temos uma distinção entre as partes de minha aplicação web. Existe uma arquitetura bem nítida, onde novas peças podem encaixar com simplicidade. Tenho uma parte para tratar a lógica de atendimento de requisições, outra para armazenar o HTML das respostas, outra para representar as classes de negócio e outra para representar as classes de acesso aos dados da aplicação.
+
+Essa distinção é um padrão muito comum em aplicações web, e é chamado de MVC. Essa sigla vem de Model, View, Controller e a correspondência com nossas partes é a seguinte:
+
+a lógica de atendimento das requisições é a parte Controller, pois é nela que as requisições são controladas
+as classes de negócio estão na parte Model, pois elas modelam a aplicação
+classes e arquivos para tratar do HTML se encontram na parte View, porque elas se tornarão a parte que o usuário irá ver
+Com isso, mesmo sem saber, você implementou o padrão MVC em sua aplicação Web. Parabéns!
+
+Contudo, nossa implementação rudimentar é bastante falha. Existem grandes problemas e lacunas na nossa implementação. Você consegue fazer uma lista? Escreve aí, que a gente vai discutí-los juntos.
+
+-- 04_A04 - O padrão MVC --------------------------------------
+
+Note que agora temos uma distinção entre as partes de minha aplicação web. Existe uma arquitetura bem nítida, onde novas peças podem encaixar com simplicidade. Tenho uma parte para tratar a lógica de atendimento de requisições, outra para armazenar o HTML das respostas, outra para representar as classes de negócio e outra para representar as classes de acesso aos dados da aplicação.
+
+Essa distinção é um padrão muito comum em aplicações web, e é chamado de MVC. Essa sigla vem de Model, View, Controller e a correspondência com nossas partes é a seguinte:
+
+a lógica de atendimento das requisições é a parte Controller, pois é nela que as requisições são controladas
+as classes de negócio estão na parte Model, pois elas modelam a aplicação
+classes e arquivos para tratar do HTML se encontram na parte View, porque elas se tornarão a parte que o usuário irá ver
+Com isso, mesmo sem saber, você implementou o padrão MVC em sua aplicação Web. Parabéns!
+
+Contudo, nossa implementação rudimentar é bastante falha. Existem grandes problemas e lacunas na nossa implementação. Você consegue fazer uma lista? Escreve aí, que a gente vai discutí-los juntos.
+
+-- 06_A01 - Roteamento padrão -----------------------------------------
+
+Na aula anterior você finalmente descobriu o padrão MVC. Viu como é tranquilo? Nenhuma solução complexa ou ciência da NASA. Usando nossos conhecimentos de orientação a objetos, da linguagem C# e da api do .NET, nós implementamos uma arquitetura baseada no padrão MVC. Porém, se nós continuássemos a evoluir nossa aplicação em cima desse código, iríamos enfrentar alguns problemas. São esses problemas que eu quero mostrar pra vocês nessa aula (se você montou sua lista de problemas, vem comigo pra gente compará-las juntos).
+
+Primeira coisa: imagina que teríamos que implementar uma nova funcionalidade. Por exemplo, mover um livro para outra lista. De uma maneira geral, o que seria necessário? Definir a rota e escrever a lógica para atender a requisição relativa essa rota, certo? Onde eu configuro a rota? Ganhou uma mariola quem disse “na classe Startup”. Então um problema que eu enfrento nessa aplicação é que a cada funcionalidade eu tenho que alterar a classe de inicialização para incluir a nova rota atendida. Será que não conseguimos separar isso? Vamos explorar essa idéia.
+
+Olha aqui para as rotas e veja se consegue identificar algum padrão nelas. Se quiser pausa o vídeo, vai lá. Muito bem, o padrão que estamos usando para nossas rotas é o nome da classe de lógica, pelo menos o prefixo dela, e o segundo segmento é o nome do método! Foi esse padrão que você pensou?
+
+Se existe um padrão, dá pra gente escrever um código que utiliza esse padrão para rotear! Ou seja, eu poderia extrair o nome da classe e do método diretamente da rota e tentar usar essas informações para invocar o método! Qual a vantagem disso? A vantagem é que eu poderia evitar escrever na classe Startup a cada nova funcionalidade! Menos dependência!
+
+Então eu criei uma classe para fazer o roteamento usando essa regra implícita, essa convenção. Só pra não aumentar muito o tempo desse vídeo, eu já estou com ela aqui na minha aplicação e vou deixar um link para o código com essa classe. Mas não fiquem achando que é mágica não! Se você estiver curioso sobre essa classe, eu criei um vídeo especial chamado Para Saber Mais: Criação da classe de roteamento por convenção para demonstrar a criação dessa classe. Agora que eu já tenho essa classe aqui, vou integrá-la a minha aplicação. O que eu preciso fazer é substituir o mapeamento de cada rota individual pela chamada do método estático RoteamentoPadrao.Tratamento().
+
+Repare que agora a classe Startup não depende mais das lógicas diretamente. E pra demonstrar a vantagem desse roteamento padrão, eu vou criar um novo RequestDelegate na classe LivrosLogica chamado Teste(), onde vou responder “nova funcionalidade implantada”, subir o servidor, testar o endereço Livros/Teste e tcharam! A nova lógica foi implementada sem realizarmos qualquer mudança na classe de inicialização da aplicação. Repare que saímos de uma situação em que essa classe era quase a próprio sistema para uma situação onde ela nem precisa mais ser modificada.
+
+Isso foi uma melhoria importante, que deixa nossa aplicação mais distribuída. Contudo, tivemos que abandonar o desenvolvimento da aplicação de listas de leitura para escrever um código genérico, que pode ser usado em outras aplicações. E até que ponto essa classe RoteamentoPadrao é robusta para entrar em produção? Será que já foi bem testada? Será que alguém já não teve essa solução antes? E é claro que estou manipulando a pergunta para que eu possa responder sim, essa solução existe e é o framework AspNet Core MVC.
+
+No próximo vídeo a gente vai começar a substituir nossa implementação do MVC pela implementação do AspNet Core MVC e com isso vamos abordar os outros problemas que nossa abordagem tinha. Te vejo lá!
+
+-- 06_A02 - Usando o AspNet Core MVC ---------------------------------
+
+Pra usar o framework AspNet Core MVC em nossa aplicação, a gente precisa adicionar o seu pacote em nosso projeto. Então vamos abrir o console do gerenciador de pacotes e colocar o comando
+
+Install-Package Microsoft.AspNetCore.Mvc -Version 2.0.2
+Lembrando que sua máquina precisa de acesso à internet. Pronto, instalamos o pacote.
+
+Agora vamos usar o framework e pra isso preciso informar no método ConfigureServices(), chamando o método AddMvc().
+
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddRouting();
+    services.AddMvc();
+}
+Agora vou substituir o roteamento padrão que eu determinei pelo roteamento padrão do AspNet Core MVC. E a convenção que ele utiliza é bastante parecida com a que a gente criou. Coincidência né! A convenção do AspNet Core MVC é no primeiro segmento controller e o segundo action. O significado de cada segmento ainda é o nome da classe e o nome do método que será usado para tratar a requisição. A diferença é que o framework usa como sufixo Controller ao invés de Logica. E o método não será mais um RequestDelegate. Vamos ver isso já já. Para adicionar o roteamento padrão do AspNet Core MVC basta utilizarmos o método de extensão UseMvcWithDefaultRoutes().
+
+Pronto, assim a gente já consegue subir o servidor e testar…
+
+Contudo ainda não está roteando. Porquê? Lembram que falei que o nome da classe não podia mais terminar com Logica? Tinha que ser Controller.
+
+Vou mudar o nome das minhas classes de lógicas para usar o sufixo Controller. Vou aproveitar e renomear a pasta também, tomando o cuidado de alterar a declaração do namespace. Ok.
+
+Agora vou mudar os métodos. No caso vou começar pelo método Teste, pois é esse que quero usar para ver se minha aplicação agora está usando o framework certinho. Agora nossos métodos não precisam mais ser um RequestDelegate. Vamos fazer essas modificações. Primeira coisa é, em vez de retornar um Task, retornar uma string com a resposta. E, já que não uso mais o contexto HttpContext, não preciso solicitá-lo como argumento do método. O código final fica assim:
+
+public string Teste()
+{
+    return "Nova funcionalidade implementada.";
+}
+Subo a aplicação para testar essa rota especificamente. Tudo funcionando! Veja que agora eu abstraí todo o trabalho de roteamento e uso das propriedades de HttpContext porque deixei essa responsabilidade para o framework. Mas foi muito bom aprender internamente como funciona!
+
+-------------------------------------------------------------------------
+
+-- 07_A01 - O estágio ExecuteResult --------------------------------------
+
+Agora vamos começar a trabalhar nas actions que retornam HTML.
+
+Antes de continuar, duas observações...
+
+A classe Startup não depende mais da minha aplicação, demonstrado por não precisarmos declarar determinados namespaces na seção de importação. Veja: não dependemos mais da minha implementação MVC, nem da minha lógica e nem do sistema de roteamento do AspNetCore.
+Quando adiciono o serviço MVC, dentro do método de extensão AddMvc() ele automaticamente adiciona os serviços dos quais depende, e um deles é o serviço de roteamento. Portanto não precisamos mais adicioná-lo na mão e vou removê-lo do meu código.
+Vamos começar a resolver o HTML pelo formulário. Vou mudar o retorno para string e remover o argumento de entrada HttpContext. Beleza. Vamos testar. Opa! Ele retornou texto puro!! Porquê?
+
+Porque agora a resposta não é diretamente escrita por nós. Ela é escrita pelo framework. Ou seja, existe mais um estágio depois da execução da action, e ele é chamado Execute Result. Quando retornamos uma string, esse estágio entende que queremos mandar um texto puro como resposta e faz isso. Veja o content-type da resposta: text/plain.
+
+Como o framework faz para retornar HTML então? Usando OO! Repare que podemos retornar diferentes respostas. Umas pode ser texto puro, outras HTML. Tem mais, já retornamos também respostas com códigos de status diferentes. Aquela do 404, lembra? Cada tipo de resposta representa um resultado de action diferente. Então o que o framework fez foi encapsular esse conceito (resultado de uma action) em um tipo, mais especificamente uma interface, a IActionResult. Só por curiosidade, veja a declaração dessa interface. Olha o método ExecuteResultAsync(). Bem parecida com RequestDelegate, não? Agora em vez de retornarmos uma string, podemos retornar um objeto que implementa o tipo IActionResult.
+
+Daí, pra cada tipo diferente, cria-se uma implementação diferente. E pro caso de um resultado que retorna um HTML? O tipo que implementa IActionResult e uma resposta HTML é o ViewResult. Então o que eu vou fazer é criar uma instância desse tipo. E agora, para substituir o código que carrega o arquivo eu digo que o nome da view é formulario.html. Para finalizar eu retorno esse objeto. Vamos testar?
+
+Opa! Erro 500. Porquê?
+
+Próximo vídeo vamos descobrir o que está acontecendo.
+
+-- 07_A02 - Atividade - Navegador não redenriza -------------------
+
+Seguindo o vídeo anterior, Diego escreveu a action abaixo para responder um formulário HTML quando executada.
+
+public string Formulario()
+{
+    var html = HtmlUtils.CarregaArquivoHTML("form");
+    return html;
+}
+Contudo, ao testar a mudança Diego recebeu como resultado o texto puro do formulário HTML, sem que o navegador o tivesse renderizado.
+
+Selecione a alternativa correta que explica o motivo para esse acontecimento.
+
+ RESPOSTA: Não renderizou porque o estágio Execute Result por padrão trata action que retornam string como texto puro.
+
+-- 07_A03 - Resultados de Actions - Atividade ------------------
+
+Leia as seguintes afirmações e escolha a alternativa correta.
+
+1. Um objeto da classe ViewResult representa um resultado HTML
+2. IActionResult é uma interface que representa o resultado de uma action.
+3. ViewResult herda de IActionResult para representar um tipo específico de resultado
+  3. CORRETA!
+4. Existem vários tipos de resultados de actions. A classe ViewResult é um deles.
+
+ * ViewResult implementa a interface IActionResult, não herda.
+
+-- 07_A04 - Convenções nas views do AspNet Core MVC -----------------
+
+ . Para descobrirmos o erro que está acontecendo, eu vou habilitar uma funcionalidade no AspNet Core para mostrar as informações de erro do servidor. Mas cabe ressaltar que ela só pode ser usada em ambientes de desenvolvimento, porque justamente mostra várias informações sensíveis, que podem ser utilizadas para o mal. Então, reforçando: só use essa funcionalidade em ambientes que não sejam de produção, ok?
+
+Onde habilito essa funcionaldade? Na classe de inicialização, Startup. Vou no método Configure() e chamo o método UseDeveloperExceptionPage(), que vai mostrar uma página bonitinha com as informações do erro. Então vou subir o servidor e verificar o erro.
+
+Veja que a página informa que não foi possível encontrar formulario.html.
+
+Repara que o framework procura especificamente em uma pasta chamada Views, e dentro dela em uma subpasta com o nome de nosso controlador! E gente, isso é uma regra do framework, tá? Então vamos nos adequar a essas regras. Vou renomear a pasta HTML para Views, e criar uma subpasta Cadastro dentro dela, movendo o arquivo pra lá. Agora acho que vai achar. Ops, mesmo erro. Estranho. Peraí, olha aqui. Ele está buscando um arquivo com extensão CSHTML. Já vamos ver que extensão é essa, mas primeiro quero botar pra funcionar. E se eu mudar a extensão do arquivo para essa aí? Vamos ver. Também tenho que mudar o código. E outra coisa que temos que fazer é informar que esse arquivo deve ser copiado para o diretório de saída quando for mais novo. Vamos testar agora!
+
+Agora o erro mudou. Olha essa mensagem: An error occurred during the compilation of a resource required to process this request.
+
+Não sei se você observou, então vou destacar a palavra pra você. “Compilation”. Ué, compilação? A gente não já compilou o código antes de executar?
+
+Mas antes de falarmos sobre isso, vamos resolver esse problema. Descobri que isso é um bug reportado para projetos que usam o .NET Standard 2.0 e a solução é a seguinte. Me sigam aí:
+
+vou abrir o arquivo do projeto usando o botão direito e selecionando Editar Alura.ListaLeitura.App.csproj.
+dentro desse arquivo XML, vou colocar mais uma tag aqui na tag chamada PreserveCompilationContext, com valor igual a true. O código que vocês devem colocar é o seguinte:
+<PropertyGroup>
+ <OutputType>Exe</OutputType>
+ <TargetFramework>netcoreapp2.0</TargetFramework>
+ <PreserveCompilationContext>true</PreserveCompilationContext>
+</PropertyGroup>
+em seguida você vai precisar limpar a solução e recompilá-la. Agora vamos testar novamente e se tudo der certo, o formulário será exibido!
+Ufa! Funcionou! Então, recapitulando, o que fizemos foi:
+
+criamos um objeto ViewResult que representa o resultado de actions que vão retornar HTML
+o arquivo deve ter extensão cshtml e ficar dentro da pasta Views e subpasta com nome do prefixo do controlador
+sua action deve retornar esse objeto para o estágio Execute Result
+Vamos continuar com as outras actions que retornam HTML.
+
+Essas ficam no controlador de LivrosController. Então o que eu preciso fazer é retornar um IActionResult e criar um objeto do tipo ViewResult, com ViewName igual a “lista”. Mas para isso preciso criar uma subpasta chamada Livros (lembram da convenção né?) e copiar o arquivo aqui pra dentro, mudando sua extensão e indicando que ele será copiado para a saída.
+
+Vamos testar e ver o que aconteceu. Funcionou, mas o problema é que esqueci de substituir #NOVO-ITEM#. Só que agora não tenho mais acesso a string do conteúdo para substituir. Como o framework resolve isso? Vamos ver esse assunto no próximo vídeo.
+
+-- 07_A05 - PreserveCompilationContext -------------------------------
+
+Pesquisando nas issues relacionadas ao AspNet Core descobri que a opção PreserveCompilationContext é uma configuração exigida para compilar as views. Quando ela está habilitada indicamos que nossas views serão compiladas em tempo de execução. Ela pode ser desligada e usada em conjunto com outras opções para pré-compilar as views e assim diminuir o tempo de espera do usuário ao solicitar aquela view específica.
+https://github.com/aspnet/AspNetCore/search?q=PreserveCompilationContext&type=Issues
+Mais detalhes (em inglês) aqui.
+
+PS.: agradecimentos ao Thiago por postar essa dúvida no fórum.
+
+-- 07_A06 - Atividade - Ajude Roberta a entender as convenções --------------
+
+Roberta criou uma aplicação com 2 controladores nomeados como HomeController e RoteiroController. Para usar a convenção de views do Asp.Net Core MVC, seus arquivos HTML deverão estar armazenados respectivamente em quais pastas?
+
+Alternativa correta
+
+R: Pasta Views/Home e Views/Roteiro
+ 
+Isso aí! O framework usa a pasta Views e subpastas cujo nome será o prefixo de cada classe controladora.
+
+-- 07_A07 - O motor de views Razor -------------------------------
+
+Reparem que não temos acesso a string para fazer a substituição no HTML. Como o framework resolve isso? E a resposta está associada ao fato de que precisamos tornar nossa página dinâmica. Para isso, o framework delegou a responsabilidade para uma entidade específica chamada View Engine, ou seja, um motor que se encarrega de juntar o HTML com o código necessário para tornar a página dinâmica. Cada view engine tem suas próprias regras e padronizações.
+
+E quem é a view engine padrão? Uma implementação chamada Razor. Quais são suas regras? As views devem ter extensão cshtml, e você pode escrever código C# dentro do arquivo. Eita, como assim? Isso mesmo, vc pode colocar código csharp dentro da view. Essa é a razão de termos visto um erro de compilação quando chamamos a view do formulário no vídeo anterior, lembram? O Razor compila as views quando são invocadas.
+
+Então já que posso colocar código aqui na view lista, vou transferir esse código que manipula a lista de livros para lá. Assim. Não precisamos mais substituir nada, então vou remover esse código de replace. Só que agora temos uma confusão entre o que é HTML e o que é C#? Como o Razor sabe qual é qual? Ele sabe porque vamos usar um símbolo para identificar o que é código. Esse símbolo é o arroba. Assim. Tanto no foreach quanto na variável livro.
+
+@foreach (var livro in livros)
+{
+    <li>@livro.Titulo - @livro.Autor</li>
+}
+Mas olha o que está acontecendo. O Razor está reclamando da lista livros. Com toda razão, né? Afinal, onde ela está sendo declarada? Eu poderia declarar a variável aqui, já que posso escrever código na view, mas lembrem-se que já discutimos que é má prática juntar código com HTML. Claro que não vamos evitar completamente, mas se pudermos minimizar, tanto melhor. Então como o Razor faz para transportar objetos do estágio de execução da action para o estágio de execução da view, e por consequência, da action para a view?
+
+Pra quem respondeu OO, muito bem! Repare que o framework tem acesso a instância do controlador. Se definirmos uma propriedade para guardar a lista de livros, o framework pode repassá-la para o Razor. Contudo, o framework não conhece essa propriedade. Então o próprio framework criou uma classe com propriedades para transporte de objetos e basta que nossos controladores herdem dessa classe. O nome dessa classe é Controller. Então vou fazer LivrosController herdar de Controller, e em vez de criar minha propriedade para transporte da lista, vou usar uma já existente chamada ViewBag, que representa o objeto a ser consumido pela view. Então eu passo a lista para ViewBag.Livros e na view eu pego essa informação dentro do foreach.
+
+Desse jeito eu já consigo rodar minha aplicação para testar se fiz as modificações. Contudo, quando chamamos a rota desejada temos o erro NullReferenceException. Isso acontece porque a ViewBag da view não foi inicializada. Veja que em nosso código apenas criamos um objeto ViewResult e setamos a propriedade ViewName. Não definimos mais nada. Para inicializar a ViewBag de ViewResult usaremos o método View(), definido na classe-pai Controller, passando como argumento de entrada o nome da view desejada. O código da action ParaLer() fica assim:
+
+public IActionResult ParaLer()
+{
+    var _repo = new LivroRepositorioCSV();
+    ViewBag.Livros = _repo.ParaLer.Livros;
+    return View("lista");
+}
+Ok, tá tudo funcionando. Vou fazer o mesmo para as outras duas actions Lendo e Lidos. Testo de novo e pronto. Terminei de substituir minha implementação do MVC pelo AspNet Core MVC!
+
+-- 07_A09 - Conclusão -------------------------------------------
+
+Nessa aula você conheceu dois recursos muito importantes do framework AspNet Core MVC para renderizar suas views: o estágio ExecuteResult, que é onde o framework escreve a resposta HTTP a partir da view que você montou. E o motor de renderização de views Razor, que é a implementação padrão.
+
+Essa também foi a última aula! Como falei no começo do curso, agora você tem uma base sólida para entender o porquê de cada parte dessa estrutura que o VS criou quando criamos um novo projeto usando AspNet Core com MVC. E vai ser uma boa oportunidade para fazer uma revisão de um projeto assim.
+
+A pasta Controllers estão os controladores de nossa aplicação. O nome de um controlador termina com o sufixo Controller e herda da classe base Controller. Seus métodos são actions e retornam implementações de IActionResult.
+
+Para gerar as views temos uma estrutura de pastas que começa em Views e subpastas respectivas aos prefixos dos nomes dos controladores. Dentro de cada subpasta temos arquivos com extensão cshtml e neste projeto aqui existe uma correspondência entre a action e a view.
+
+Na pasta Models estão os modelos da aplicação.
+
+A classe de inicialização da aplicação. Ela possui os métodos ConfigureServices(), que adiciona o serviço MVC, e o método Configure(), que além de outras coisas define o roteamento padrão do framework MVC.
+
+A classe Program tem o código que sobe o host a partir das configurações do hospedeiro web (usando Kestrel e classe de inicialização Startup).
+
+Agora tá na hora de você continuar seu aprendizado em outros cursos. Quem sabe não nos encontramos aí pela Alura? Boa sorte. Fique em paz!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
