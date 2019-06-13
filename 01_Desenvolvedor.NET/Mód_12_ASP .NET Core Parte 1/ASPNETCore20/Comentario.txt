@@ -1,0 +1,60 @@
+
+
+-- 01_A02 - Um curso em 2 partes -----------------------------------------
+PRÓXIMA ATIVIDADE
+
+Este curso é dividido em 2 partes
+Várias mudanças e novidades surgiram nos últimos anos dentro da comunidade de desenvolvedores de tecnologias Microsoft, sendo as mais notáveis o surgimento do .NET Core e do ASP.NET Core.
+
+Pensando nas tecnologias mais atuais, a Alura disponibilizou para desenvolvedores de tecnologias Microsoft o curso ASP.NET Core 2.0, dividido em duas partes, que abordam de forma prática a criação de uma aplicação de e-commerce, do início ao fim.
+
+Curso Asp.NET Core 2.0 parte 1:
+Uma webapp usando o padrão MVC
+
+Faça esse curso e...
+Aprenda a usar a última versão da plataforma web usada por mais de 45 milhões de websites no mundo todo
+Desenvolva websites com código compatível com Windows, Linux e Mac OS
+Crie websites prontos para a nuvem
+Aprenda o MVC, o padrão mais utilizado para desenvolvimento web
+Aumente sua produtividade com o conteúdo dinâmico com Razor View Engine e das Tag Helpers
+Aprenda a configurar o Entity Framework Core e migrations para criar bancos de dados e tabelas e consultas no SQL Server
+Curso Asp.NET Core 2.0 parte 2:
+Melhorando sua webapp com validações e segurança.
+
+Faça esse curso e...
+Aprenda a organizar código JavaScript com classes e métodos
+Permita que dados do modelo trafeguem do cliente para o servidor, e vice-versa, através de Data Contract
+Atualize as quantidades dos produtos no banco de dados com Entity Framework
+Utilize Tag Helpers para agilizar a elaboração de view com formulário
+Obtenha um pedido do banco de dados, altere e atualize o pedido no banco de dados
+Reforce a segurança da aplicação web com o Token Anti-Falsificação.
+
+-- 01_A03 - Introdução ------------------------------------
+
+Neste curso aprenderemos a criar uma aplicação de comércio eletrônico utilizando o ASP.NET Core 2.0.
+
+Iniciaremos pela criação do projeto, no Visual Studio Code, utilizando o padrão MVC. Ele contém três componentes, o model, o view, e o controller. Cada um deles será explorado em detalhes ao longo do curso. Aprenderemos a criar uma rota padrão para acessar cada uma das páginas da nossa aplicação.
+
+Veremos como criar um modelo, que é um conjunto de classes em C# a partir do qual geraremos um banco de dados. Para isso, utilizaremos um componente denominado Entity Framework Core, que converterá nossas classes C# para uma tabela do banco de dados. Estudaremos o relacionamento entre estas entidades por meio de propriedades de navegação do nosso modelo. Conheceremos o conceito de migrações, que permitem a criação de atualizações de tabelas, colunas e outros objetos do banco de dados, por meio das classes do C#.
+
+Aprenderemos a trabalhar com catálogo de produtos, inicialmente lendo um arquivo em formato de texto, armazenando este conteúdo, e posteriormente gravando os produtos do catálogo por meio da tabela de produtos. Exploraremos como consultar esta tabela por meio do Entity Framework Core, para exibir em visualização de carrossel. Para isso, trabalharemos com o conceito de paginação e utilizaremos o motor de renderização chamado razor.
+
+Em seguida, montaremos um pattern repository, que permite que cada uma das entidades do nosso modelo tenha a sua classe específica de acesso a dados. Veremos ainda o conceito de tag helper, que é um componente que roda no servidor e se assemelha a um elemento HTML. Ele é bastante utilizado para a geração dinâmica e fácil de conteúdo HTML. Além disso, passaremos o código do produto que foi selecionado no carrossel, para a próxima página de carrinho, utilizando a rota. Gravaremos o número do pedido em uma sessão, para que possamos acessá-lo durante a navegação do usuário.
+
+Por fim, aprenderemos a criar e obter um pedido do banco de dados, e também como gravar cada item do pedido em uma tabela de item do pedido. Estudaremos como exibir os produtos selecionados pelo usuário em nossa página com a visualização do carrinho. Ao final, teremos o pedido já finalizado, com a página de resumo do pedido.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

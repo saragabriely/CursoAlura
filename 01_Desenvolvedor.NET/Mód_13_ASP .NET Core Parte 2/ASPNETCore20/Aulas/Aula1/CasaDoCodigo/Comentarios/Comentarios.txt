@@ -1,0 +1,910 @@
+﻿
+
+-- 03_A05 - Relacionamentos e Migrações -------------------------
+
+De um lado, temos as classes do modelo em C# e, do outro, o banco de dados vazio. Portanto, precisamos fazer a geração das tabelas a partir do modelo, e para isso utilizamos o Entity Framework Core. Acessaremos os seus comandos, clicando na opção "Tools", na barra de menu superior. Na sequência, selecionaremos "NuGet Package Manager > Package Manager Console".
+
+No console, podemos digitar os comandos que permitirão gerar tabelas. Criaremos um pacote de atualizações do esquema do banco de dados e, em seguida, o aplicaremos. Ele é chamado de migração, ou migration. Ele contém informações de quais tabelas geraram quais chaves, ou colunas, a partir do código. Para isso, utilizaremos o comando Add-Migration e, em seguida, teremos que inserir o nome da migração. Daremos o nome Inicial.
+
+PM> Add-Migration Inicial
+Pressionaremos a tecla "Enter" para rodarmos a aplicação, e ele gerará o pacote de migração. Ao finalizar, abriremos o projeto, e na pasta "Migrations" observamos que há uma classe contendo a data, seguida do nome Inicial.cs, nela temos todo o esquema que foi gerado a partir da entidade Produto, são instruções para a criação da tabela de produtos.
+
+Retornaremos ao console. Uma vez que geramos a migração, precisamos fazer a aplicação dela. Para isso, utilizamos o comando Update-Database, seguido de -verbose, que indica ao Entity que ele deve gerar uma série de logs, para podermos visualizar o que está acontecendo. Pressionaremos a tecla "Enter" para executarmos.
+
+Os logs foram gerados, assim como a respectiva tabela no banco de dados, como podemos observar em "SQL Server Object Explorer > CasaDoCodigo > Tables > dbo.Produto". Clicaremos com o botão direito do mouse sobre ela, e selecionaremos a opção "View Designer".
+
+Podemos visualizar que foi gerada uma tabela contendo uma chave primária id, que é uma das propriedades da nossa classe e, em seguida, mais três linhas, com código, nome e preço do produto. Assim, concluímos a criação da nossa primeira migração.
+
+Retornaremos ao ApplicationContext para fazermos o mapeamento do restante das entidades. Assim como fizemos anteriormente, utilizaremos o modelBuilder:
+
+namespace CasaDoCodigo
+{
+    public class ApplicationContext : DbContext
+    {
+        public ApplicationContext(DbContextOptions options) : base(options)
+        {
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Produto>().HasKey(t => t.Id);
+
+                        modelBuilder.Entity<Pedido>().HasKey(t => t.Id);
+
+                        modelBuilder.Entity<ItemPedido>().HasKey(t => t.Id);
+
+                        modelBuilder.Entity<Cadastro>().HasKey(t => t.Id);
+        }
+    }
+}
+Agora que relacionamos, fizemos o mapeamento de todas as entidades, precisamos descrever como serão os relacionamentos. Utilizaremos os comandos para criar estas conexões, como o HasMany(), acompanhado da expressão lambda t.Itens, indicando que queremos trabalhar com muitos itens. Por fim, vamos inserir o novo método WithOne(), que indica o relacionamento de volta, ou seja, cada item de pedido se relaciona a um pedido individual:
+
+namespace CasaDoCodigo
+{
+    public class ApplicationContext : DbContext
+    {
+        public ApplicationContext(DbContextOptions options) : base(options)
+        {
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Produto>().HasKey(t => t.Id);
+
+                        modelBuilder.Entity<Pedido>().HasKey(t => t.Id);
+                        modelBuilder.Entity<Pedido>().HasKey(t => t.Id).HasMany(t => t.Itens).WithOne(t => t.Pedido);
+
+                        modelBuilder.Entity<ItemPedido>().HasKey(t => t.Id);
+
+                        modelBuilder.Entity<Cadastro>().HasKey(t => t.Id);
+        }
+    }
+}
+A seguir, faremos o relacionamento entre o pedido e o cadastro. A diferença é que esta relação se dá de um para um, ou seja, cada pedido está relacionado a um cadastro e vice-versa. Acrescentaremos ainda um método indicando que o atributo é obrigatório, que é o IsRequired().
+
+namespace CasaDoCodigo
+{
+    public class ApplicationContext : DbContext
+    {
+        public ApplicationContext(DbContextOptions options) : base(options)
+        {
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Produto>().HasKey(t => t.Id);
+
+                        modelBuilder.Entity<Pedido>().HasKey(t => t.Id);
+                        modelBuilder.Entity<Pedido>().HasKey(t => t.Id).HasMany(t => t.Itens).WithOne(t => t.Pedido);
+                        modelBuilder.Entity<Pedido>().HasKey(t => t.Id).HasOne(t => t.Cadastro).WithOne(t => t.Pedido).IsRequired();
+
+                        modelBuilder.Entity<ItemPedido>().HasKey(t => t.Id);
+
+                        modelBuilder.Entity<Cadastro>().HasKey(t => t.Id);
+        }
+    }
+}
+Dando continuidade, faremos isso com o ItemPedido. Cada um estará relacionado a um Pedido e a um Produto. Da mesma forma, o Cadastro está relacionado a um Pedido.
+
+namespace CasaDoCodigo
+{
+    public class ApplicationContext : DbContext
+    {
+        public ApplicationContext(DbContextOptions options) : base(options)
+        {
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Produto>().HasKey(t => t.Id);
+
+                        modelBuilder.Entity<Pedido>().HasKey(t => t.Id);
+                        modelBuilder.Entity<Pedido>().HasKey(t => t.Id).HasMany(t => t.Itens).WithOne(t => t.Pedido);
+                        modelBuilder.Entity<Pedido>().HasKey(t => t.Id).HasOne(t => t.Cadastro).WithOne(t => t.Pedido).IsRequired();
+
+                        modelBuilder.Entity<ItemPedido>().HasKey(t => t.Id);
+                        modelBuilder.Entity<ItemPedido>().HasOne(t => t.Pedido);
+                        modelBuilder.Entity<ItemPedido>().HasOne(t => t.Produto);
+
+                        modelBuilder.Entity<Cadastro>().HasKey(t => t.Id);
+                        modelBuilder.Entity<Cadastro>().HasOne(t => t.Pedido);
+        }
+    }
+}
+Com isso, concluímos o mapeamento e podemos criar uma nova migração. Retornaremos ao console e digitaremos o comando Add-Migration Modelo. Pressionaremos a tecla "Enter" para executarmos. O novo pacote será criado. Aplicaremos a nova migração com o comando Update-Database -verbose, pressionando a tecla "Enter" para executá-la.
+
+Agora, ao abrir o SQL Object Explorer vemos as tabelas Cadastro, ItemPedido, Pedido e Produto.
+
+-- 03_A06 - Gerando Banco, Classe Startup, Serviços, Injeção de Dependências ----
+
+Recapitulando, aprendemos a criar um esquema de banco de dados com tabelas, colunas e chaves a partir das classes do C#, utilizando o Entity Framework Core. Caso queira se aprofundar nesta ferramenta, você pode acessar o curso Entity Framework Core: Banco de dados de forma eficiente.
+
+Retornaremos ao projeto e deletaremos o banco de dados "CasaDoCodigo". A seguir, o recriaremos com as tabelas que já estão definidas. Faremos isso aplicando o comando Update-Database -verbose no console. Executando, o banco de dados é recriado, assim como as tabelas. Ao abrirmos o SQL Server Object Explorer novamente, atualizado, veremos que o banco de dados aparece normalmente.
+
+Mas e se quiséssemos criar o banco de dados, assim que a aplicação fosse executada, com o comando "F5", sem precisar digitar o comando Update-Database?
+
+Para fazermos isso, acessaremos a classe Startup.cs, ela que define a configuração da nossa aplicação. Ela possui um método Configure(), que é executado quando a aplicação subir para o servidor, em resposta ao comando "F5". Ela então estará sujeita às requisições do browser e, neste momento, teremos a garantia de que o banco de dados foi criado.
+
+Portanto, acessaremos a classe Database a partir do método Configure(), para garantirmos que ela esteja criada. O primeiro passo será modificar a assinatura deste método, para podermos adicionar um novo parâmetro. Após IHostingEnvironment env, adicionaremos uma vírgula (,) e quebraremos uma linha, para incluirmos o IServiceProvider. Como o nome induz, ele fornecerá um serviço para nós, que é o contexto da aplicação, do banco de dados, chamado ApplicationContext. Definiremos o parâmetro serviceProvider.
+
+namespace CasaDoCodigo
+{
+    public class Startup
+    {
+        public Startup(IConfiguration configuration)
+
+        public IConfiguration Configuration { get; }
+
+        // This method gets called by the runtime. Use this method to add services to the container.
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddMvc();
+
+            string connectionString = Configuration.GetConnectionString("Default");
+
+            services.AddDbContext<ApplicationContext>(options =>
+                options.UseSqlServer(connectionString)
+            );
+        }
+
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env,
+            IServiceProvider serviceProvider)
+    }
+}
+Copiaremos e chamaremos o serviceProvider abaixo, para que ele nos gere uma nova instância de ApplicationContext. Então acessaremos, a partir do contexto, o Database. Assim, este objeto tem o método necessário para garantir que ele gere o banco de dados, caso este ainda não exista, que é o EnsureCreated().
+
+namespace CasaDoCodigo
+{
+    public class Startup
+    {
+        public Startup(IConfiguration configuration)
+
+        public IConfiguration Configuration { get; }
+
+        // This method gets called by the runtime. Use this method to add services to the container.
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddMvc();
+
+            string connectionString = Configuration.GetConnectionString("Default");
+
+            services.AddDbContext<ApplicationContext>(options =>
+                options.UseSqlServer(connectionString)
+            );
+        }
+
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env,
+            IServiceProvider serviceProvider)
+                {
+                    if (env.IsDevelopment())
+                    {
+                        app.UseBrowserLink();
+                        app.UseDeveloperExceptionPage();
+                    }
+                    else
+                    {
+                        app.UseExceptionHandler
+                    }
+
+                    app.UseStaticFiles();
+
+                    app.UseMvc(routes =>
+                    {
+                        routes.MapRoute(
+                            name: "default",
+                            template: "{controller=Pedido}/{action=Carrossel}/{id?}");
+                    });
+
+                    serviceProvider.GetService<ApplicationContext>().Database.EnsureCreated();
+    }
+}
+Colocaremos um break point nesta linha que acabamos de editar, para vermos o que acontece ao executarmos a aplicação, com o atalho "F5". Ao executar, veremos que a aplicação foi iniciada, subiu, e passará pelo serviceProvider para garantir que o banco de dados foi criado.
+
+Abriremos o SQL Server Object Explorer, onde temos o banco de dados "CasaDoCodigo" — o apagaremos. Executaremos novamente a aplicação. Retornando ao explorador do SQL e atualizando-o, veremos que o banco de dados foi recriado, com todas as suas tabelas.
+
+Portanto, o que vimos foi uma configuração da nossa aplicação do ASP.NET Core, a partir do método Configure(). Resumindo, temos a classe Startup, que define o modo como configuramos a aplicação. Há nela dois métodos, o ConfigureServices() e o Configure().
+
+O ConfigureServices() serve para adicionarmos serviços, por exemplo, o SQL Server, ou o serviço de log. Já a classe Configure() é onde o serviço é consumido, ou utilizado. Por esse motivo, este método também é chamado de configuração de pipeline. Com ele, podemos indicar, por exemplo, que nossa aplicação utilizará o MVC.
+
+O método Configure() define, por exemplo, que vamos utilizar arquivos estáticos em nossa aplicação, por meio do UseStaticFiles(). Já a utilização do MVC é definida pelo método UseMvc(), ou ainda, podemos configurar a chamada do método que acabamos de criar, para garantir que o banco de dados tenha sido criado. Isto é feito pelo parâmetro novo serviceProvider.
+
+Como o ASP.NET Core MVC reconheceu o parâmetro novo? Ele fez isso graças a uma técnica chamada injeção de dependência. Ele já possui esta técnica nativamente, e pode ser utilizada para criar instâncias a partir da definição de parâmetros do tipo interface. Ou seja, podemos definir uma interface, dizer que ela gerará uma instância de uma determinada classe, e então injetar, inserindo parâmetros para a criação das novas instâncias. Também podemos utilizar um esquema alternativo de injeção de dependência, utilizando um outro framework, como o ninject.
+
+-- 03_A07 - Método EnsureCreated X Método Migrate --------------------
+
+Vamos complementar as aulas anteriores, fazendo uma breve observação. Anteriormente, vimos como criar um banco de dados com o método EnsureCreated(). Contudo, este método não utiliza migrações. Sendo assim, como ele cria o banco de dados? Verificando se o banco ainda não existe, em caso positivo, ele procura o nosso modelo e mapeamento, para poder fazer um esquema, e então gerar o banco de dados do SQL Server.
+
+Contudo, uma vez que utilizamos o método EnsureCreated(), não podemos mais aplicar nenhuma migração no sistema. Portanto, o recomendável é utilizar, em seu lugar, o método Migrate(), que faz a mesma coisa, só que utilizando as migrações. O banco é criado da mesma forma, só que utilizando migrações para isso e, ao final, permite que adicionemos novas migrações, caso necessário.
+
+-- 03_A09 - Para saber mais: Como Ler Configurações no Controller? -------------
+
+Para Saber Mais...
+Como Ler Configurações no Controller?
+Você pode ter se deparado com esse problema da vida real, fora do contexto do nosso curso: como ler configurações do ASP.NET Core 2.0 a partir de um controller? Vamos partir do pressuposto de que você tenha uma aplicação de blog com uma estrutura de configuração definida no arquivo appsetings.json.
+
+Vamos começar pelo arquivo appsetings.json. Digamos que sua configuração seja definida pelo arquivo abaixo:
+
+{
+    "ConnectionStrings": {
+        "Blog": "Server=(localdb)\\mssqllocaldb;Database=MeuBlog;Trusted_Connection=True;"
+    },  
+    "Security": {
+        "Language" : "pt-BR",
+        "SuperUser": {
+            "Login": "bgiorgione",
+            "Email": "bgiorgione@bgiorgione.com.br",
+            "ShowEmail": "true"
+        },
+        "Admin": {
+            "Login": "moliveira",
+            "Email": "mclricardo@gmail.com.br",
+            "ShowEmail": "false"
+        }
+    }
+}
+Listagem: o arquivo appsetings.json
+
+Todos os método de que precisamos precisam vir da classe Configuration, que é uma implementação da interface IConfiguration.
+
+O primeiro passo seria configurar o mecanismo de injeção de dependência do ASP.NET Core para obter o objeto de configuração. Mas felizmente esse objeto já vem automaticamente registrado internamente no contêiner de injeção de dependência do ASP.NET Core, portanto você não precisa adicionar o código services.AddSingleton<IConfiguration>(Configuration); na sua classe Startup.
+
+Agora, como vimos no curso, basta adicionar um parâmetro IConfiguration no construtor do controller para começarmos a obter as configurações:
+
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+
+namespace Blog.Controllers
+{
+    public class BlogController : Controller
+    {
+        private IConfiguration _configuration;
+
+        public BlogController(IConfiguration Configuration)
+        {
+            _configuration = Configuration;
+        }
+
+        public IActionResult Usuarios()
+        {
+            // Configuração usando a string de chave
+            ViewData["SecurityLanguage"] = _configuration["Security:Language"];
+
+            // Configuração usando método GetSection
+
+            ViewData["SecuritySuperUserLogin"] = 
+            _configuration.GetSection("Security").GetSection("SuperUser").GetSection("Login");
+
+            // Configuração usando GetSection e string de chave ao mesmo tempo
+            ViewData["SecuritySuperUserEmail"] = 
+                _configuration.GetSection("Security")["SuperUser:Email"];
+
+            // Configuração usando GetSection e string de chave ao mesmo tempo
+            ViewData["SecuritySuperUserShowEmail"] = 
+                _configuration.GetSection("Security")["SuperUser:ShowEmail"];
+
+            return View();
+        }
+    }
+}
+Listagem: o arquivo BlogController.cs
+
+No exemplo acima, populamos o ViewData com as configuração. Mas você pode utilizar as configurações como quiser, claro.
+
+Agora basta exibir os dados na view Usuarios:
+
+<p>
+    SecurityLanguage <strong>@ViewData["SecurityLanguage"]</strong><br />
+    SecuritySuperUserLogin <strong>@ViewData["SecuritySuperUserLogin"]</strong><br />
+    SecuritySuperUserEmail <strong>@ViewData["SecuritySuperUserEmail"]</strong>
+    SecuritySuperUserShowEmail <strong>@ViewData["SecuritySuperUserShowEmail"]</strong>
+</p>
+Listagem: o arquivo Usuarios.cshtml
+
+-- 03_A10 - Para saber mais: Diferenças entre EF 6 e EF Core -------------
+
+Para saber mais...
+Diferenças entre o Entity Framework 6 e o Entity Framework Core
+Neste curso utilizamos Entity Framework Core 2.0 como ORM (Framework de Mapeamento Objeto-Relacional). Talvez você esteja se perguntando: "Quais as diferenças entre o Entity Framework Core e o Entity Framework 6 que eu costumava usar em projetos anteriores?"
+
+Primeiro caso: Para aplicações EF6 existentes
+O Entity Framework Core é considerado um avanço em relação ao Entity Framework 6, porém nem todas as funcionalidades do EF6 foram implementadas no EF Core. As próximas versões do EF Core irão tratar de eliminar essas limitações.
+
+É preciso um bom motivo para migrar um projeto EF 6 para EF Core, caso contrário você pode estar arriscando seu projeto.
+
+Veja no final da página as tabelas comparativas entre as duas versões do Entity Framework para decidir qual a melhor opção.
+
+Segundo caso: Para novas aplicações
+Se você precisar criar novas aplicações, é recomendával utilizar o EF Core, desde que seu aplicativo não necessite de recursos do Entity Framework 6 que ainda não foram implementados no EF Core.
+
+O EF 6 depende do Windows. Isso significa que você não poderá criar novas aplicações com EF 6 para o .NET Core. Somente o Entity Framework Core pode rodar sobre o .NET Core.
+
+Você ainda pode utilizar o Entity Framework 6 em novos projetos, porém é importante saber se ele é aceitável para sua aplicação. Você pode visualizar as diferenças entre EF 6 e EF Core nas tabelas abaixo, que podem lhe ajudar a decidir qual das duas opções é mais adequada ao seu projeto.
+
+Comparação entre os recursos do EF6 e EF Core
+As informações se referem à primeira versão em que o recurso aparece. Quando o recurso não é suportado, a coluna está em branco.
+
+Criação de um modelo	EF 6	EF Core
+Anotações de dados	Sim	1.0
+API fluente	Sim	1.0
+Atualizar modelo do banco de dados	Parcial	
+Chaves alternativas		1.0
+Construtores com parâmetros		2.1
+Convenções personalizadas	Sim	1.0 (parcial)
+Convenções	Sim	1.0
+Conversões de valor da propriedade		2.1
+Criar um modelo do banco de dados: Assistente de VS	Sim	
+Criar um modelo do banco de dados: Linha de comando	Sim	1.0
+Dados espaciais	Sim	
+Divisão de entidade	Sim	
+Divisão de tabela	Sim	2.0
+Editor de gráfico de modelo	Sim	
+Filtros de consulta global		2.0
+Formato de modelo: Código	Sim	1.0
+Formato de modelo: EDMX (XML)	Sim	
+Geração de chaves: Banco de dados	Sim	1.0
+Geração de chaves: Cliente		1.0
+Herança: Tabela por classe concreta (TPC)	Sim	
+Herança: Tabela por hierarquia (TPH)	Sim	1.0
+Herança: Tabela por tipo (TPT)	Sim	
+Mapeamento de campo		1.1
+Mapeamento de classe básico	Sim	1.0
+Mapeamento de função escalar do banco de dados	Ruim	2.0
+Muitos para muitos sem entidade de ingresso	Sim	
+Propriedades de estado sombra		1.0
+Tipos complexos/de propriedade	Sim	2.0
+Tipos mapeados sem chaves (tipos de consulta)		2.1
+Visualização gráfica do modelo	Sim	
+ 
+Consultar Dados	EF6	EF Core
+Avaliação mista de cliente/servidor		1.0
+Carregamento de dados relacionados: carregamento adiantado de tipos derivados		2.1
+Carregamento de dados relacionados: Eager	Sim	1.0
+Carregamento de dados relacionados: Explicit	Sim	1.1
+Carregamento de dados relacionados: Lazy	Sim	2.1
+Consultas explicitamente compiladas	Ruim	2.0
+Consultas LINQ	Sim	1.0 (em andamento para consultas complexas)
+Consultas SQL brutas: Composição com LINQ		1.0
+Consultas SQL brutas: tipos de entidade	Sim	1.0
+Consultas SQL brutas: tipos que não são de entidade (por exemplo, tipos de consulta)	Sim	2.1
+Conversão de GroupBy	Sim	2.1
+Linguagem de consulta baseada em texto (por exemplo, Entity SQL)	1.0	
+SQL gerado legível	Ruim	1.0
+Salvando dados	EF6	EF Core
+Acesso ao estado controlado	Sim	1.0
+APIs de baixo nível de grafo desconectado	Ruim	1.0
+Controle de alterações: Instantâneo	Sim	1.0
+Controle de alterações: Notificação	Sim	1.0
+Controle de alterações: Proxies	Sim	
+Envio em lote de instruções		1.0
+Gráfico desconectado ponta a ponta		1.0 (parcial)
+Mapeamento de procedimento armazenado	Sim	
+Simultaneidade otimista	Sim	1.0
+Transações	Sim	1.0
+ 
+Outros recursos	EF6	EF Core
+APIs de criação/exclusão de banco de dados	Sim	1.0
+Dados de propagação	Sim	2.1
+Ganchos de ciclo de vida (eventos, interceptação)	Sim	
+Migrações	Sim	1.0
+Pool de DbContext		2.0
+Registro em log simples (por exemplo, Database.Log)	Sim	
+Resiliência da conexão	Sim	1.1
+ 
+Provedores de Banco de Dados	EF6	EF Core
+DB2	Sim	1.0
+Firebird	Sim	2.0
+Jet (Microsoft Access)		2.0 (2)
+MySQL	Sim	1.0
+Na memória (para teste)		1.0
+Oracle	Sim	1.0 (1)
+PostgreSQL	Sim	1.0
+SQLite	Sim	1.0
+SQL Server Compact	Sim	1.0 (2)
+SQL Server	Sim	1.0
+ 
+Plataformas	EF6	EF Core
+.NET Core (Console, ASP.NET Core)		1.0
+.NET Framework (Console, WinForms, WPF, ASP.NET)	Sim	1.0
+Mono e Xamarin		1.0 (em andamento)
+UWP		1.0 (em andamento)
+Atualmente existe um provider, mas ele é pago. Existe uma outra versão oficial gratuita para Oracle em desenvolvimento
+Este provider só funciona com .NET Framework (mas não no .NET Core).
+
+-----------------------------------------------------------------------------
+-- 04_A01 - DataService, Injeção de dependência-----------------------------
+
+Poderíamos aproveitar que estamos criando o banco de dados automaticamente para implementarmos um método para a carga destes dados, e alimentarmos nosso banco com o catálogo inicial de produtos. Porém, com isso estaríamos violando o princípio de separação de responsabilidades.
+
+Sendo assim, criaremos uma classe específica (DataService) para não poluirmos a classe Startup, com um método público denominado InicializaDB() para inicializar o banco de dados, caso seja necessário. Para isso, ele precisará acessar o contexto, ApplicationContext.
+
+Portanto, criaremos um campo privado e, para que o contexto seja inicializado, criaremos também uma instância. Poderíamos usar simplesmente private readonly ApplicationContext contexto = new ApplicationContext, mas não o faremos porque queremos usar o sistema de injeção de dependências do ASP.NET Core.
+
+Selecionaremos o campo privado contexto usando o atalho "Ctrl + ." e gerando um construtor, que tomará o parâmetro ApplicationContext contexto como obrigatório na criação do objeto DataService, e então teremos a instância do contexto:
+
+class DataService
+{
+    private readonly ApplicationContext contexto;
+
+    public DataService(ApplicationContext contexto)
+    {
+        this.contexto = contexto;
+    }
+
+    public void InicializaDB()
+    {
+        contexto.Database.EnsureCreated();
+    }
+}
+Por padrão, o ApplicationContext é gerado pela injeção de dependência, assim, é possível acessar o objeto contexto no método InicializaDB(). Para garantir que ele seja criado, usaremos EnsureCreated(), e com isso chamaremos o DataService, em vez de fazer a criação do banco de dados diretamente na classe Startup.
+
+Queremos que se crie uma instância do serviço de dados, para o qual basta substituirmos ApplicationContext por DataService em serviceProvider.GetService<ApplicationContext>().Database.EnsureCreated(), mais acima no código.
+
+Em seguida, chamaremos o novo método, InicializaDB(), deixando a linha de código da seguinte maneira: serviceProvider.GetService<DataService>().InicializaDB(). Porém, para o serviço de injeção de dependência do ASP.NET Core funcionar, é necessário registrar a nova classe, isto é, DataService, no contêiner de injeção de dependências.
+
+Iremos ao método ConfigureServices() da classe Startup e faremos o registro chamando um método que adiciona uma instância, a qual queremos que exista somente enquanto os objetos que a utilizarem estiverem ativos. Este método é AddTransient, que significa adicionar uma instância temporária.
+
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddMvc();
+
+    string connectionString = Configuration.GetConnectionString("Default");
+
+    services.AddDbContext<ApplicationContext>(options =>
+        options.UseSqlServer(connectionString)
+    );
+
+    services.AddTransient<DataService>();
+}
+Normalmente, trabalhamos com interfaces para a injeção de independência, então moveremos a classe DataService para um novo arquivo utilizando "Ctrl + ." e escolhendo a opção "Move type to DataService.cs". Vamos acessá-lo pelo painel de "Solution Explorer", do lado direito.
+
+Criaremos uma interface a partir deste novo arquivo, com "Ctrl + ." e "Extract Interface...". Na janela que se abre, clicaremos em "OK", e a interface será extraída. Vamos voltar a Startup.cs e, no registro da injeção de dependência, incluiremos o tipo da interface: services.AddTransient<IDataService, DataService>();.
+
+-- 04_A01 - DataService, Injeção de dependência ------------------------
+
+Poderíamos aproveitar que estamos criando o banco de dados automaticamente para implementarmos um método para a carga destes dados, e alimentarmos nosso banco com o catálogo inicial de produtos. Porém, com isso estaríamos violando o princípio de separação de responsabilidades.
+
+Sendo assim, criaremos uma classe específica (DataService) para não poluirmos a classe Startup, com um método público denominado InicializaDB() para inicializar o banco de dados, caso seja necessário. Para isso, ele precisará acessar o contexto, ApplicationContext.
+
+Portanto, criaremos um campo privado e, para que o contexto seja inicializado, criaremos também uma instância. Poderíamos usar simplesmente private readonly ApplicationContext contexto = new ApplicationContext, mas não o faremos porque queremos usar o sistema de injeção de dependências do ASP.NET Core.
+
+Selecionaremos o campo privado contexto usando o atalho "Ctrl + ." e gerando um construtor, que tomará o parâmetro ApplicationContext contexto como obrigatório na criação do objeto DataService, e então teremos a instância do contexto:
+
+class DataService
+{
+    private readonly ApplicationContext contexto;
+
+    public DataService(ApplicationContext contexto)
+    {
+        this.contexto = contexto;
+    }
+
+    public void InicializaDB()
+    {
+        contexto.Database.EnsureCreated();
+    }
+}
+Por padrão, o ApplicationContext é gerado pela injeção de dependência, assim, é possível acessar o objeto contexto no método InicializaDB(). Para garantir que ele seja criado, usaremos EnsureCreated(), e com isso chamaremos o DataService, em vez de fazer a criação do banco de dados diretamente na classe Startup.
+
+Queremos que se crie uma instância do serviço de dados, para o qual basta substituirmos ApplicationContext por DataService em serviceProvider.GetService<ApplicationContext>().Database.EnsureCreated(), mais acima no código.
+
+Em seguida, chamaremos o novo método, InicializaDB(), deixando a linha de código da seguinte maneira: serviceProvider.GetService<DataService>().InicializaDB(). Porém, para o serviço de injeção de dependência do ASP.NET Core funcionar, é necessário registrar a nova classe, isto é, DataService, no contêiner de injeção de dependências.
+
+Iremos ao método ConfigureServices() da classe Startup e faremos o registro chamando um método que adiciona uma instância, a qual queremos que exista somente enquanto os objetos que a utilizarem estiverem ativos. Este método é AddTransient, que significa adicionar uma instância temporária.
+
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddMvc();
+
+    string connectionString = Configuration.GetConnectionString("Default");
+
+    services.AddDbContext<ApplicationContext>(options =>
+        options.UseSqlServer(connectionString)
+    );
+
+    services.AddTransient<DataService>();
+}
+Normalmente, trabalhamos com interfaces para a injeção de independência, então moveremos a classe DataService para um novo arquivo utilizando "Ctrl + ." e escolhendo a opção "Move type to DataService.cs". Vamos acessá-lo pelo painel de "Solution Explorer", do lado direito.
+
+Criaremos uma interface a partir deste novo arquivo, com "Ctrl + ." e "Extract Interface...". Na janela que se abre, clicaremos em "OK", e a interface será extraída. Vamos voltar a Startup.cs e, no registro da injeção de dependência, incluiremos o tipo da interface: services.AddTransient<IDataService, DataService>();.
+
+-- 04_A03 - Lendo Arquivo Json de Produtos ---------------------------
+
+Ao rodarmos nossa aplicação novamente, percebemos que cometemos um engano ao obtermos uma instância do DataService — o ASP.NET Core não reconhece este tipo. Isso porque na verdade criamos o registro de uma interface IDataService, sendo necessário trocarmos o GetService:
+
+serviceProvider.GetService<IDataService>().InicializaDB();
+Isso, sim, fará com que seja gerada uma instância a partir desta interface. Acessaremos InicializaDB() da classe DataService e começaremos a fazer a carga do nosso catálogo de produtos. Felizmente, já temos um arquivo JSON contendo as informações acerca destes produtos.
+
+Na pasta "_Recursos" da Solução há uma subpasta chamada "dados", que por sua vez contém "livros.json", com código, nome e preço de cada um dos produtos, no caso, livros. Faremos uma cópia deste arquivo no nosso projeto "CasaDoCodigo".
+
+Como iremos ler este arquivo .json?
+
+Poderemos utilizar a classe File do .NET para acessá-lo. Importaremos a referência (o namespace), e faremos a leitura de todo o texto do arquivo, com ReadAllText(). Passaremos o nome do arquivo como parâmetro deste método e precisaremos armazenar o texto em uma variável denominada json.
+
+Para realizarmos a conversão deste JSON em uma lista de objetos a serem utilizados para alimentar o banco de dados, usaremos uma biblioteca bem conhecida no .NET, o Newtonsoft. Para isto, chamaremos a classe desta biblioteca e o método para desserializar e transformar o texto em objetos, passando o tipo para o qual queremos converter como parâmetro, mas antes disso criaremos um tipo chamado Livro.
+
+Copiaremos os campos do arquivo livros.json e criaremos três propriedades automáticas para esta nova classe, definindo-os com { get; set; }. Feito isto, utilizaremos Livro para desserializar o arquivo JSON, passando o tipo, no caso uma lista de Livro. Passaremos a nossa string como parâmetro, que é a variável json, e então armazenaremos este conteúdo em uma lista, um novo objeto, chamado livros. Incluiremos também um breakpoint na última linha do método.
+
+class DataService : IDataService
+{
+    private readonly ApplicationContext contexto;
+
+    public DataService(ApplicationContext contexto)
+    {
+        this.contexto = contexto;
+    }
+
+    public void InicializaDB()
+    {
+        contexto.Database.EnsureCreated();
+
+        var json = File.ReadAllText("livros.json");
+        var livros = JsonConvert.DeserializeObject<List<Livro>>(json);
+    }
+}
+
+class Livro
+{
+    public string Codigo { get; set; }
+    public string Nome { get; set; }
+    public decimal Preco { get; set; }
+}
+Vamos rodar a aplicação para verificar se a conversão é bem sucedida, iniciando pela criação do banco e, em seguida, pela carga do arquivo livros.json. Após a passagem pelo breakpoint, na linha 22, acessaremos o conteúdo de livros e veremos as informações de código, nome e preço, como gostaríamos.
+
+Adiante, começaremos a importar estes dados para o nosso banco de dados.
+
+-- 04_A05 - Por que parâmetro como interface e não como classe concreta? ----------
+
+Quando definimos que os parâmetros de métodos e construtores de uma determinada classe são classes concretas, corremos o risco de "engessar" as relações entre as classes.
+
+É uma boa prática programar para interfaces, pois isso diminui o acoplamento entre as classes, isto é, diminui a dependência entre elas. Por exemplo, imagine esta classe:
+
+public class Automovel()
+{
+    public Automovel(MotorAGasolina motor)
+    {
+    ...
+    }
+}
+O que acontece quando você precisa trocar MotorAGasolina por uma outra classe, chamada MotorAAlcool, que implementa os mesmos métodos e interfaces? Nesse caso, você precisa mudar a classe Automovel:
+
+public class Automovel()
+{
+    public Automovel(MotorAAlcool motor)
+    {
+    ...
+    }
+}
+Mas isso não é bom, pois você está modificando uma classe que funciona perfeitamente, apenas para trocar o tipo de um parâmetro!
+
+Isso representa uma violação de um princípio conhecido como "open-closed principle", isto é, aberto para extensibilidade, fechado para modificação. De acordo com esse princípio, você deveria projetar sua classe para que as mudanças, como alterações nos tipos de parâmeros, não necessitem de alterações na classe Automovel.
+
+Mas quando você estabelece que a interface utilizada é de uma determinada interface, você já definiu um contrato entre a classe Automovel e o tipo de classe que ela recebe como parâmetro do construtor:
+
+public class Automovel()
+{
+    public Automovel(IMotor motor)
+    {
+    }
+}
+A partir daí, não importa qual é exatamente a classe recebida como parâmetro do construtor de Automovel, desde que ela implemente a interface IMotor.
+
+-- 04_A06 - Gravando Produtos no Banco de dados -----------------------
+Tendo os objetos — os livros —, começaremos a importá-los como produtos do nosso banco de dados, varrendo-os e inserindo-os um a um com o laço foreach. Assim, para cada livro contido na coleção livros, acessaremos o que seria a tabela do banco de dados, que no Entity Framework chamamos de DbSet, e está dentro de contexto.
+
+Passaremos o nome da classe que representa uma tabela do banco, no caso, a tabela Produto, e então chamaremos o método para adicionar uma nova instância de Produto da nossa lista de produtos, passando o código, nome e preço do livro como argumentos.
+
+Entretanto isto ainda não é o suficiente, pois quando adicionamos tudo isso ao DbSet de Produto, o que fazemos é adicionar informações em memória, as quais ainda não são de fato enviadas ao banco de dados, exigindo que isto seja feito todas as vezes em que um produto for adicionado ao DbSet.
+
+Para que isto ocorra de uma vez só, chamaremos o método SaveChanges() a partir de contexto e, aí sim, quando tivermos todos os produtos carregados em memória, prontos para serem adicionados ao banco de dados, fazemos a gravação no banco de dados de uma única vez. Nesta linha, também acrescentaremos um breakpoint, e então rodaremos a aplicação novamente.
+
+public void InicializaDB()
+{
+    contexto.Database.EnsureCreated();
+
+    var json = File.ReadAllText("livros.json");
+    var livros = JsonConvert.DeserializeObject<List<Livro>>(json);
+
+    foreach (var livro in livros)
+    {
+        contexto.Set<Produto>().Add(new Produto(livro.Codigo, livro.Nome, livro.Preco));
+    }
+    contexto.SaveChanges();
+}
+Recapitulando:
+
+o serviço será subido;
+quando o arquivo de produtos for lido, cada livro será inserido ao DbSet;
+eles serão enfim gravados no banco de dados, com SaveChanges().
+Atualizaremos o SQL Server Object Explorer, e em localdb, temos "Databases > CasadoCodigo > Tables". Clicaremos com o lado direito do mouse em "dbo.Produto", selecionaremos "View Data" e visualizarmos os dados. Então, teremos a carga dos produtos a partir do nosso arquivo livros.json.
+
+-- 04_A08 - ProdutoRepository ---------------------------------------
+
+A partir de agora, faremos pequenas alterações no nosso código para melhorarmos a qualidade e estrutura do nosso projeto. Temos, por exemplo, o método InicializaDB() que cria e salva produtos no banco de dados, além de ler o arquivo JSON. São muitas responsabilidades para um método só.
+
+Sendo assim, extrairemos para um novo método as seguintes linhas, em que lemos o arquivo JSON. Selecionaremos o trecho e usaremos "Ctrl + ." e "Extract Method". O método será chamado de GetLivros(), e retornará uma lista de livros.
+
+var json = File.ReadAllText("livros.json");
+var livros = JsonConvert.DeserializeObject<List<Livro>>(json);
+Em seguida, salvaremos os livros no banco de dados, em forma de produtos. E extrairemos o seguinte trecho para o método SaveProdutos():
+
+foreach (var livro in livros)
+{
+    contexto.Set<Produto>().Add(new Produto(livro.Codigo, livro.Nome, livro.Preco));
+}
+contexto.SaveChanges();
+Isto não é o suficiente para melhorarmos o nosso projeto. Na verdade, queremos ter uma classe especializada em ler, gravar, fazer alterações e manipular os dados da entidade de produtos. Para isso, utilizaremos um padrão de projeto de acesso a dados a partir da criação de um diretório. Clicaremos com o botão direito do mouse em "CasaDoCodigo > Add > New Folder" e renomearemos a pasta com "Repositories".
+
+Porém, ao tentarmos nomear, seremos informados de que a pasta já existe. Portanto, clicaremos nela com o lado direito do mouse e em "Include In Project". Com isto, começaremos a criar nosso repositório de produtos, ao qual adicionaremos uma nova classe, ProdutoRepository.
+
+Moveremos nosso método SaveProdutos() para esta nova classe, recortando-o de DataService.cs. Com isso, deixamos de ter acesso ao objeto contexto, porque ele ficou na classe DataService. Então, copiaremos o campo previamente criado para contexto, isto é, private readonly ApplicationContext contexto, e o colaremos na nova classe de repositório.
+
+Em ProdutoRepository.cs teremos, portanto:
+
+namespace CasaDoCodigo.Repositories
+{
+    public class ProdutoRepository
+    {
+        private readonly ApplicationContext contexto;
+
+        private void SaveProdutos(List<Livro> livros)
+        {
+            foreach (var livro in livros)
+            {
+                contexto.Set<Produto>().Add(new Produto(livro.Codigo, livro.Nome, livro.Preco));
+            }
+            contexto.SaveChanges();
+        }
+    }
+}
+No entanto, a classe Repositories não instanciará o contexto, pois ela o receberá em seu construtor através da injeção de dependência. Criaremos um novo construtor para a nova classe selecionando o campo contexto, e usando "Ctrl + ." e "Generate constructor". Com isso, o contexto será fornecido via injeção de dependência:
+
+private readonly ApplicationContext contexto;
+
+public ProdutoRepository(ApplicationContext contexto)
+{
+    this.contexto = contexto;
+}
+Vamos mudar a visibilidade de SaveProdutos(), de private para public:
+
+public void SaveProdutos(List<Livro> livros)
+{
+    // foreach omitido
+}
+O programa indicará um problema em SaveProdutos(), pois Livro se encontra menos acessível do que SaveProdutos(), em DataService.cs. Recortaremos a classe e a colaremos junto à ProdutoRepository, ao fim de seu código e, além disto, usaremos public.
+
+Em seguida, criaremos e extrairemos uma interface a partir da classe ProdutoRepository, usando "Ctrl + ." mais uma vez. Agora sim, a interface no novo arquivo está sendo gerada, IProdutoRepository, com o método SaveProdutos().
+
+Então, voltaremos a DataService.cs para podermos consumir esse método do repositório e, como Livro em List<Livro> livros = GetLivros() foi movido, usaremos "Ctrl + ." para resolvermos a referência. Assim, SaveProdutos() sumirá desta classe, sendo necessário acessarmos o ProdutoRepository, que está em IProdutoRepository.
+
+Para isso, precisaremos registrar a interface IProdutoRepository na classe Startup para podermos utilizar a injeção de dependência. Usaremos services.AddTransient para criarmos uma instância temporária para este tipo, e incluiremos o nome de IProdutoRepository:
+
+public void ConfigureServices(IServiceCollection services)
+{
+    // código omitido
+
+    services.AddTransient<IDataService, DataService>();
+    services.AddTransient<IProdutoRepository, ProdutoRepository>();
+}
+De volta a DataService.cs e, no local em que temos o construtor, estamos recebendo ApplicationContext contexto. No entanto, precisamos receber o ProdutoRepository no construtor do DataService.cs, então fica faltando criarmos um campo para este repositório, a ser chamado de produtoRepository:
+
+class DataService : IDataService
+{
+    private readonly ApplicationContext contexto;
+    private readonly IProdutoRepository produtoRepository;
+
+    public DataService(ApplicationContext contexto,
+        IProdutoRepository produtoRepository)
+    {
+        this.contexto = contexto;
+        this.produtoRepository = produtoRepository;
+    }
+
+    // código omitido
+}
+Utilizaremos este campo privado no DataService para chamar SaveProdutos():
+
+public void InicializaDB()
+{
+    contexto.Database.EnsureCreated();
+
+    List<Livro> livros = GetLivros();
+
+    produtoRepository.SaveProdutos(livros);
+}
+Rodaremos a app e constataremos que tudo funciona corretamente. Reabriremos o SQL Server para verificar o carregamento da lista de produtos no banco de dados, selecionando a tabela de produtos (dbo.Produto) em "Databases > CasaDoCodigo > Tables" com o botão direito do mouse e, em "View Data", para visualizarmos os dados.
+
+Os produtos são carregados como esperado, a partir do nosso arquivo JSON, porém desta vez utilizando o repositório de produtos.
+
+-- 04_A09 - Injetando Modelo na View Carrossel ------------------------------
+
+Chegou a hora de injetarmos o nosso modelo na view para gerarmos uma página dinâmica. E quem faz esta injeção é o controller, cujo pedido acessará o banco de dados para passar o modelo à view por meio do repositório de produtos.
+
+Assim, modificaremos nosso repositório para podermos criar um método para a obtenção de produtos. Na interface IProdutoRepository, criaremos o método GetProdutos(), a partir do qual retornaremos uma lista contendo todos os produtos do catálogo.
+
+public interface IProdutoRepository
+{
+    void SaveProdutos(List<Livro> livros);
+    IList<Produto> GetProdutos();
+}
+Feito isso, iremos à classe ProdutoRepository e forçaremos a implementação desta interface com o novo método. Com IProdutoRepository selecionado, usaremos "Ctrl + ." e optaremos por "Implement interface", e será criado o método GetProdutos(), que acessará o Dbset dos produtos, retornando-o em uma lista:
+
+public IList<Produto> GetProdutos()
+{
+    return contexto.Set<Produto>().ToList();
+}
+Iremos ao controller para consumirmos este método do repositório e pegarmos os produtos. Para isso, acessaremos PedidoController.cs, e criaremos um campo privado que receberá o valor quando fizermos a injeção de dependência. Também criaremos um construtor a partir deste campo, selecionando private readonly IProdutoRepository produtoRepository e usando "Ctrl + .".
+
+public class PedidoController : Controller
+{
+    private readonly IProdutoRepository produtoRepository;
+
+    public PedidoController(IProdutoRepository produtoRepository)
+    {
+        this.produtoRepository = produtoRepository;
+    }
+}
+Agora consumiremos um método de produtoRepository na action de Carrossel(), cujo retorno será injetado como parâmetro do método View():
+
+public IActionResult Carrossel()
+{
+    return View(produtoRepository.GetProdutos());
+}
+Feito isso, modificaremos a view de Carrolsel() para que esta listagem seja exibida na tela. Abriremos "Views > Pedido > Carrossel.cshtml" no painel "Solution Explorer", que se encontra do lado direito. Logo após a linha com <h3>Catálogo</h3>, deixaremos um espaço para renderizar a listagem de views na tela.
+
+Usaremos @ para indicar que estamos colocando um código C# em um arquivo .cshtml. Em seguida, incluiremos uma instrução C#, que no caso será a varredura da nossa lista de produtos, o nosso modelo. Em foreach, poderemos colocar um HTML, dentro do qual incluiremos um trecho em C#.
+
+@foreach (var produto in Model)
+{
+    <div>@produto.</div>
+}
+Porém, o IntelliSense não reconhece ao digitarmos @produto., por não termos descrito o tipo ou modelo desta view de carrossel. Teremos que incluir a diretiva @model, que exige o tipo de modelo que iremos injetar na view, isto é, a lista de produtos.
+
+@model List<Produto>;
+
+<h3>Catálogo</h3>
+
+@foreach (var produto in Model)
+{
+    <div>@produto.Nome</div>
+}
+Desta vez, o programa nos mostra as opções ao digitarmos, e então rodaremos a aplicação com a tecla "F5" para verificar a diferença na nossa tela. A parte dos produtos será carregada e exibida na view. Com isso, temos o catálogo, e cada um dos produtos contidos no banco de dados.
+
+Adiante, passaremos os produtos para baixo, onde se localiza o carrossel com as informações tais como nome e preço.
+
+-- 04_A12 - Exibindo uma página de produtos -----------------------------
+
+Vamos colocar os dados acerca do catálogo de produtos no nosso carrossel, dando uma olhada na nossa view, com uma estrutura que nos mostra que este HTML fixo foi pensado para que quatro produtos seguidos estejam em um mesmo grupo, denominado "página".
+
+No carrossel, conforme clicamos no ícone branco de seta nas laterais, temos a alternância entre os grupos de quatro produtos sendo exibidos simultaneamente. Representaremos isto modificando o HTML no código para conseguirmos injetar nosso modelo.
+
+Removeremos a div de classe item, ficando apenas com a de item active. E no lugar de quatro produtos, manteremos apenas o primeiro, a ser repetido várias vezes com informações diferentes, isto é, cada vez que ele for exibido, estará associado a um produto diferente.
+
+Portanto, faremos uma estrutura de repetição, o foreach do C#, usando @. A repetição terá cada produto em uma página de produtos (produtosDaPagina) mas, antes, incluiremos um código C# com a declaração dessa coleção entre chaves. Pegaremos o modelo e obteremos somente os quatro primeiros elementos desta coleção de produtos, por meio do método Take().
+
+Feito isso, incluiremos a div que representará cada um dos produtos do carrossel dentro do foreach:
+
+<div class="carousel-inner" role="listbox">
+    <div class="item active">
+        <div class="row">
+
+        @{
+            var produtosDaPagina = Model.Take(4);
+        }
+
+        @foreach (var produto in produtosDaPagina)
+        {
+         // código referente à div omitido
+        }
+E então trocaremos as informações por aquelas do nosso modelo de produtos. Em relação à imagem de cada produto do carrossel, por exemplo, temos um arquivo large_001.jpg, em que 001 pode ser representado pela propriedade código do nosso produto, sendo substituído portanto por `@produto.Codigo, e ficandolarge_@produto.Codigo.jpg`.
+
+Da mesma forma, mais abaixo, onde se encontra o nome do produto, ASP.NET Core MVC, trocaremos para `@produto.Nome, e no lugar do preço,R$ 69,90, deixaremosR$ @produto.Preco`. Com isso, poderemos rodar a aplicação, atualizando a página.
+
+Ocorrerá um erro de compilação, pois o programa está considerando que jpg (a extensão do arquivo de imagem), faz parte do código C#. Envolveremos esta parte com parênteses, pois assim o delimitaremos. O trecho ficará assim: large_@(produto.Codigo).jpg.
+
+Ao rodarmos a aplicação novamente, veremos que o carrossel traz as informações provenientes do nosso modelo para a apresentação de uma página de produtos.
+
+-- 04_A13 - Paginação do Carrossel de Produtos --------------------------
+
+Agora que conseguimos exibir a primeira página do nosso catálogo, tentaremos exibir as demais. Voltaremos à view do carrossel, e remover o código do primeiro laço, feito com base nos produtos do modelo. Identificaremos a div de classe item active, que mostra cada uma das páginas do carrossel.
+
+Faremos um laço com código C#, iniciando com @ e, entre chaves ({}), colocaremos a declaração de uma constante que será o tamanho de cada página, isto é, 4. Em seguida, calcularemos a quantidade de páginas que queremos exibir, para o qual dividiremos a quantidade de produtos pelo tamanho da página.
+
+Porém, esta conta não é o suficiente, pois caso o resultado seja um número não inteiro, precisaremos obter o menor número inteiro acima deste valor. Para tal, utilizaremos uma função da biblioteca de matemática do C#, o teto, ou ceiling, em inglês. Também será necessário converter o parâmetro de Ceiling() para double. Ainda armazenaremos o retorno do seu valor na quantidade de páginas que teremos na aplicação, e faremos um cast para tornar o Math.Ceiling() um int.
+
+Depois, faremos um laço for, e então varreremos os produtos desta página em específico. Incluiremos a div neste laço e formataremos o documento com "Ctrl + K + D".
+
+<div class = "carousel-inner" role="listbox">
+
+    @{
+        const int TAMANHO_PAGINA = 4;
+
+        int paginas = (int)Math.Ceiling((double)Model.Count() / TAMANHO_PAGINA);
+    }
+
+    @for (int pagina = 0; pagina < paginas; pagina++)
+    {
+        <div class="item active">...</div>
+    }
+
+</div>
+Assim, temos os produtos da página e, em vez de Model.Take(4), deixaremos Model.Take(TAMANHO_PAGINA). Além disso, precisaremos pegar os produtos daquela página específica, para o qual chamaremos um método do LINQ (Consulta Integrada à Linguagem) do .NET, com Model., pulando a quantidade de elementos correspondente ao número de páginas por meio do método Skip():
+
+<div class="item active">
+    <div class="row">
+
+        @{
+            var produtosDaPagina = Model.Skip(pagina * TAMANHO_PAGINA).Take(TAMANHO_PAGINA);
+        }
+
+        @foreach (var produto in produtosDaPagina)
+        {
+            // código omitido
+        }
+    </div>
+</div>
+Rodaremos a aplicação mais uma vez e veremos todos os produtos, mas não é o que gostaríamos. Queremos exibir apenas uma página por vez, a qual ficaria rodando pelo carrossel. Vamos modificar a div de classe item active do CSS, que indica a página que está sendo exibida no momento — no caso, todas.
+
+Deixaremos somente a primeira página ativa, aquela que possui índice igual a zero. Removeremos active e usaremos uma expressão C# com @ e, entre parênteses, o operador ternário para verificar se a página é igual a zero. Se sim, será retornada a string com o nome da classe do CSS, active e, caso contrário, o retorno será uma string vazia:
+
+<div class="item @(pagina == 0 ? "active" : "")">
+Vamos rodar a aplicação novamente com "Ctrl + F5". Agora sim, estamos exibindo uma página por vez e conseguimos mover o carrossel para a direita ou para a esquerda usando as setas, e acessar todos os produtos do nosso catálogo.
+
+---------------------------------------------------------------------
+---------------------------------------------------------------------
+
+Nesse capítulo, aprendemos:
+
+DataService, Injeção de Dependência
+Lendo Arquivo Json de Produtos
+Gravando Produtos no Banco de Dados
+ProdutoRepository
+Injetando Modelo na View Carrossel
+Exibindo uma Página de Produtos
+Paginação do Carrossel de Produtos
+
+-- 04_A17 - Para saber mais - Code First, Database First ou Model First? --------
+
+Quando trabalhamos com frameworks de "Mapeamento Objeto-Relacional", como Entity Framework, temos 3 alternativas: Code First, Database First ou Model First. Como escolher a melhor? Neste post, Gabriel Ferreira desmistifica e discute cada um deles, para você não ter dúvidas quando iniciar seu próximo projeto com Entity Framework Core.
+
+Qual técnica utilizar com o Entity Framework: Code First, Database First ou Model First?
+Gabriel Ferreira
+
+Fonte: http://gabsferreira.com/qual-tecnica-utilizar-com-o-entity-framework-code-first-database-first-ou-model-first/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
