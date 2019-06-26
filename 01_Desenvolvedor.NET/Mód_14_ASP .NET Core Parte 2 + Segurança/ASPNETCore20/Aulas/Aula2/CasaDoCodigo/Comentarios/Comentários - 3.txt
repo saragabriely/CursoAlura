@@ -1,0 +1,1650 @@
+﻿
+-- 02_A01 - Chamando Repositório de Itens a Partir do Controller -------------
+
+Iniciamos a nossa aula 2 com um novo projeto para a solução. Seguiremos esse padrão de projeto por aula até o final do curso, dessa forma podemos comparar isoladamente o que foi produzido em cada atividade.
+
+Em PedidoController nós temos o método UpdateQuantidade() que é acessodo com sucesso a partir do código JavaScript. A próxima etapa é coletar as informações de Id, ItemPedido e Quantidade e fazer as alterações necessárias no banco de dados. Para isso, precisaremos utilizar como meio o Entity Framework e, como já aprendemos na primeira parte do curso, para acessar o Entity utilizamos o conceito de repositório, portanto adicionaremos um novo método para alterar a quantidade que irá cair na classe repositório de ItemPedido.
+
+No gerenciador de soluções, abriremos o repositório ItemPedidoRepository, localizado na pasta Repositories.
+
+pasta repositories - acessoando arquivo na área de soluções 
+Teremos acesso à interface que usaremos para declarar o novo método.
+
+namespace CasaDoCodigo.Repositories
+{
+    public interface ItemPedidoRepository
+    {
+
+    }
+
+    public class ItemPedidoRepository: BaseRepository<ItemPedido>, IItemPedidoRepository
+    {
+        public ItemPedidoRepository(ApplicatonContext) : base(contexto)
+        {
+        }
+    }
+}
+Nada será retornado, então adicionaremos void e o nome o mesmo nome proveniente de PedidoController, isto é, UpdateQuantidade que receberá o parâmetro ItemPedido.
+
+namespace CasaDoCodigo.Repositories
+{
+    public interface ItemPedidoRepository
+    {
+        void UpdateQuantidade(ItemPedido itemPedido);
+    }
+
+    public class ItemPedidoRepository: BaseRepository<ItemPedido>, IItemPedidoRepository
+    {
+        public ItemPedidoRepository(ApplicatonContext) : base(contexto)
+        {
+        }
+    }
+}
+Faremos essa classe que implementa a interface, também implementar o método UpdateQuantidade(). Clicaremos sobre o nome da interface IItemPedidoRepository, digitamos o atalho "Ctrl + ." e selecionamos a opção "Implementar Interface".
+
+Dessa forma, será criado um método novo, o NotImplementedException()
+
+namespace CasaDoCodigo.Repositories
+{
+    public interface ItemPedidoRepository
+    {
+        void UpdateQuantidade(ItemPedido itemPedido);
+    }
+
+    public class ItemPedidoRepository: BaseRepository<ItemPedido>, IItemPedidoRepository
+    {
+        public ItemPedidoRepository(ApplicatonContext) : base(contexto)
+        {
+        }
+
+        public void UpdateQuantidade(ItemPedido itemPedido)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
+Mesmo não existindo nenhum código dentro desse novo método, nós iremos realizar sua chamada a partir de PedidoController. Para fazer isso, utilizaremos a injeção de dependências.
+
+Declararemos um novo campo privado, chamado itemPedidoRepository.
+
+namespace CasaDoCodigo.Controllers
+{
+    public class PedidoController : Controller
+    {
+        private readonly IProdutoRepository produtoRepository;
+        private readonly IPedidoRepository pedidoRepository;
+                private readonly IItemPedidoRepository itemPedidoRepository;
+
+                public PedidoController(IProdutoRepository produtoRepository,
+            IPedidoRepository pedidoRepository)
+        {
+            this.produtoRepository = produtoRepository;
+            this.pedidoRepository = pedidoRepository;
+        }
+O novo campo privado que criamos receberá o valor da injeção de dependência. Iremos incluir um novo parâmetro no construtor da classe, que será IItemPedidoRepository itemPedidoRepository. Em seguida faremos a atribuição, de modo que o campo privado receba o valor do parâmetro que foi injetado, portanto escreveremos this.itemPedidoRepository = itemPedidoRepository
+
+namespace CasaDoCodigo.Controllers
+{
+    public class PedidoController : Controller
+    {
+        private readonly IProdutoRepository produtoRepository;
+        private readonly IPedidoRepository pedidoRepository;
+                private readonly IItemPedidoRepository itemPedidoRepository;
+
+                public PedidoController(IProdutoRepository produtoRepository,
+            IPedidoRepository pedidoRepository,
+                        IItemPedidoRepository itemPedidoRepository)
+        {
+            this.produtoRepository = produtoRepository;
+            this.pedidoRepository = pedidoRepository;
+                        this.itemPedidoRepository = itemPedidoRepository;
+        }
+Assim feito, no método UpdateQuantidade() acessaremos o novo método UpdateQuantidade() e passaremos o parâmetro itemPedido
+
+namespace CasaDoCodigo.Controllers
+
+<****!****> 
+
+        [httpPost] 
+        public void UpdateQuantidade([FromBody]ItemPedido itemPedido)
+        {
+            itemPedidoRepository.UpdateQuantidade(itemPedido);
+        }
+    }
+}
+Acessaremos a página de produtos, selecionaremos qualquer um e clicaremos sobre o botão "+" quando estivermos na página de carrinho. Seremos redirecionados para o método UpdateQuantidade() do PedidoController. Usaremos o atalho "F11" e chegaremos à linha throw new NotImplementedException().
+
+Public class ItemPedidoRepository : BaseRepository<ItemPedido>, IItemPedidoRepository
+{
+    public ItemPedidoRepository(ApplicationContext contexto) : base(contexto)
+    {
+    }
+
+    public void UpdateQuantidade(ItemPedido itemPedido)
+    {
+        throw new NotImplementedException();
+    }
+}
+A partir desse ponto começaremos a implementar o novo método para gravar informações no banco de dados.
+
+-- 02_A02 - Alterando a Quantidade no Banco de Dados ----------------------
+
+Chegamos no ItemPedidoRepository, e começaremos a implementar o método UpdateQuantidade() para gravarmos informações no banco de dados.
+
+Public class ItemPedidoRepository : BaseRepository<ItemPedido>, IItemPedidoRepository
+{
+    public ItemPedidoRepository(ApplicationContext contexto) : base(contexto)
+    {
+    }
+
+    public void UpdateQuantidade(ItemPedido itemPedido)
+    {
+        throw new NotImplementedException();
+    }
+}
+Removeremos a linha throw new NotImplementedException() e começaremos a acessar a entidade ItemPedido. Vamos entender como faremos isso:
+
+ItemPedidoRepository herda da classe BaseRepository, quando navegamos por essa classe - pasta seleciona-la e pressionar o atalho "F12" - encontraremos um campo privado chamado dbSet do tipo Dbset<T>, isto é, um tipo genérico que é o item pedido. No construtor da classe dbSet recebe o valor contexto.Set<T>(), método do Entity Framework que permite a manipulação da entidade em questão, no caso, ItemPedido.
+
+namespace CasaDoCodigo.Repositories 
+{
+    public abstract class BaseRepository<T> where T : BaseModel 
+    { 
+        protected readonly ApplicationContext contexto;
+        protected readonly DbSet<T> dbSet;
+
+        public BaseRepository(ApplicationContext contexto)
+        {
+            this.contexto = contexto;
+            dbSet = contexto.Set<T>();
+
+        }
+    }
+}
+Voltaremos ao ItemPedidoRepository e acessaremos o dbSet no UpdateQuantidade(). Aplicaremos um filtro, de forma que localizemos somente o pedido que nos interessa, ou melhor, aquele que possui o id passado pelo objeto. Para aplicarmos esse filtro utilizaremos um método do Linq chamado Where(), que por sua vez receberá uma expressão lambda ip (que representa item pedido), ip.id que deverá ser igual ao id do parâmetro de itemPedido, portanto escreveremos itemPedido.Id.
+
+public class ItemPedidoRepository: BaseRepository<ItemPedido>, IItemPedidoRepository
+{
+    public ItemPedidoRepository(ApplicationContext contexto) : base(contexto)
+    {
+    }
+
+    public void UpdateQuantidade(ItemPedido itemPedido)
+    {
+        dbSet
+            .Where(ip => ip.Id == itemPedido.Id)
+Como estamos buscando apenas um item, usaremos outro método do Linq chamado SingleOrDefault() que retornará um elemento, caso esse elemento não seja encontrado será retornado um valor nulo.
+
+public class ItemPedidoRepository: BaseRepository<ItemPedido>, IItemPedidoRepository
+{
+    public ItemPedidoRepository(ApplicationContext contexto) : base(contexto)
+    {
+    }
+
+    public void UpdateQuantidade(ItemPedido itemPedido)
+    {
+        dbSet
+            .Where(ip => ip.Id == itemPedido.Id)
+            .SingleOrDefault();
+Precisamos armazenar esse valor em algum lugar, portanto declararemos uma variável nova chamada itemPedidoDB.
+
+public class ItemPedidoRepository: BaseRepository<ItemPedido>, IItemPedidoRepository
+{
+    public ItemPedidoRepository(ApplicationContext contexto) : base(contexto)
+    {
+    }
+
+    public void UpdateQuantidade(ItemPedido itemPedido)
+    {
+        var itemPedidoDB = 
+        dbSet
+            .Where(ip => ip.Id == itemPedido.Id)
+            .SingleOrDefault();
+Uma vez que estamos obtendo a variável ItemPedidoDB, precisamos verificar se o seu valor não é nulo, e caso seja, queremos ignorá-la. Adicionaremos uma verificação If, e caso o valor da variável seja diferente de nulo nós iremos atualizar o banco de dados.
+
+Para atualizarmos os dados basta acessar o objeto itemPedidoBD e modificar sua quantidade, atribuindo a nova quantidade a ser recebida do parâmetro de ItemPedido.
+
+public class ItemPedidoRepository: BaseRepository<ItemPedido>, IItemPedidoRepository
+{
+    public ItemPedidoRepository(ApplicationContext contexto) : base(contexto)
+    {
+    }
+
+    public void UpdateQuantidade(ItemPedido itemPedido)
+    {
+        var itemPedidoDB = 
+        dbSet
+            .Where(ip => ip.Id == itemPedido.Id)
+            .SingleOrDefault();
+
+        if (itemPedidoDB != null)
+        {
+            itemPedidoDB.Quantidade = itemPedido.Quantidade;
+        }
+No entanto, perceberemos que não podemos fazer atribuição a Quantidade, porque a propriedade ItemPedido.Quantidade não pode ser utilizada nesse contexto, porque o "acessador set é inacessível", segundo a mensagem no Visual Studio. Isso quer dizer que esta é apenas uma propriedade de leitura. Ao invés de modificarmos a propriedade para deixá-la pública, criaremos um novo método para modificar a Quantidade. Criaremos um novo método chamado AtualizaQuantidade(), que receberá como parâmetro a nova quantidade.
+
+public class ItemPedidoRepository: BaseRepository<ItemPedido>, IItemPedidoRepository
+{
+    public ItemPedidoRepository(ApplicationContext contexto) : base(contexto)
+    {
+    }
+
+    public void UpdateQuantidade(ItemPedido itemPedido)
+    {
+        var itemPedidoDB = 
+        dbSet
+            .Where(ip => ip.Id == itemPedido.Id)
+            .SingleOrDefault();
+
+        if (itemPedidoDB != null)
+        {
+            itemPedidoDB.AtualizaQuantidade (itemPedido.Quantidade);
+        }
+Nós escrevemos o método, mas ele ainda não existe e por isso forçaremos o Visual Studio a criá-lo: selecionaremos o método e teclaremos o atalho "Ctrl + .", depois escolheremos a opção "Gerar método 'ItemPedido.AtualizaQuantidade'". Dessa forma não será mais indicado erro no código, mas não temos o método implementado. Selecionaremos AtualizaQuantidade() e pressionaremos "F12".
+
+Implementaremos o método atribuindo à propriedade Quantidade o novo valor da quantidade recebida no método
+
+namespace CasaDoCodigo.Models
+{
+
+<****!****>
+
+ public ItemPedido(Pedido pedido, Produto produto, int quantidade, decimal precoUnitario)
+        {
+            Pedido = pedido;
+            Produto = produto;
+            Quantidade = quantidade;
+            PrecoUnitario = precoUnitario;
+        }
+
+
+        internal void AtualizaQuantidade(int quantidade)
+        {
+            Quantidade = quantidade;
+         }
+    } 
+De volta ao ItemPedidoRepository, teremos alterações feitas em memória, portanto precisamos descarregar essas alterações no banco dados. Para isso, utilizaremos o contexto.SaveChanges().
+
+Feito isso, adicionaremos breaking points na linha if (itemPedidoDB != null) e itemPedidoDB.AtualizaQuantidade (itemPedido.Quantidade);. Adicionaremos outro breaking point na linha Quantidade = quantidade; do método AtualizaQuantidade().
+
+public class ItemPedidoRepository: BaseRepository<ItemPedido>, IItemPedidoRepository
+{
+    public ItemPedidoRepository(ApplicationContext contexto) : base(contexto)
+    {
+    }
+
+    public void UpdateQuantidade(ItemPedido itemPedido)
+    {
+        var itemPedidoDB = 
+        dbSet
+            .Where(ip => ip.Id == itemPedido.Id)
+            .SingleOrDefault();
+
+        if (itemPedidoDB != null)
+        {
+            itemPedidoDB.AtualizaQuantidade (itemPedido.Quantidade);
+
+            contexto.SaveChanges();
+        }
+Iremos executar a aplicação e, como de praxe, clicaremos sobre um item qualquer e depois sobre o botão "+" quando estivermos na página do carrinho. Quando essas ações forem finalizadas, seremos direcionados para a PedidoController. Veremos que para itemPedido teremos as seguintes informações:
+
+Id : 12009
+Pedido: null
+PrecoUnitario : 0
+Produto: null
+Quantidade : 1
+Pressionaremos o atalho "F5" para navegarmos até o próximo método. ItemPedidoDB, que foi carregado do banco de dados, terá as seguintes informações:
+
+Id: 12009
+Pedido: null
+PrecoUnitario : 49,90
+Produto: null
+Quantidade : 1
+Em seguida iremos até o método AtualizaQuantidade(), e veremos que a quantidade continua sendo 1. Devemos inserir um valor que nos permita acompanhar se houve mudança no banco de dados, alteraremos o valor de quantidade para 117.
+
+internal void AtualizaQuantidade(int quantidade);
+{ 
+    Quantidade = quantidade; 
+}
+Pressionaremos "F5" e iremos verificar se de fato houve mudança no banco de dados. Na área "Pesquisador de Objetos do SQL Server", clicaremos sobre "CasaDoCódigo > Tabelas > dbo.ItemPedido", clicaremos sobre o arquivo e selecionaremos a opção "Exibir Dados".
+
+tabela item pedido - selecionando o arquivo correspondente
+Como podemos ver por meio da tabela, os dados foram atualizados corretamente.
+
+Id	PedidoId	PrecoUnitario	ProdutoId	Quantidade
+1	1	49,90	54	1
+2	1	49,90	3	1
+3	1	49,90	65	1
+4	1	49,90	37	1
+5	2	49,90	2	1
+6	2	49,90	1	1
+7	2	49,90	3	1
+8	3	49,90	3	1
+9	4	49,90	1	1
+1009	1004	49,90	2	1
+2009	2004	49,90	2	1
+3009	3004	49,90	2	1
+4009	4004	49,90	2	1
+5009	5004	49,90	1	1
+6009	6004	49,90	14	1
+7009	7004	49,90	2	1
+8009	8004	49,90	1	1
+9009	9004	49,90	2	1
+10009	10004	49,90	1	1
+11009	11004	49,90	2	1
+12009	12004	49,90	2	177
+NULL	NULL	NULL	NULL	NULL
+
+-- 02_A04 - Organizando Código JavaScript com Classe -----------------
+
+Conseguimos atualizar as quantidades no banco de dados. Voltaremos ao código JavaScript para organiza-lo e precisaremos criar uma nova função, para que possamos tornar o botão "-" também funcional na página do carrinho de compras.
+
+O nosso código JavaScript está se tornando muito extenso, o que prejudica sua organização e manutenção.
+
+@{
+    ViewData["Title"] = "Carrinho";
+}
+
+
+@section Scripts
+{
+    <script type="text/javascript">
+        function clickIncremento(btn) {
+            var linhaDoItem = $(btn).parents('[item-id]');
+            var itemId = $(linhaDoItem).attr('item-id');
+            var novaQtde = $(linhaDoItem).find('input').val();
+
+            var data = {
+                Id: itemId,
+                Quantidade: novaQtde
+            };
+
+            $.ajax({
+                url: '/pedido/updatequantidade',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data)
+            });
+
+            debugger;
+        }
+    </script>
+}
+Criaremos um novo arquivo que armazenará essas informações. Na área "Gerenciador de Soluções" do Visual Studio, abriremos a pasta "wwwroot > js".
+
+pasta "Js" em evidência na área Gerenciador de Soluções 
+
+Com Js selecionado, clicaremos com o botão direito e escolheremos as opções "Adicionar > Novo Item". Na nova caixa de diálogo, configuraremos para que este novo arquivo seja JavaScript, e seu nome será carrinho.js.
+
+ opção "Arquivo Java Script" selecionada entre outras possibilidades de tipos de arquivo, como JSON, JSX e XML
+Moveremos para dentro do novo arquivo o código JavaScript, que contém somente a função clickIncremento(). Como nós movemos esse código, precisamos avisar a view onde está localizado o arquivo js, portanto devemos passar a fonte do arquivo (src). Teremos a subpasta js e o arquivo carrinho.js.
+
+@section Scripts
+{
+    <script src="~/js/carrinho.js">
+
+    </script>
+}
+Voltando para carrinho.js, teremos uma função clickIncremento() que chamos de escopo global, o que indica que esta função está visível para todo o código JavaScript que referencia esse arquivo. O que desejamos fazer é organizar esse código, deixando a função dentro de um outro escopo, logo, ciaremos uma nova classe para encapsular a função.
+
+function clickIncremento(btn) {
+            var linhaDoItem = $(btn).parents('[item-id]');
+            var itemId = $(linhaDoItem).attr('item-id');
+            var novaQtde = $(linhaDoItem).find('input').val();
+
+            var data = {
+                Id: itemId,
+                Quantidade: novaQtde
+            };
+
+            $.ajax({
+                url: '/pedido/updatequantidade',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data)
+            });
+
+            debugger;
+A classe é um conceito que entrou no JavaScript a partir do ECMAScript versão 6, e ele irá permitir que organizemos melhor nosso código. o Nome dessa classe será Carrinho.Para utilizar um função dentro de uma classe, não podemos ter a palavra function dentro dela, portanto a deletaremos.
+
+class Carrinho { 
+    clickIncremento(btn) {
+            var linhaDoItem = $(btn).parents('[item-id]');
+            var itemId = $(linhaDoItem).attr('item-id');
+            var novaQtde = $(linhaDoItem).find('input').val();
+
+            var data = {
+                Id: itemId,
+                Quantidade: novaQtde
+            };
+
+            $.ajax({
+                url: '/pedido/updatequantidade',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data)
+            });
+
+            debugger;
+
+        }
+
+}
+Para acessarmos a função clickIncremento() que está na classe precisamos criar uma instância, que ficará ao final do código e se chamará carrinho.carrinhoserá uma nova instância da classe Carrinho().
+
+class Carrinho { 
+    clickIncremento(btn) {
+            var linhaDoItem = $(btn).parents('[item-id]');
+            var itemId = $(linhaDoItem).attr('item-id');
+            var novaQtde = $(linhaDoItem).find('input').val();
+
+            var data = {
+                Id: itemId,
+                Quantidade: novaQtde
+            };
+
+            $.ajax({
+                url: '/pedido/updatequantidade',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data)
+            });
+
+            debugger;
+
+        }
+
+}
+
+var carrinho = new Carrinho();
+Criaremos uma nova função para decrementar a quantidade de itens no carrinho. Essa nova função se chamará clickDecremento(), e receberá o botão como parâmetro (btn).
+
+class Carrinho { 
+    clickIncremento(btn) {
+            var linhaDoItem = $(btn).parents('[item-id]');
+            var itemId = $(linhaDoItem).attr('item-id');
+            var novaQtde = $(linhaDoItem).find('input').val();
+
+            var data = {
+                Id: itemId,
+                Quantidade: novaQtde
+            };
+
+            $.ajax({
+                url: '/pedido/updatequantidade',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data)
+            });
+
+            debugger;
+
+        }
+
+        clickDecremento(btn) {
+
+        }
+}
+
+var carrinho = new Carrinho();
+O código de clickDecremento() será praticamente o mesmo de clickIncremento(), portanto iremos realizar um reaproveitamento do código atribuindo-lhe novas funções. Observem este trecho:
+
+clickIncremento(btn) {
+            var linhaDoItem = $(btn).parents('[item-id]');
+            var itemId = $(linhaDoItem).attr('item-id');
+            var novaQtde = $(linhaDoItem).find('input').val();
+
+            var data = {
+                Id: itemId,
+                Quantidade: novaQtde
+            };
+Sabemos que esta parte de código é responsável pela obtenção do objeto data. Podemos criar uma nova função denominada getData() ao final da classe Carrinho. Essa nova função deverá receber um elemento html, portanto escreveremos elemento como parâmetro. Feito isso, inseriremos o trecho de código que havíamos destacado para dentro de getData().
+
+class Carrinho { 
+    clickIncremento(btn) {
+            var linhaDoItem = $(btn).parents('[item-id]');
+            var itemId = $(linhaDoItem).attr('item-id');
+            var novaQtde = $(linhaDoItem).find('input').val();
+
+            var data = {
+                Id: itemId,
+                Quantidade: novaQtde
+            };
+
+            $.ajax({
+                url: '/pedido/updatequantidade',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data)
+            });
+
+            debugger;
+
+        }
+
+        clickDecremento(btn) {
+
+        }
+        getData(elemento) {
+        var linhaDoItem = $(btn).parents('[item-id]');
+            var itemId = $(linhaDoItem).attr('item-id');
+            var novaQtde = $(linhaDoItem).find('input').val();
+
+            var data = {
+                Id: itemId,
+                Quantidade: novaQtde
+            };
+        }
+}
+
+var carrinho = new Carrinho();
+No método getData() substituiremos o parâmetro btn em linhaDoItem() para elemento.
+
+getData(elemento) {
+        var linhaDoItem = $(elemento).parents('[item-id]');
+            var itemId = $(linhaDoItem).attr('item-id');
+            var novaQtde = $(linhaDoItem).find('input').val();
+
+            var data = {
+                Id: itemId,
+                Quantidade: novaQtde
+            };
+        }
+}
+Iremos consumir a função GetData() em clickIncremento(), para isso acessaremos a instância this.getData() e passaremos o parâmetro btn. Depois, atribuiremos esse conteúdo a uma variável local denominada let data.
+
+class Carrinho { 
+    clickIncremento(btn) { 
+        let data = this.getData(btn);
+
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        });
+Vejamos o próximo trecho de código restante:
+
+    $.ajax({
+      url: '/pedido/updatequantidade',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(data)
+    });
+Sabemos que sua função é postar a quantidade do pedido, logo, criaremos ao final da classe Carrinho, uma nova função denominada postQuantidade() que receberá o objeto data. Dentro desta função alocaremos o trecho do código destacado.
+
+postQuantidade(data) { 
+        $.ajax({
+      url: '/pedido/updatequantidade',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(data)
+    });
+Assim feito, chamaremos esse código por meio do this.postQuantidade(), passando como parâmetro a variável data
+
+class Carrinho { 
+    clickIncremento(btn) { 
+        let data = this.getData(btn);
+
+        this.postQuantidade(data);
+
+        debugger;
+    }
+Ao observarmos atentamente a função getData(), veremos que ela não retorna nada. Substituiremos var data por return
+
+getData(elemento) {
+        var linhaDoItem = $(elemento).parents('[item-id]');
+            var itemId = $(linhaDoItem).attr('item-id');
+            var novaQtde = $(linhaDoItem).find('input').val();
+
+            return = {
+                Id: itemId,
+                Quantidade: novaQtde
+            };
+        }
+}
+Nosso código está bem mais organizado e funcional. Copiaremos a código de clickIncremento() para clickDecremento() e removeremos o debugger.
+
+class Carrinho { 
+    clickIncremento(btn) { 
+        let data = this.getData(btn);
+        this.postQuantidade(data);
+
+    } 
+
+    clickDecremento(btn) { 
+        let data = this.getData(btn);
+        this.postQuantidade(data);
+
+}
+Precisamos diferenciar os dois: no caso de clickIncremento() o valor de Quantidadedeve aumentar, já em clickDecremento() deve diminuir. Faremos isso adicionando, respectivamente data.Quantidade++ e data.Quantidade--.
+
+class Carrinho { 
+    clickIncremento(btn) { 
+        let data = this.getData(btn);
+        data.Quantidade++;
+        this.postQuantidade(data);
+
+    } 
+
+    clickDecremento(btn) { 
+        let data = this.getData(btn);
+        data.Quantidade--;
+        this.postQuantidade(data);
+
+}
+Para conseguirmos utilizar a instância da classe Carrinho, que está na variável carrinho devemos fazer algumas modificações no código html. Iremos até Carrinho.cshtml e modificaremos o evento onclick, referenciando a instância carrinho.
+
+<input type="text" value="@(item.Quantidade)"
+                               class="form-control text-center" />
+                        <span class="input-group-btn">
+                            <button class="btn btn-default"
+                                    onclick="carrinho.clickIncremento(this)">
+                                <span class="glyphicon-plus"></span>
+Copiaremos a linha onclick="carrinho.clickIncremento(this)" e a colocaremos mais acima do código onde se localiza o botão "-" e copiaremos esse tracho. Depois, alteraremos o nome da função clickIncremento() para clickDecremento().
+
+ <span class="input-group-btn">
+                            <button class="btn btn-default">
+                                                            onclick="carrinho.clickDecremento(this)"
+                                <span class="glyphicon-minus"></span>
+                            </button>
+                        </span>
+Com isso, temos o código para aumentar e diminuir a quantidade de itens no carrinho de compras.
+
+-- 02_A06 - Digitando a Nova Quantidade ----------------------------
+
+Temos a função clickIncremento() e clickDecremento() em nosso código. Iremos testá-las na tela de carrinho, clicando sobre os botões de "+" e "-", depois que ela for atualizada por meio do atalho "F5".
+
+Ao clicarmos sobre o botão "+" e atualizarmos a página, veremos que o valor de itens do carrinho aumenta, e ao clicarmos no botão "-" diminui. A numeração na caixa de texto está responsiva aos cliques do usuário, exatamente o que queríamos.
+
+controle de quantidades do carrinho funcionando corretamente
+Para finalizar a configuração da caixa de texto, queremos que o usuário possa digitar a quantidade de itens sem precisar fazer uso dos botões de "+" ou "-", gerando uma modificação direta no banco de dados.
+
+Modificaremos a classe Carrinho, adicionando uma nova função chamada updateQuantidade(), que receberá o elemento html que será a própria caixa de texto, isto é, o nome do parâmetro será input. Em seguida, aproveitaremos trechos de código da mesma classe, retirando a linha data.Quantidade. Faremos outra modificação: para getData() passaremos input e não btn.
+
+class Carrinho {
+    clickIncremento(btn) { 
+        let data = this.getData(btn);
+        data.Quantidade++; 
+        this.postQuantidade(data);
+    }
+
+    clickDecremento(btn) { 
+        let data = this.getData(btn);
+        data.Quantidade--;
+        this.postQuantidade(data);
+    }
+
+    updateQuantidade(input) {
+        let data = this.getData(input);
+        this.postQuantidade(data);
+    }
+
+Para acessarmos updateQuantidade() iremos para Carrinho.cshtml e localizarmos o input e adicionaremos um novo evento chamado onblur, que será acionado para chamarmos na instância carrinho a função que criamos. Passaremos como parâmetro para updateQuantidade() o elemento this.
+
+<input type="text" value="@(item.Quantidade)"
+                               class="form-control text-center" />
+                                                             onblur="carrinho.updateQuantidade(this)"/>
+                        <span class="input-group-btn">
+                            <button class="btn btn-default"
+                                    onclick="clickIncremento(this)">
+                                <span class="glyphicon-plus"></span>
+                            </button>
+Feitas essas modificações, poderemos ir até a página de carrinho e digitar um valor qualquer no campo de quantidade. Digitaremos 17 e apertaremos a tecla "Tab", desse modo a chamada será realizada para o banco de dados.
+
+De volta ao Visual Studio, aa área "Pesquisador de Objetos", inspecionaremos a tabela dbo.ItemPedido.
+
+tabela de item pedido
+Ao final da tabela teremos o valor 17. O registro ocorrerá da mesma maneira se adicionarmos valores diferentes na caixa de texto, o que revela que conseguimos implementar a alteração de quantidades diretamente.
+
+Id	PedidoId	PrecoUnitario	ProdutoId	Quantidade
+1	1	49,90	54	1
+2	1	49,90	3	1
+3	1	49,90	65	1
+4	1	49,90	37	1
+5	2	49,90	2	1
+6	2	49,90	1	1
+7	2	49,90	3	1
+8	3	49,90	3	1
+9	4	49,90	1	1
+1009	1004	49,90	2	1
+2009	2004	49,90	2	1
+3009	3004	49,90	2	1
+4009	4004	49,90	2	1
+5009	5004	49,90	1	1
+6009	6004	49,90	14	1
+7009	7004	49,90	2	1
+8009	8004	49,90	1	1
+9009	9004	49,90	2	1
+10009	10004	49,90	1	1
+11009	11004	49,90	2	1
+12009	12004	49,90	2	177
+13010	13005	49,90	1	17
+NULL	NULL	NULL	NULL	NULL
+
+-- 03_A01 - Criando uma ViewModel ----------------------------------
+
+Estamos visualizando a view de Carrinho.cshtml que exibe corretamente as informações e tratando dos eventos de click do botão de "+" e de "-", assim como da digitação de quantidade diretamente na caixa de texto, que será gravada no banco de dados.
+
+Nesta view fazemos o cálculo do total geral de itens do carrinho utilizando uma expressão em C#, A @(Model.Sum(i => i.Quantidade * i.PrecoUnitario)), que utiliza a quantidade do item e multiplica por seu preço unitário, ao final é realizada a soma desses valores, dessa forma é obtida o total no carrinho. Essa é uma regra de negócio, e essa informação não deveria estar contida dentro da view, que por definição só abriga regras de apresentação.
+
+</div>
+    <div class="panel-footer">
+        <div class="row">
+            <div class="col-md-10">
+                <span numero-itens>
+                    Total: @(Model.Count())
+                    itens
+                </span>
+            </div>
+            <div class="col-md-2">
+                Total: R$ <span class="pull-right" total>
+                    @(Model.Sum(i => i.Quantidade * i.PrecoUnitario))
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+O ideal seria mover essa regra de negócio para um local mais adequeado, para isso criaremos uma classe nova que fornecerá os dados para a view. No começo da nossa view teremos a declaração do modelo com diretiva @Model, que recebe uma lista ItemPedido. Trocaremos essa informação por uma nova classe que fornecerá um modelo novo e específico para esta view, isto é, uma view model.
+
+@{
+    ViewData["Title"] = "Carrinho";
+}
+@model IList<ItemPedido>;
+
+<h3>Meu Carrinho</h3>
+Criaremos a view model dentro da pasta Models do nosso projeto. Criaremos um novo diretório chamado ViewModels e dentro dele adicionaremos numa nova classe cujo nome será CarrinhoViewModel.cs.
+
+A vantagem de uma view model é que ela não precisa ser associada ao Entity Framework, pois diferentes das classes do modelo, não será gravada no banco de dados como tabela.
+
+namespace CasaDoCodigo.Models.ViewModels
+{
+    public class CarrinhoViewModel
+    {
+    }
+}
+CarrinhoViewModel, portanto, irá fornecer uma série de dados para view, como uma lista de itens de pedido. Vamos declarar essa informação como uma propriedade pública, uma lista de pedidos que chamaremos de Itens e será somente de leitura, por isso a declararemos como get.
+
+namespace CasaDoCodigo.Models.ViewModels
+{
+    public class CarrinhoViewModel
+    {
+        public IList<ItemPedido> Itens { get; } 
+    }
+}
+A próxima etapa é gerar o construtor para que essa classe receba a lista de itens. Selecionaremos a linha public IList<ItemPedido> Itens { get; }, acionaremos o atalho "Ctrl + ." e escolheremos a opção "Gerar Construtor".
+
+namespace CasaDoCodigo.Models.ViewModels
+{
+    public class CarrinhoViewModel
+    {
+        public CarrinhoViewModel(IList<ItemPedido> itens)
+        {
+            itens = itens;
+        }
+
+        public IList<ItemPedido> Itens { get; }
+    }
+}
+Forneceremos para a view uma propriedade que calculará o valor total disponível no carrinho, para isso declararemos uma propriedade pública chamada Total que retornará um valor que contém casas decimais, isto é, a soma do subtotal de itens. Usaremos o método Sum() e como parâmetro passaremos uma expressão lambda.
+
+namespace CasaDoCodigo.Models.ViewModels
+{
+    public class CarrinhoViewModel
+    {
+        public CarrinhoViewModel(IList<ItemPedido> itens)
+        {
+            Itens = itens;
+        }
+
+        public IList<ItemPedido> Itens { get; }
+
+        public decimal Total => Itens.Sum(i => i.Quantidade * i.PrecoUnitario);
+    }
+}
+Utilizaremos essa nova classe como modelo da view Carrinho.cshtml.
+
+@{
+    ViewData["Title"] = "Carrinho";
+}
+@model CarrinhoViewModel;
+
+<h3>Meu Carrinho</h3>
+No entanto, veremos uma marcação de erro do Visual Studio em CarrinhoViewModel, isso se deve porque colocamos essa classe em outro namespace que não foi reconhecido. Temos duas alternativas: inserir antes do nome da classe seu respectivo namespace, ou incluir uma nova diretiva using no arquivo _ViewImports.cshtml. Recorreremos a segunda opção.
+
+Na área "Gerenciador de Soluções" abriremos o arquivo _ViewImports.cshtml.
+
+view imports selecionada
+Dentro desse arquivo teremos algumas diretivas using.
+
+@using CasaDoCodigo
+@using CasaDoCodgio.Models
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+Adicionaremos uma nova diretiva referente a ViewModels.
+
+@using CasaDoCodigo
+@using CasaDoCodgio.Models
+@using CasaDoCodigo.Models.ViewModels
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+Com isso, não teremos mais uma mensagem de erro em CarrinhoViewModel na view Carrinho.cshtml.
+
+O próximo passo é modificar algumas informações da view de modo que ela se adeque à CarrinhoViewModel, com por exemplo o laço foreach que obtém os itens a partir de Model, que costumava ser uma lista, mas atualmente trata-se de um objeto que contém uma lista.
+
+<div class="panel-body">
+
+        @foreach (var item in Model)
+        {
+
+            <div class="row row-center linha-produto" item-id="@item.Id">
+Substituiremos Model por Model.Itens.
+
+<div class="panel-body">
+
+        @foreach (var item in Model.Itens)
+        {
+
+            <div class="row row-center linha-produto" item-id="@item.Id">
+Mais abaixo no código da view, teremos a quantidade total de itens Total, que era fornecido por Model.Count. Substituiremos Model.Count por Model.Itens.Count.
+
+</div>
+    <div class="panel-footer">
+        <div class="row">
+            <div class="col-md-10">
+                <span numero-itens>
+                    Total: @(Model.Itens.Count())
+                    itens
+                </span>
+            </div>
+Mais abaixo, teremos o cálculo do valor total que nos referimos no começo da aula.
+
+
+<div class="col-md-2">
+                Total: R$ <span class="pull-right" total>
+                    @(Model.Sum(i => i.Quantidade * i.PrecoUnitario))
+Nós removeremos este cálculo e o substituiremos por Model.Total.
+
+<div class="col-md-2">
+                Total: R$ <span class="pull-right" total>
+                    @(Model.Total)
+Precisamos, ainda, fornecer uma instância a nova classe CarrinhoViewModel a partir do cotroller, afinal é ele que irá retornar uma view e injetar o objeto que servirá de modelo. Em gerenciador de soluções abriremos o arquivo PedidoController.cs e localizaremos a action que retorna Carrinho. Percebam que ela está injetando na view o parâmetro pedidoRepository.GetPedido().Itens, que é uma lista de pedidos. Podemos substituir este trecho por CarrinhoViewModel.
+
+ public IActionResult Carrinho(string codigo)
+        {
+            if (!string.IsNullOrEmpty(codigo))
+            {
+                pedidoRepository.AddItem(codigo);
+            }
+
+                        return View(pedidoRepository.GetPedido().Itens);
+        }
+Selecionaremos pedidoRepository.GetPedido().Itens e extrairemos uma variável local, para que nosso código se torne mais legível. Pressionaremos "Ctrl + ." e escolheremos a opção "Introduzir local para "pedidoRepository.GetPedido().Itens".
+
+ public IActionResult Carrinho(string codigo)
+        {
+            if (!string.IsNullOrEmpty(codigo))
+            {
+                pedidoRepository.AddItem(codigo);
+            }
+
+                        List<ItemPedido> itens = pedidoRepository.GetPedido().Itens;
+                        return base.View(itens);
+        }
+Com a variável criada que capta os itens, montaremos uma instância de CarrinhoViewModel, que receberá como parâmetro itens.
+
+ public IActionResult Carrinho(string codigo)
+        {
+            if (!string.IsNullOrEmpty(codigo))
+            {
+                pedidoRepository.AddItem(codigo);
+            }
+
+                        List<ItemPedido> itens = pedidoRepository.GetPedido().Itens;
+                        CarrinhoViewModel carrinhoViewModel = new CarrinhoViewModel(itens);
+                        return base.View(carrinhoViewModel);
+        }
+Executaremos nossa aplicação pressionando o atalho "F5". Seremos direcionados para a página principal e selecionaremos um produto para adicionarmos o carrinho. Já na página de carrinho aumentaremos o número de itens e veremos que o valor total é modificado cada vez que um intem é incluído.
+
+valor total modificando
+
+Conseguimos aplicar o padrão novo que fornece informações para a view com a vantagem de não precisar ser gravado no banco de dados como tabela.
+
+-- 02_A03 - Preparando o Objeto de Resposta Para a Chamada AJAX ----------------
+
+Nesta aula iremos resolver mais um problema da nossa aplicação: quando aumentamos a quantidade de itens no carrinho de compras, nós não dispomos da atualização automática da página, o que nos obriga a pressionar o tempo todo a tecla "F5" para vermos os valores corretos. Para deixarmos nossa página dinâmica, modificaremos o JavaScript.
+
+No Visual Studio, abriremos o arquivo Carrinho.js dentro da pasta wwwroot, subpasta js. Nós teremos o método ajax() que realiza a chamada para o servidor para que os dados sejam atualizados.
+
+class Carrinho {
+
+<****!****>
+
+ postQuantidade(data) {
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        });
+    }
+}
+
+var carrinho = new Carrinho();
+A página deve ser atualizada no momento em que obtivermos a resposta de sucesso na chamada ajax(). Faremo isso ao adicionar uma chamada para outro método, logo depois doajax(). Esse novo método indicará que a chamada foi completada, e seu nome é done(), que significa em inglês "completo" ou "terminado". done() receberá como parâmetro uma função (function()) , que por sua vez receberá a resposta do servidor(response), enviada por pedidoController. Dentro do corpo da função nós inseriremos o código de refresh da página, isto é, o comando JavaScript location.reload().
+
+class Carrinho {
+
+<****!****>
+
+ postQuantidade(data) {
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+         }).done(function (response) {
+                     location.reaload();
+        });
+    }
+}
+
+var carrinho = new Carrinho();
+Feitas as alterações no código, voltaremos a página inicial e selecionaremos um item qualquer para dispormos no carrinho. Já na página de carrinho, atualizaremos o JavaScript pressionando a tecla "F5" E clicaremos sobre o botão "+" como fizemos outras vezes, para avaliar se as modificações surtiram efeito. Notaremos que a quantidade de itens e valores é atualizada automaticamente, contudo esse ainda não é o estado ideal, pois quando fazemos o location.reload() estamos obrigando o servidor a recriar toda a página e mandá-la novamente para o navegador, o que aumenta o consumo de banda larga por usuário. O ideal é realizarmos uma chamada ajax() que receba uma informação precisa do item que foi alterado e o valor total do carrinho. Deletaremos location.reload() e começaremos a montar uma nova classe que fornecerá um objeto de resposta para o método updateQuantidade().
+
+Abriremos o arquivo PedidoController.cs, onde teremos o método que fornece a resposta para a chamada ajax(), isto é, UpdateQuantidade().
+
+
+ [HttpPost]
+        public void UpdateQuantidade([FromBody]ItemPedido itemPedido)
+        {
+            itemPedidoRepository.UpdateQuantidade(itemPedido);
+        }
+    }
+}
+UpdateQuantidade() não retorna nada, isto é, temos void como resposta. O que queremos fazer é retornar um novo objeto. Criaremos uma nova classe chamada UpdateQuantidadeResponse dentro da pasta Models do nosso projeto. A nova classe irá conter o item de pedido que foi alterado ao clicarmos no botão de "+" ou "-" no carrinho. Esse novo itemPedido será apenas de leitura, portanto escreveremos a palavra get.
+
+namespace CasaDoCodigo.Models
+{
+    public class UpdateQuantidadeResponse
+    {
+        public ItemPedido ItemPedido { get; } 
+    }
+} 
+Quando alteramos algum valor, é importante que retornemos todo o carrinho com os valores totais, portanto declararemos uma outra propriedade pública que será o próprio carrinho (CarrinhoViewModel), caso seja necessário incluiremos o namespace.
+
+namespace CasaDoCodigo.Models
+{
+    public class UpdateQuantidadeResponse
+    {
+        public ItemPedido ItemPedido { get; } 
+        public CarrinhoViewModel CarrinhoViewModel { get; }
+    }
+} 
+Criaremos um construtor para a classe: selecionaremos as duas propriedades existentes e acionaremos o atalho "Ctrl + ." e a opção "Gerar Construtor".
+
+namespace CasaDoCodigo.Models
+{
+    public class UpdateQuantidadeResponse
+    {
+        public UpdateQuantidadeResponse(ItemPedido itemPedido, CarrinhoViewModel carrinhoViewModel)
+        {
+            ItemPedido			= itemPedido;
+            CarrinhoViewModel	= carrinhoViewModel;
+        }
+
+        public ItemPedido		 ItemPedido			{ get; }
+        public CarrinhoViewModel CarrinhoViewModel	{ get; }
+    }
+}
+
+Dessa forma, temos a classe que fornecerá o objeto de resposta quando o usuário clicar nos botões "+", "-" ou alterar a quantidade de itens diretamente na caixa de texto.
+
+-- 02_A04 - Tratando Resposta da Chamada AJAX ------------------------------
+
+Você acabou de desenvolver um método UpdateQuantidade no controller Pedido, para receber a chamada de requisições AJAX a partir do código cliente.
+
+Esse método devolve um objeto da classe UpdateQuantidadeResponse, que tem duas propriedades:
+
+ItemPedido
+CarrinhoViewModel
+Depois que a requisição é feita, o código JavaScript precisa tratar a resposta do método para "imprimir" as informações no console do browser.
+
+Qual trecho de código é o mais adequado para essa tarefa?
+
+$.ajax({
+    url: '/pedido/updatequantidade',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(data)
+}).done(function (response) {
+    let itemPedido = response.itemPedido;
+    let carrinhoViewModel = response.carrinhoViewModel;
+
+    console.log(JSON.stringify(itemPedido));
+    console.log(JSON.stringify(carrinhoViewModel));
+});
+
+-- 02_A05 - Refatorando Repositórios ----------------------------------
+
+Criamos a classe UpdateQuantidadeResponse que será retornada para Carrinho.js na função ajax(), que contém a função done() que por sua vez, receberá como resposta uma instância dessa nova classe.
+
+Iremos preparar o método UpdateQuantidadade() , que está na PedidoController.cs para retornar uma instância da nova classe.
+
+Iremos até a PedidoController.cs para retornar o UpdateQuantidadeResponse. Adicionaremos a palavra return logo a frente de itemPedidoRepository.
+
+ [HttpPost]
+        public void UpdateQuantidade([FromBody]ItemPedido itemPedido)
+        {
+            return itemPedidoRepository.UpdateQuantidade(itemPedido);
+        }
+    }
+}
+No entanto, o método UpdadeQuantidade() retorna um void, portanto iremos até itemPedididoRepository e encontraremos a assinatura do método na interface IItemPedidoRepository.
+
+namespace CasaDoCodigo.Repositories
+{
+    public interface IItemPedidoRepository
+    {
+        void UpdateQuantidade(ItemPedido itemPedido);
+    }
+Mais abaixo no código encontraremos a implementação concreta do método UpdateQuantidade().
+
+ public void UpdateQuantidade(ItemPedido itemPedido)
+        {
+            var itemPedidoDB =
+            dbSet
+                .Where(ip => ip.Id == itemPedido.Id)
+                .SingleOrDefault();
+
+            if (itemPedidoDB != null)
+            {
+                itemPedidoDB.AtualizaQuantidade(itemPedido.Quantidade);
+
+                contexto.SaveChanges();
+            }
+        }
+Trocaremos a palavra void por UpdateQuantidadeResponse. É importante notarmos que o objeto UpdateQuantidadeResponse retorna não apenas o item que é alterado, mas também o CarrinhoViewModel que contém informações do pedido. Como estamos no repositório de ItemPedido não teremos como acessar o pedido a partir daqui, por isso moveremos o método UpdateQuantidade() para o repositório de pedidos, isto é, ItemPedidoRepository.cs. Colaremos todo o trecho destacado ao final da classe, e o removeremos de seu local original.
+
+
+public UpdateQuantidadeResponse UpdateQuantidade(ItemPedido itemPedido)
+        {
+            var itemPedidoDB =
+            dbSet
+                .Where(ip => ip.Id == itemPedido.Id)
+                .SingleOrDefault();
+
+            if (itemPedidoDB != null)
+            {
+                itemPedidoDB.AtualizaQuantidade(itemPedido.Quantidade);
+
+                contexto.SaveChanges();
+            }
+        }
+Moveremos, ainda, a assinatura da interface. Copiaremos a linha void UpdateQuantidade(ItemPedido itemPedido) em ItemPedidoRepository.cs, depois podemos remover essa assinatura do código.
+
+namespace CasaDoCodigo.Repositories
+{
+    public interface IItemPedidoRepository
+    {
+        void UpdateQuantidade(ItemPedido itemPedido);
+    }
+Depois colaremos em PedidoRepository.cs, ou seja, na interface do repositório de pedidos.
+
+namespace CasaDoCodigo.Repositories
+{
+    public interface IPedidoRepository
+    {
+        Pedido GetPedido();
+        void AddItem(string codigo);
+                void UpdateQuantidade(ItemPedido itemPedido);
+    }
+Iremos retornar a parte do UpdateQuantidade, modificando o retorno da interface de void para UpdateQuantidadeResponse
+
+namespace CasaDoCodigo.Repositories
+{
+    public interface IPedidoRepository
+    {
+        Pedido GetPedido();
+        void AddItem(string codigo);
+                UpdateQuantidadeResponse UpdateQuantidade(ItemPedido itemPedido);
+    }
+Mais abaixo no código, começaremos a implementar o UpdateQuantidade que foi movida para PedidoRepository.cs.
+
+Temos ItemPedidoDB que será obtido a partir do banco de dados e que inicialmente acessávamos a partir do dbset, que era de ItemPedido, inicalmente. Aqui o dbset é referente a Pedido. Teremos de obter por meio do itemPedidoRepository a informação de ItemPedido.
+
+public UpdateQuantidadeResponse UpdateQuantidade(ItemPedido itemPedido)
+        {
+            var itemPedidoDB =
+            dbSet
+                .Where(ip => ip.Id == itemPedido.Id)
+                .SingleOrDefault();
+
+            if (itemPedidoDB != null)
+            {
+                itemPedidoDB.AtualizaQuantidade(itemPedido.Quantidade);
+
+                contexto.SaveChanges();
+            }
+        }
+Criaremos em ItemPedidoRepository um novo método para obter somente ItemPedido a partir do itemPedidoId. Iseriremos uma assinatura de método que retornará ItemPedido e criaremos um novo método chamado GetItemPedido(), que receberá como parâmetro int itemPedidoId.
+
+namespace CasaDoCodigo.Repositories
+{
+    public interface IItemPedidoRepository
+    {
+        ItemPedido GetItemPedido(int itemPedidoId);
+    }
+
+        public class ItemPedidoRepository : BaseRepository<ItemPedido>, IItemPedidoRepository
+        {
+            public ItemPedidoRepository(ApplicationContext contexto) : base(contexto)
+            {
+            }
+        }
+}
+Feito isso, implementaremos o método na classe concreta IItemPedidoRepository. Dessa forma teremos GetItemPedido recebendo itemPedidoId
+
+namespace CasaDoCodigo.Repositories
+{
+    public interface IItemPedidoRepository
+    {
+        ItemPedido GetItemPedido(int itemPedidoId);
+    }
+
+        public class ItemPedidoRepository : BaseRepository<ItemPedido>, IItemPedidoRepository
+        {
+            public ItemPedidoRepository(ApplicationContext contexto) : base(contexto)
+            {
+            }
+
+            public ItemPedido GetItemPedido(int itemPedidoId)
+            {
+                throw new NotImplementedException();
+            }
+        }
+}
+Dessa forma teremos GetItemPedido() recebendo itemPedidoId. Esse método irá retornar a seguinte expressão registrada em PedidoRepository.cs.
+
+<****!****>
+
+            dbSet
+                .Where(ip => ip.Id == itemPedido.Id)
+                .SingleOrDefault();
+
+<****!****>          
+Iremos copiar essa expressão e colá-la no método GetItemPedido() e adicionar a expressão return. Além disso, substituiremos itemPedido.Id por ItemPedidoId.
+
+namespace CasaDoCodigo.Repositories
+{
+    public interface IItemPedidoRepository
+    {
+        ItemPedido GetItemPedido(int itemPedidoId);
+    }
+
+        public class ItemPedidoRepository : BaseRepository<ItemPedido>, IItemPedidoRepository
+        {
+            public ItemPedidoRepository(ApplicationContext contexto) : base(contexto)
+            {
+            }
+
+            public ItemPedido GetItemPedido(int itemPedidoId)
+            {
+                return 
+                dbSet
+                .Where(ip => ip.Id == itemPedidoId)
+                .SingleOrDefault();
+
+            }
+        }
+}
+Consumiremos o método GetItemPedido() em PedidoRepository.cs, faremos isso chamando um repositório a partir do outro, realizando uma injeção de dependência por meio da interface. Em PedidoRepository declararemos um campo privado que será chamado de IItemPedidoRepository itemPedidoRepository. Esse item será fornecido via injeção de dependência, portanto precisamos criar um novo parâmetro no construtor da classe, que será itemPedidoRepository. Forneceremos no corpo do construtor this.itemPedidoRepository, atribuindo a este campo local o parâmetro itemPedidoRepository.
+
+public class PedidoRepository : BaseRepository<Pedido>, IPedidoRepository
+    {
+        private readonly IHttpContextAccessor contextAccessor;
+        private readonly IItemPedidoRepository itemPedidoRepository;
+
+        public PedidoRepository(ApplicationContext contexto,
+            IHttpContextAccessor contextAccessor,
+            IItemPedidoRepository itemPedidoRepository) : base(contexto)
+        {
+            this.contextAccessor = contextAccessor;
+            this.itemPedidoRepository = itemPedidoRepository;
+        }
+Ao final do código, trabalharemos no método UpdateQuantidade(). Removeremos o seguinte trecho do código:
+
+dbSet
+    .Where(ip => ip.Id == itemPedido.Id)
+    .SingleOrDefault();
+Assim, obteremos itemPedidoDB a parir de ItemPedidoRepository.GetItemPedido, passando como parâmetro itemPedido.Id. A nova forma do código ficará desse modo:
+
+public UpdateQuantidadeResponse UpdateQuantidade(ItemPedido itemPedido)
+        {
+            var itemPedidoDB = itemPedidoRepository.GetItemPedido(itemPedido.Id);
+
+            if (itemPedidoDB != null)
+            {
+                itemPedidoDB.AtualizaQuantidade(itemPedido.Quantidade);
+
+                                contexto.SaveChanges();
+
+            }
+Conseguimos pegar ItemPedidoDB e salvando a quantidade de itens no banco de dados. Teremos de retornar do método UpdateQuantidade() uma nova instância de UpdateQuantidadeResponse(), para isso passaremos como parâmetro no construtor ItemPedidoDB e CarrinhoViewModel, que declararemos mais acima do código em uma variável local para que este se torne mais legível. Para CarrinhoViewModel() iremos acionar o método GetPedido() e depois acessaremos a propriedade Itens. Assim feito, passaremos carrinhoViewModel para como outro parâmetro do método UpdateQuantidadeResponse().
+
+public UpdateQuantidadeResponse UpdateQuantidade(ItemPedido itemPedido)
+        {
+            var itemPedidoDB = itemPedidoRepository.GetItemPedido(itemPedido.Id);
+
+            if (itemPedidoDB != null)
+            {
+                itemPedidoDB.AtualizaQuantidade(itemPedido.Quantidade);
+
+                                contexto.SaveChanges();
+
+                                var carrinhoViewModel = new CarrinhoViewModel(GetPedido().Itens);
+
+                                return mew UpdateQuantidadeResponse(itemPedidoDB, carrinhoViewModel);
+
+            }
+Ainda resta resolver um problema: quando itemPedidoDB for igual a nulo, isto é, quando não for encontrado o Id correto, o que faremos? Precisamos criar uma exceção. Escreveremos trow new ArgumentException(), passando como parâmetro a mensagem "ItemPedido não encontrado".
+
+public UpdateQuantidadeResponse UpdateQuantidade(ItemPedido itemPedido)
+        {
+            var itemPedidoDB = itemPedidoRepository.GetItemPedido(itemPedido.Id);
+
+            if (itemPedidoDB != null)
+            {
+                itemPedidoDB.AtualizaQuantidade(itemPedido.Quantidade);
+
+                                contexto.SaveChanges();
+
+                                var carrinhoViewModel = new CarrinhoViewModel(GetPedido().Itens);
+
+                                return mew UpdateQuantidadeResponse(itemPedidoDB, carrinhoViewModel);
+
+            }
+                        throw new ArgumentExecption("ItemPedido não encontrado");
+                }
+        }
+}
+
+Voltemos à PedidoController e veremos o método UpdateQuantidade() que é chamado no ItemPedidoRepository.
+
+ [HttpPost]
+        public UpdateQuantidadeResponse UpdateQuantidade([FromBody]ItemPedido itemPedido)
+        {
+            return itemPedidoRepository.UpdateQuantidade(itemPedido);
+        }
+    }
+}
+
+Faremos uma pequena alteração e chamaremos diretamente o método em pedidoRepository
+
+ [HttpPost]
+        public UpdateQuantidadeResponse UpdateQuantidade([FromBody]ItemPedido itemPedido)
+        {
+            return pedidoRepository.UpdateQuantidade(itemPedido);
+        }
+    }
+}
+Dessa forma temos todas as chamadas operando corretamente. Nas próximas aulas veremos como utilizar o código JavaScript para tratar os retornos e fazer a atualização na tela de carrinho.
+
+-- 02_A06 - Adicione a propriedade Subtotal em ItemPedido ----------------
+
+IMPORTANTE
+Antes de continuar no próximo vídeo, adicione esta propriedade à classe ItemPedido no arquivo CasaDoCodigo/Models/modelo.cs:
+
+[DataMember]
+        public decimal Subtotal => Quantidade * PrecoUnitario;
+Esse código nada mais é o do que uma propriedade "read only", isto é, propriedade com get mas sem set, que poderia ser escrita de outra forma:
+
+[DataMember]
+public decimal Subtotal
+{
+    get 
+    {
+        return Quantidade * PrecoUnitario;
+    }
+}
+Com a propriedade Subtotal, a entidade ItemPedido tem pode fazer ela mesma o cálculo do subtotal, e assim evitamos passar essa responsabilidade de regra de negócio para outros trechos de código da aplicação, como é o caso do código JavaScript que você irá estudar agora.
+
+-- 02_A07 - Atualizando o Item na View com JavaScript --------------
+
+Começaremos a testar o objeto de resposta, pegar o resultado e começar a atualizar a nossa página de carrinho. Voltaremos ao nosso código JavaScript, no arquivo carrinho.js
+
+    postQuantidade(data) {
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        }).done(function (response) {
+
+                });
+    }
+}
+
+var carrinho = new Carrinho();
+Inseriremos a instrução debugger que fará com que o navegador Chrome pare na linha correta.
+
+    postQuantidade(data) {
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        }).done(function (response) {
+                    debugger;
+
+                });
+    }
+}
+
+var carrinho = new Carrinho();
+Na página de carrinho no navegador, clicaremos sobre o botão "+" para acrescentar um novo item. Assim que fizemos esse procedimento, iremos ser direcionados para a linha em que se encontra o comando debugger, dessa forma poderemos inspecionar o objeto response. Esse objeto contém ItemPedido, que conterá as informações do item que teve sua quantidade atualizada, e carrinhoViewModel, que por sua vez abriga todas as informações acerca do carrinho de compras.
+
+Acessaremos o objeto ItemPedidoque está dentro de response. Em nosso código JavaScript criaremos uma variável local que declararemos como itemPedido, que será igual a response.itemPedido
+
+    postQuantidade(data) {
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        }).done(function (response) {
+                    let itemPedido = response.itemPedido;
+                    debugger;
+
+                });
+    }
+}
+
+var carrinho = new Carrinho();
+Dessa forma, ao voltarmos para a página de carrinho e selecionarmos o botão "+", ItemPedido será preenchido com as informações que precisamos para atualizar a linha de pedido. Sobre a área de "Quantidade", clicaremos com o botão direito do mouse e selecionaremos a opção "Inspecionar".
+
+ área de compras da página de carrinho, com menu de opções aberto com "selecionar" em destaque 
+
+Dessa forma, veremos o código html da página. Para chegarmos exatamente na linha que corresponde ao item atualizado, procuraremos o atributo item-id.
+
+<div class="row row-center linha-produto" item-id="22011"> ==$0
+Obteremos a parte do objeto de resposta para chegarmos na <div>. Voltaremos ao código JavaScript e declararemos uma variável linhaDoItem que será obtida a partir do jQuery. Para fazermos uma consulta a esta biblioteca, iremos inserir $('[item-id=' + itemPedido.id +]'), ou seja, o seletor com uma concatenação de string com itemPedido.id.
+
+    postQuantidade(data) {
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        }).done(function (response) {
+                    let itemPedido = response.itemPedido;
+                    let lihaDoItem = $('[item-id=' + itemPedido.id +]')
+                    debugger;
+
+                });
+    }
+}
+
+var carrinho = new Carrinho();
+Executaremos novamente a aplicação no browser e clicaremos sobre o botão "+". Veremos que linhaDoItem obteu a <div> que contém as informações do itemId. De volta ao código JavaScript, nosso próximo passo é modificar a quantidade do item que foi atualizado. Para isso acessaremos linhaDoItem, um elemento html, e procuraremos a caixa de texto da quantidade, que por sua vez é um elemento input. Logo,procuraremos na hierarquia html utilizando a função find() e utilizaremos como argumento o nome 'input'. Quando este elemento for encontrado, trocaremos o valor desse elemento utilizando a função jQuery val, que receberá o parâmetro o valor da quantidade alterada, isto é, itemPedido.quantidade
+
+    postQuantidade(data) {
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        }).done(function (response) {
+                    let itemPedido = response.itemPedido;
+                    let linhaDoItem = $('[item-id=' + itemPedido.id +]')
+                    linhaDoItem.find('input').val(itemPedido.quantidade);
+                    debugger;
+                });
+    }
+}
+
+var carrinho = new Carrinho();
+Retornaremos ao navegador, na página carrinho. Ao clicarmos nos botões "+" ou "-", a quantidade do item é atualizada automaticamente, no entanto o subvalor total da compra não acompanha essa atualização.
+
+subtotal
+Ao inspecionarmos este elemento, encontraremos um <span> que contém um atributo subtotal, o que permitirá que encontremos o local em que precisamos fazer a substituição do html.
+
+<span class="pull-right" subtotal>
+                        149,70
+                    </span>
+No código JavaScript, a partir de linhaDoItem, localizaremos qual é o elemento que contém um atributo subtotal, para isso utilizaremos novamente a função find(). Para trocarmos o html de um elemento, utilizamos a função jQuery .html(), que receberá como parâmetro o novo valor, ou seja, itemPedido.subtotal.
+
+    postQuantidade(data) {
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        }).done(function (response) {
+                    let itemPedido = response.itemPedido;
+                    let linhaDoItem = $('[item-id=' + itemPedido.id +]')
+                    linhaDoItem.find('input').val(itemPedido.quantidade);
+                    linhaDoItem.find('[subtotal]').html(itemPedido.subtotal);
+                    debugger;
+                });
+    }
+}
+
+var carrinho = new Carrinho();
+Ao retornarmos ao browser, veremos que o valor subtotal é alterado à medida que aumentamos ou diminuímos o número de itens no carrinho. A única questão é que o valor está perdendo a formatação correta: ao invés de fazer uso da vírgula ("449,70"), está utilizando o ponto ("449.7") .
+
+Utilizaremos um recurso JavaScript que realiza a modificação de um protótipo númerico. Tal protótipo permitirá que acessemos uma função a partir de um número e assim formatá-lo. Formataremos uma string que possui duas casas decimais, para isso escreveremos Number.prototype.duasCasas que será igual a function(). No corpo dessa função, declararemos o retorno de uma string formatada, isto é, o valor obtido por meio de this. Usaremos o toFixed() que retornará duas casas decimais. Em seguida, substituiremos o ponto decimal por uma vírgula utilizando o método replace()
+
+    postQuantidade(data) {
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        }).done(function (response) {
+                    let itemPedido = response.itemPedido;
+                    let linhaDoItem = $('[item-id=' + itemPedido.id +]')
+                    linhaDoItem.find('input').val(itemPedido.quantidade);
+                    linhaDoItem.find('[subtotal]').html(itemPedido.subtotal);
+                    debugger;
+                });
+    }
+}
+
+var carrinho = new Carrinho();
+
+Number.prototype.duasCasas = function()  {
+    return this.toFixed(2).replace('.',',');
+}
+Envolveremos a expressão (itemPedido.subtotal) em () e utilizaremos a função duasCasas()
+
+    postQuantidade(data) {
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        }).done(function (response) {
+                    let itemPedido = response.itemPedido;
+                    let linhaDoItem = $('[item-id=' + itemPedido.id +]')
+                    linhaDoItem.find('input').val(itemPedido.quantidade);
+                    linhaDoItem.find('[subtotal]').html((itemPedido.subtotal).duasCasas());
+                    debugger;
+                });
+    }
+}
+
+var carrinho = new Carrinho();
+
+Number.prototype.duasCasas = function()  {
+    return this.toFixed(2).replace('.',',');
+}
+Assim feito, a formatação dos itens numéricos da página carrinho estarão corretas.
+
+-- 02_A08 - Atualizando Totais do Carrinho na View com JavaScript ----------
+
+Começaremos a modificar o valor e quantidade total de itens no carrinho na tela via JavaScript, mas primeiro, veremos uma situação em que removemos a quantidade de itens do carrinho até que ela fique zerada.
+
+Quando zeramos a quantidade de itens no carrinho devemos remover esse item do banco de dados, portanto voltaremos ao ItemPedidoRepository.cs, onde criaremos um método novo para realizar essa remoção quando necessária.
+
+Na interface adicionaremos o método RemoveItemPedido() que retornará um void. Esse método terá como parâmetro int itemPedidoId
+
+namespace CasaDoCodigo.Repositories
+{
+    public interface IItemPedidoRepository
+    {
+        ItemPedido GetItemPedido(int itemPedidoId);
+                void RemoveItemPedido(int itemPedidoId);
+    }
+Assim feito, implementaremos o método na classe concreta: selecionamos IItemPedidoRepository e utilizando o atalho "Ctrl + ." escolheremos a opção "Implementar interface".
+
+public class ItemPedidoRepository : BaseRepository<ItemPedido>, IItemPedidoRepository
+    {
+        public ItemPedidoRepository(ApplicationContext contexto) : base(contexto)
+        {
+        }
+Desas forma, ao final do código teremos:
+
+public void RemoveItemPedido(int itemPedidoId)
+{
+    throw new NotImplementedException();
+}
+Para removermos o item precisaremos obte-lo no banco de dados, faremos isso por meio do método GetItemPedido(), que receberá como parâmetro itemPedidoId. Iremos remover esse itemPedidoId do dbSet, que é o conjunto de itens do banco de dados. O dbSet possui um método para excluir itens do banco, chamado Remove(), que por sua vez receberá GetItemPedido(itemPedidoId).
+
+public void RemoveItemPedido(int itemPedidoId)
+{
+    dbSet.Remove(GetItemPedido(itemPedidoId));
+}
+Iremos até PedidoRepository.cs e chamaremos o método RemoveItemPedido() para excluir ItemPedido quando necessário. Adicionaremos a condicional if, e quando o Quantidade foi igual a 0, chamaremos o itemPedidoRepository.RemoveItemPedido(itemPedido.id).
+
+public UpdateQuantidadeResponse UpdateQuantidade(ItemPedido itemPedido)
+        {
+            var itemPedidoDB = itemPedidoRepository.GetItemPedido(itemPedido.Id);
+
+            if (itemPedidoDB != null)
+            {
+                itemPedidoDB.AtualizaQuantidade(itemPedido.Quantidade);
+
+                if (itemPedido.Quantidade == 0)
+                {
+                    itemPedidoRepository.RemoveItemPedido(itemPedido.Id);
+                }
+No código JavaScript, atualizaremos o valor total do carrinho. Procuraremos o html que contém o elemento com a quantidade total de itens em nosso carrinho. Ao inspecionarmos o código html veremos que essa quantidade é armazenada em um <span>, precisamente no atributo numero-itens.
+
+<span numero-itens> Total: 1 itens</span>
+Localizaremos esse tributo por meio de uma filtragem do jQuery. No código JavaScript inseriremos o seletor para localizado atributo numero-itens. Quando esse elemento for encontrado, trocaremos o html com a função html(), que receberá Total: 12345 itens
+
+postQuantidade(data) {
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        }).done(function (response) {
+            let itemPedido = response.itemPedido;
+            let linhaDoItem = $('[item-id=' + itemPedido.id + ']')
+            linhaDoItem.find('input').val(itemPedido.quantidade);
+            linhaDoItem.find('[subtotal]').html((itemPedido.subtotal).duasCasas());
+
+                        $('[numero-itens]').html('Total: 12345 itens');
+                        debugger;
+                });
+Iremos intercalar a string Total: 12345 itens de forma que possamos substituir os caracteres numéricos pela quantidade total de itens no em carrinhoViewModel. Acessaremos a lista de itens e em seguida obteremos a quantidade de elementos da lista, que conseguimos acessar por meio da função JavaScript lenght.
+
+postQuantidade(data) {
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        }).done(function (response) {
+            let itemPedido = response.itemPedido;
+            let linhaDoItem = $('[item-id=' + itemPedido.id + ']')
+            linhaDoItem.find('input').val(itemPedido.quantidade);
+            linhaDoItem.find('[subtotal]').html((itemPedido.subtotal).duasCasas());
+
+                        $('[numero-itens]').html('Total:' + carrinhoViewModel.itens.length + 'itens');
+                        debugger;
+                });
+Contudo, carrinhoViewModel ainda não foi declarado, faremos isso na linha acima.
+
+postQuantidade(data) {
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        }).done(function (response) {
+            let itemPedido = response.itemPedido;
+            let linhaDoItem = $('[item-id=' + itemPedido.id + ']')
+            linhaDoItem.find('input').val(itemPedido.quantidade);
+            linhaDoItem.find('[subtotal]').html((itemPedido.subtotal).duasCasas());
+                        let carrinhoViewModel = response.carrinhoViewModel;
+                        $('[numero-itens]').html('Total:' + carrinhoViewModel.itens.length + 'itens');
+                        debugger;
+                });
+Pressionaremos o atalho "F5" para compilar a aplicação. Depois, iremos até a página inicial e colocaremos três itens diferentes no carrinho de compras. Reduziremos a quantidade de um dos itens até que na caixa de texto seja exibido o valor 0. A quantidade total de itens foi atualizada, contudo o item que apresenta 0 de quantidade não foi removido.
+
+página de carrinho de compras que contém três itens visíveis na tela, um deles possui a quantidade marcada como "0" na caixa de texto. Em "Valor Total" temos a quantidade "2".
+
+Isso aconteceu porque não configuramos para que o item seja removido da tela. Faremos isso nesta etapa. De volta ao código JavaScript, iremos verificar a quantidade de itens que foram alterados. Incluiremos a condicional if para fazer a verificação de itemPedido, caso ela seja igual a 0, linhaDoItem será removida por meio do método remove().
+
+postQuantidade(data) {
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        }).done(function (response) {
+            let itemPedido = response.itemPedido;
+            let linhaDoItem = $('[item-id=' + itemPedido.id + ']')
+            linhaDoItem.find('input').val(itemPedido.quantidade);
+            linhaDoItem.find('[subtotal]').html((itemPedido.subtotal).duasCasas());
+            let carrinhoViewModel = response.carrinhoViewModel;
+            $('[numero-itens]').html('Total: ' + carrinhoViewModel.itens.length + ' itens');
+
+
+            if (itemPedido.quantidade == 0) {
+                linhaDoItem.remove();
+            }
+
+            debugger;
+        });
+    }
+}
+Dessa forma, quando um item estiver com uma quantidade igual a 0, ele será removido da tela e da quantidade total de itens. Contudo, falta atualizarmos o valor total do pedido. Para isso, inseriremos $('[total]').html((carrinhoViewModel.total), e para que a formatação seja correta, inseriremos a função duasCasas() que envolverá toda a expressão.
+
+postQuantidade(data) {
+        $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        }).done(function (response) {
+            let itemPedido = response.itemPedido;
+            let linhaDoItem = $('[item-id=' + itemPedido.id + ']')
+            linhaDoItem.find('input').val(itemPedido.quantidade);
+            linhaDoItem.find('[subtotal]').html((itemPedido.subtotal).duasCasas());
+            let carrinhoViewModel = response.carrinhoViewModel;
+            $('[numero-itens]').html('Total: ' + carrinhoViewModel.itens.length + ' itens');
+            $('[total]').html((carrinhoViewModel.total).duasCasas());
+
+            if (itemPedido.quantidade == 0) {
+                linhaDoItem.remove();
+            }
+
+            debugger;
+        });
+    }
+}
+Com isso, o valor total e quantidade de itens são atualizados.
+
+
+
+
+
+
+
+
+
+
+
+
