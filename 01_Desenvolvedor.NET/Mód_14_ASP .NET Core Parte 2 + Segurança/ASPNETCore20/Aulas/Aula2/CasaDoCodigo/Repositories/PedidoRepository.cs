@@ -18,15 +18,18 @@ namespace CasaDoCodigo.Repositories
 
     public class PedidoRepository : BaseRepository<Pedido>, IPedidoRepository
     {
-        private readonly IHttpContextAccessor contextAccessor;
+        private readonly IHttpContextAccessor  contextAccessor;
         private readonly IItemPedidoRepository itemPedidoRepository;
+        private readonly ICadastroRepository   cadastroRepository;
 
         public PedidoRepository(ApplicationContext    contexto,
                                 IHttpContextAccessor  contextAccessor,
-                                IItemPedidoRepository itemPedidoRepository) : base(contexto)
+                                IItemPedidoRepository itemPedidoRepository,
+                                ICadastroRepository cadastroRepository) : base(contexto)
         {
             this.contextAccessor      = contextAccessor;
             this.itemPedidoRepository = itemPedidoRepository;
+            this.cadastroRepository   = cadastroRepository;
         }
 
         public void AddItem(string codigo)
@@ -100,6 +103,11 @@ namespace CasaDoCodigo.Repositories
             if (itemPedidoDB != null)
             {
                 itemPedidoDB.AtualizaQuantidade(itemPedido.Quantidade);
+
+                if(itemPedido.Quantidade == 0)
+                {
+                    itemPedidoRepository.RemoveItemPedido(itemPedido.Id);
+                }
 
                 contexto.SaveChanges();
 

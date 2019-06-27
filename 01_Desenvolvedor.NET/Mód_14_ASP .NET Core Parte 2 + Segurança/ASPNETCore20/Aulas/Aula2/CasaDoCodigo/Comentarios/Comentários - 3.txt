@@ -1637,6 +1637,398 @@ postQuantidade(data) {
 }
 Com isso, o valor total e quantidade de itens são atualizados.
 
+-- 02_A09 - Redefina o Valor do Input -----------------------
+
+Considere um código JavaScript, onde input é objeto representando um elemento <input> que foi capturado por uma função do jQuery, e itemPedido é uma variável objeto contendo duas propriedades:
+
+var itemPedido = {
+    id: 123,
+    quantidade: 7
+}
+
+var input = $('input.total-do-item');
+Como você modificaria o valor do elemento input a partir da quantidade da variável itemPedido?
+
+input.val(itemPedido.quantidade);
+ 
+Isso mesmo! O método val() com parâmetros serve para definir um novo valor para o elemento input.
+
+-- 02_A12 - PAra saber mais ----------------------------------------
+
+Neste livro, Everton Coimbra apresenta o ASP.NET Core MVC de uma maneira que o leitor 
+já possa aprender com a prática desde o início. O estudo é dirigido ao desenvolvimento 
+de uma aplicação que envolve persistência em uma base de dados, fazendo uso do Entity 
+Framework Core. Você verá desde as operações CRUD até como desenvolver seus layouts 
+e tabelas, separando sua aplicação em camadas seguindo os conceitos de coesão e 
+acoplamento. Dentre as técnicas e recursos apresentados, estão associações, 
+personalização das classes de modelo, controle de acesso de usuários, tratamento de 
+erros, controles DropDownList aninhados e o uso de sessão para o armazenamento de
+dados.
+
+https://www.casadocodigo.com.br/products/livro-aspnet-core-mvc
+
+ASP.NET Core MVC
+Aplicações modernas em conjunto com o Entity Framework Everton Coimbra de Araújo
+
+
+-- 03_A01 - Montando a View de Cadastro ------------------------
+
+Quando terminamos de inserir os produtos no carrinho e queremos finalizar a compra clicando no botão "Finalizar Pedido", somos direcionamos para o resumo de compra, que conterá informações do pedido e do cadastro do cliente.
+
+tela de resumo de compras que contém as informações de "Número do Pedido:29007"; "Seus Dados: Harry Porto (11) 1234-5678 harry.porto@alura.com.br"; "Item: Algoritmos em Java"; "Endereço de Entrega: Rua dos Alfeneiros,no.4 (embaixo da escada) -Little Whinging - Surrey -Reino Unid"; "Quantidade: 1"
+
+Contudo, as informações que dispomos são falsas e servem apenas de modelo. Queremos exibir informações que foram coletadas do cliente, para isso precisamos criar uma tela de cadastro. Faremos uma modificação no fluxo de navegação e trocaremos o botão "Finalizar Pedido" da tela de carrinho por outra que direcione o usuário para uma tela de cadastro.
+
+botão finalizar pedido - tela de carrinho que contém um item, com o botão "Finalizar Pedido" em destaque
+Acessaremos Cadastro.cshtml , isto é, nossa view de cadastramento de usuários. Teremos todos os elementos que compõe o formulário, que até o momento não passa de um conjunto de tags html, portanto precisamos criar os campos para serem preenchidos.
+
+Incluiremos o elemento <form> no começo do código. Tal elemento precisa de algumas informações, como a action, que é o endereço para onde enviaremos as informações, ou seja, /pedido/resumo. Inseriremos, ainda, o método post() cuja função é enviar dados e realizar mudanças na aplicação.
+
+@{
+    ViewData["Title"] = "Cadastro";
+}
+
+<h3>Cadastro</h3>
+
+<form action="/pedido/resumo" method="post">
+
+</form>
+
+<div class="panel panel-default">
+Incluiremos em <form> a <div> que contém as informações do cadastro de usuário.
+
+@{
+    ViewData["Title"] = "Cadastro";
+}
+
+<h3>Cadastro</h3>
+
+<form action="/pedido/resumo" method="post">
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label class="control-label" for="nomeCliente">Nome do Cliente</label>
+                <input type="text" class="form-control" id="nomeCliente" placeholder="Nome do Cliente">
+            </div>
+            <div class="form-group">
+                <label class="control-label" for="email">Email</label>
+                <input type="email" class="form-control" id="email" placeholder="Email">
+            </div>
+            <div class="form-group">
+                <label class="control-label" for="telefone">Telefone</label>
+                <input type="text" class="form-control" id="telefone" placeholder="Telefone">
+            </div>
+
+<****!****>
+
+                    class="btn btn-success">
+                    Finalizar Pedido
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</form>
+Estamos trabalhando com a forma html que será executada no browser. Contudo, existe outra maneira de criar o formulário por meio da tag helper. Para isso, trocaremos o atributo action para asp-action. Assim feito, mudaremos o nome da nossa antiga action para uma que se encontra em PedidoController.cs, que será a resumo.
+
+@{
+    ViewData["Title"] = "Cadastro";
+}
+
+<h3>Cadastro</h3>
+
+<form asp-action="resumo" method="post">
+
+        <div class="panel panel-default">
+
+<****!****>
+Começaremos a colocar os campos do formulário e associá-los ao nosso modelo, contudo ainda não definimos um modelo para esta view, faremos isso nesse momento. No começo do código, criaremos uma diretiva model, em seguida, o nome da classe Cadastro.
+
+@{
+    ViewData["Title"] = "Cadastro";
+}
+
+@model Cadastro
+
+<h3>Cadastro</h3>
+
+<form asp-action="resumo" method="post">
+
+        <div class="panel panel-default">
+
+<****!****>
+Precisamos associar cada campo do formulário com uma propriedade da classe Cadastro. Faremos esse procedimento ao modificar cada um dos elementos input. O primeiro é aquele que recebe nomeCliente.
+
+<input type="text" class="form-control" id="nomeCliente" placeholder="Nome do Cliente">
+            </div>
+Declacaremos como tag helper a propriedade que está associada a este input, faremos isso ao criar um novo atributo chamado asp-for. Assim feito, criaremos a associção entre uma propriedade do modelo: `@Model.Nome`
+
+<input type="text" class="form-control" id="nomeCliente" placeholder="Nome do Cliente"
+        asp-for="@Model.Nome">
+</div>
+Faremos o mesmo procedimento para todos os inputs do formulário, são eles Email, Telefone, Endereço,Complemento,Bairro, Município e CEP.
+
+<input type="text" class="form-control" id="nomeCliente" placeholder="Nome do Cliente"
+                           asp-for="@Model.Nome">
+                    <span asp-validation-for="@Model.Nome" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label class="control-label" for="email">Email</label>
+                    <input type="email" class="form-control" id="email" placeholder="Email"
+                           asp-for="@Model.Email">
+                    <span asp-validation-for="@Model.Email" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label class="control-label" for="telefone">Telefone</label>
+                    <input type="text" class="form-control" id="telefone" placeholder="Telefone"
+                           asp-for="@Model.Telefone">
+                    <span asp-validation-for="@Model.Telefone" class="text-danger"></span>
+                </div>
+            </div>
+
+<****!****>
+O elemento responsável pelo estado (UF) não se trata de um input, mas de select. Temos a caixa de listagem com todos os estados brasileiros disponíveis. Incluiremos `@Model.UF`.
+
+<div class="form-group">
+                    <label class="control-label" for="UF">UF</label>
+                    <select class="form-control single-select" name="UF"
+                            asp-for="@Model.UF">
+                        <option selected value="">[Selecione o estado]</option>
+                        <option value="AC">Acre</option>
+                        <option value="AL">Alagoas</option>
+                        <option value="AP">Amapá</option>
+                        <option value="AM">Amazonas</option>
+
+<****!****>
+Nas próximas aulas prepararemos o envio do modelo para a view.
+
+-- 03_A04 - Validando Campos do Formulário no Cliente --------------
+
+Conseguimos passar modelo para a view, e de volta recebemos no PedidoController as informações do cadastro por meio da action de resumo, contudo precisamos prepará-la para lidar corretamente com esse tipo de requisição.
+
+Ao entrarmos no browser, perceberemos que é possível acessar a action por meio de uma url digitada na barra de endereço: localhost:50040/Pedido/resumo.
+
+Contudo, essa não deveria ser uma possibilidade, pois deveríamos conseguir chegar até resumo a partir do envio de um formulário, feito por uma requisição POST.
+
+Por conseguinte iremos restringir o acesso à action inserindo uma notação com o atributo http na PedidoController.cs, o que irá impedir a chamada direta do browser.
+
+[HttpPost]
+public IActionResult Resumo()
+{
+    return View(pedidoRepository.GetPedido());
+}
+Outra modificação a ser realizada na action é a inserção de um parâmetro para recebermos os dados de cadastro. Inseriremos o parâmetro cadastroe criaremos um break point na linha return View(pedidoRepository.GetPedido());.
+
+[HttpPost]
+public IActionResult Resumo(Cadastro cadastro)
+{
+    return View(pedidoRepository.GetPedido());
+}
+Pressionaremos a tecla "F5" para compilar a aplicação. Feito isso, iremos abrir a página principal no browser e selecionaremos um produto qualquer, seremos direcionados à página de carrinho e clicaremos sobre o botão "Preencher Cadastro". Com isso, seremos direcionados para a página de formulário.
+
+Iremos preencher alguns campos do cadastro, são eles "Nome do Cliente", "Email" e "Telefone". Preenchidos os campos, clicaremos sobre o botão "Finalizar Pedido", para avaliarmos o resultado.
+
+Quando clicamos no botão de finalização de pedido, não conseguimos acessar a action de resumo. Isso ocorre porque temos uma série de validações sendo feitas pelo cliente. Caso inspecionemos a caixa de texto "Endereço" por exemplo, veremos que há um elemento hmtl input com uma série de atributos de validação. Tais atributos são utilizados pelo JavaScript do jQuery Validation Unobtrusive - um dos frameworks utilizados no projeto - como condição para que o cliente avance nas próximas etapas de compra.
+
+<inuot type="text" class="form-control input-validation-error" id="endereco" placeholder="Endereço" data-val="true" data-val-required="The Endereco field is required." name="Endereco" value aria-required="true" aria-describedby="endereco-error" aria-invalid="true"> == $0
+Precisamos exibir para o usuário uma mensagem de que os campos de cadastro não estão corretamente preenchidos, para isso incluiremos alguns elementos html na view de cadastro. Abriremos Cadastro.cshtml e para cada campo do formulário, incluiremos um elemento hmtl que indicará que o campo possui um problema de preenchimento.
+
+Logo depois do <input>, incluiremos um elemento <span> que terá uma classe CSS denominada text-danger, que por sua vez irá marcar o texto com a cor vermelha. Feito isso, transformaremos a classe em uma tag helper, incluindo o atributo específico asp-validation-for que receberá o valor `@Model.Nome`.
+
+
+<div class="form-group">
+                    <label class="control-label" for="telefone">Telefone</label>
+                    <input type="text" class="form-control" id="telefone" placeholder="Telefone"
+                           asp-for="@Model.Telefone">
+                    <span asp-validation-for="@Model.Telefone" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="control-label" for="endereco">Endereço</label>
+                    <input type="text" class="form-control" id="endereco" placeholder="Endereço"
+                           asp-for="@Model.Endereco">
+                    <span asp-validation-for="@Model.Endereco" class="text-danger"></span>
+                </div>
+
+
+<****!****>
+No caso de UF temos um select, portando depois dele iremos inserir o <span> com a propriedade `@Model.UF`.
+
+
+ <div class="form-group">
+                    <label class="control-label" for="UF">UF</label>
+                    <select class="form-control single-select" name="UF"
+                            asp-for="@Model.UF">
+                        <option selected value="">[Selecione o estado]</option>
+                        <option value="AC">Acre</option>
+                        <option value="AL">Alagoas</option>
+                        <option value="AP">Amapá</option>
+                        <option value="AM">Amazonas</option>
+
+
+                                     <****!****>
+
+                    </select>
+                    <span asp-validation-for="@Model.UF" class="text-danger"></span>
+Com as modificações realizadas em todos os campos, iremos atualizar a página e clicaremos na opção "Finalizar Pedido", na página de cadastro. Veremos que todos os campos que não foram preenchidos surgem com a mensagem em vermelho "The field is required", dessa forma orientamos o usuário a preencher os campos corretamente.
+
+-- 03_A06 - Customizando Validações no Modelo de Cadastro ----------------------
+
+public virtual Pedido Pedido { get; set; }
+        [MinLength(5,  ErrorMessage ="Nome deve ter no minimo 5 caracteres.")]
+        [MaxLength(50, ErrorMessage ="Nome deve ter no máximo 50 caracteres.")]
+        [Required(ErrorMessage = "Nome é obrigatório!")]
+        public string Nome          { get; set; } = "";
+        
+
+-- 03_A07 - Validando Dados do Formulário no Servidor -----------------------
+
+Temos a validação do lado do cliente, e já podemos começar a tratar do cadastro quando ele for recebido no servidor por meio da action resumo. Essa action receberá o parâmetro Cadastro, e ao final gravaremos essa informação no banco de dados.
+
+Para realizar a gravação no banco, utilizamos CastroRepositoy.cs. Neste arquivo, teremos a interface ICadastroRepository .
+
+namespace CasaDoCodigo.Repositoires
+{
+
+    public interface ICadastroRepository
+    {
+
+    }
+
+    public class CadastroRepository : BaseRepository<Cadastro> ICadastroRepository
+    {
+
+        public CadastroRepository(ApplicationContext contexto) : base(contexto)
+        {
+        }
+    }
+}
+Criaremos um novo método chamado Update() para atualizar as informações do cadastro. Tal método retornará um objeto Cadastro e receberá duas informações: cadastroId e Cadastro novoCadastro.
+
+namespace CasaDoCodigo.Repositoires
+{
+
+    public interface ICadastroRepository
+    {
+        Cadastro Update(int cadastroId, Cadastro novoCadastro)
+    }
+
+    public class CadastroRepository : BaseRepository<Cadastro>, ICadastroRepository
+    {
+
+        public CadastroRepository(ApplicationContext contexto) : base(contexto)
+        {
+        }
+    }
+}
+Assim feito, criaremos um método na classe concreta CadastroRepository a partir da interface. Clicaremos com o botão direito sobre ICadastroRepository e selecionaremos a opção "Ações Rápidas e Refatorações > Implementar interface". Dessa forma teremos um método novo, mas por enquanto não inseriremos o seu código definitivo, apenas um break point na linha throw new NotImplementedException();.
+
+namespace CasaDoCodigo.Repositoires
+{
+
+    public interface ICadastroRepository
+    {
+        Cadastro Update(int cadastroId, Cadastro novoCadastro)
+    }
+
+    public class CadastroRepository : BaseRepository<Cadastro>, ICadastroRepository
+    {
+
+        public CadastroRepository(ApplicationContext contexto) : base(contexto)
+        {
+        }
+
+        public Cadastro Update(int CadastroId, novoCadastro)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
+Para acessarmos esse novo método do repositório de cadastro, acessaremos o repositório de pedido, afinal é ele que contém informações do pedido que está na sessão do Asp.NET Core. Portanto iremos até PedidoRepository.cs e criaremos uma referência para CadastroRepository.cs por meio de um campo privado. Esse campo será alimentado via injeção de dependência, logo criaremos um novo parâmetro no construtor (cadastroRepository) que será alimentando no corpo do construtor no momento em que acessarmos this.cadastroRepository = cadastroRepository;
+
+public class PedidoRepository : BaseRepository<Pedido>, IPedidoRepository
+{
+    private readonly IHttpContextoAccessor contextAccessor;
+    private readonly IItemPedidoRepository itemPedidoRepository;
+    private readonly ICadastroRepository cadastroRepository;
+
+    public PedidoRepository(ApplicationContext contexto, 
+        IHttpContextoAccessor contextAccessor, 
+        IItemPedidoRepository itemPedidoRepository,
+        ICadastroRepository castroRepository) : base(contexto)
+    {
+        this.contextAccessor = contextAccessor;
+        this.itemPedidoRepository = itemPedidoRepository;
+        this.cadastroRepository = cadastroRepository;
+    }
+Precisamos criar outro método na PedidoRepository que será responsável pela atualização do cadastro. Na interface, criaremos esse novo método chamado UpdateCadastro() que retornará Pedido. Por sua vez, o método receberá o cadastro sendo modificado na view (Cadastro cadastro).
+
+public interface IPedidoRepository
+{
+    Pedido GetPedido();
+    void AddItem(string codigo);
+    UpdateQuantidadeResponse UpdateQuantidade(ItemPedido itemPedido);
+    Pedido UpdateCadastro(Cadastro cadastro);
+}
+Faremos a classe concreta implementar o novo método clicando sobre IPedidoRepository com o botão direito e selecionando as opções "Ações Rápidas e Refatorações > Implementar Interface". Ao final da classe, teremos o método UpdateCadastro().
+
+<****!****>
+
+public Pedido UpdateCadastro(Cadastro cadastro)
+{
+    throw new NotImplementedException():
+}
+Acessaremos cadastroRepository.Update(), que receberá Cadastro.Id, que está associado a pedido, portanto primeiramente pegaremos pedido, declarando uma variável pedido = GetPedido(). O segundo parâmetro do método Update() será cadastro. Ao final das alterações, deveremos retornar Pedido a partir do método UpdateCadastro(), faremos isso escrevendo return pedido, isto é, a variável local.
+
+<****!****>
+
+public Pedido UpdateCadastro(Cadastro cadastro)
+{
+    var pedido = GetPedido();
+    cadastroRepository.Update(pedido.Cadastro.Id, cadastro);
+    return pedido;
+}
+Votaremos à PedidoController.cs e consumiremos o método UpdateCadastro(). Trabalharemos no seguinte trecho do código:
+
+[HttpPost]
+public IActionResult Resumo(Cadastro.castro)
+{
+    return View(pedidoRepository.GetPedido());
+}
+Ao invés de utilizarmos return View(pedidoRepository.GetPedido()); inseriremos return View(pedidoRepository.UpdateCadastro(cadastro));
+
+[HttpPost]
+public IActionResult Resumo(Cadastro.castro)
+{
+    return View(pedidoRepository.UpdateCadastro(cadastro));
+}
+Contudo, temos de levar em consideração o seguinte quadro: pode ser que não tenhamos preenchido corretamente as informações na view, isto é, Cliente.cshtml. Por isso é sempre importante validar os dois lados, tanto cliente quanto servidor. Para termos certeza de que o modelo foi preenchido corretamente e que as regras de negócio presentes são válidas, devemos verificar o estado do modelo. Para realizarmos essa verificação, inseriremos if e acessaremos o objeto ModelState, em seguida faremos uso da propriedade IsValid. Caso o modelo esteja correto, o cadastro será atualizado.
+
+[HttpPost]
+public IActionResult Resumo(Cadastro.castro)
+{
+        if(ModelState.IsValid)
+        {
+            return View(pedidoRepository.UpdateCadastro(cadastro));
+        }
+}
+Se o modelo não for válido, retornaremos o usuário para a view de cadastro até que as informações tenham sido preenchidas corretamente. Para fazer esse redirecionamento do usuário, utilizamos return RedirectToAction(), que receberá como parâmetro o nome action correta, no caso, "Cadastro".
+
+[HttpPost]
+public IActionResult Resumo(Cadastro.castro)
+{
+        if(ModelState.IsValid)
+        {
+            return View(pedidoRepository.UpdateCadastro(cadastro));
+        }
+        return RedirectToAction("Cadastro");
+}
+Nas próximas aulas iremos programar a gravação do cadastro no banco de dados.
+
 
 
 

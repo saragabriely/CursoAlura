@@ -59,6 +59,18 @@ class Carrinho {
 
               linhaDoItem.find('[subtotal]').html((itemPedido.subtotal).duasCasas());
 
+              let carrinhoViewModel = response.carrinhoViewModel;
+
+              $('[numero-itens]')
+                  .html('Total: ' + carrinhoViewModel.itens.length + ' itens');
+
+              $('[total]').html((carrinhoViewModel.total).duasCasas());
+
+              if (itemPedido.quantidade == 0)
+              {
+                  linhaDoItem.remove();
+              }
+
               //debugger;
           }); // done - recebe a resposta do servidor e atualiza a página
     }
