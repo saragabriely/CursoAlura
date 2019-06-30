@@ -2029,6 +2029,561 @@ public IActionResult Resumo(Cadastro.castro)
 }
 Nas próximas aulas iremos programar a gravação do cadastro no banco de dados.
 
+-- 04_A12 - Aula 4 - Validando e Enviando Formulário de Cadastro ----------
+
+-- O que aprendemos?
+
+Montando a View de Cadastro
+Entendendo formulários ASP.NET Core
+Binding de campos com propriedades do modelo com o atributo asp-for
+Injetando o Cadastro na View e Redirecionando se Necessário
+O método RedirectToAction()
+Validando Campos do Formulário no Cliente
+Validando campos do formulários com o atributo asp-validation-for
+Customizando Validações no Modelo de Cadastro
+Validando entidades do modelo com MinLength, MaxLength e Required
+Validando Dados do Formulário no Servidor
+Consultando ModelState.IsValid()
+
+-- 05_A01 - Gravando Cadastro no Banco de Dados -----------------------
+
+Para gravamos o cadastro no banco de dados, precisaremos passar por algumas etapas: primeiramente preencheremos na view de cadastro as informações, depois os dados serão recebidos na action Resumo, local em que iremos validar os dados no lado do servidor. Depois que o modelo for validado, chamaremos o método UpdateCadastro(), que está em PedidoRepository.cs.
+
+O método UpdateCadastro() obterá pedido a partir do método GetPedido(), depois, navegará para Cadastro coletará o Id para passar para o método Update() do repositório.
+
+public Pedido UpdateCadastro(Cadastro cadastro)
+{
+    var pedido = GetPedido();
+    cadastroRepository.Update(pedido.Cadastro.Id, cadastro);
+    return pedido;
+}
+Como pedido saberá qual é o Id de Cadastro? Primeiramente, faremos uma consulta para averiguar a informação. Navegaremos para GetPedido(), em PedidoRepository.cs para estudar melhor essa questão.
+
+Obtemos o pedidoId que está na sessão utilizando o método GetPedidoId(). Uma vez que esta informação for coletava, faremos uma consulta Linq, que procurará pedidoId e retornará algumas entidades, como p.Itens e i.Produto, além do Idem si.
+
+
+public Pedido GetPedido()
+        {
+            var pedidoId = GetPedidoId();
+            var pedido = dbSet
+                .Include(p => p.Itens)
+                    .ThenInclude(i => i.Produto)
+                .Where(p => p.Id == pedidoId)
+                .SingleOrDefault();
+
+            if (pedido == null)
+            {
+                pedido = new Pedido();
+                dbSet.Add(pedido);
+                contexto.SaveChanges();
+                SetPedidoId(pedido.Id);
+            }
+
+            return pedido;
+        }
+Não especificamos em nenhum momento do código que Cadastro também deveria ser consultado. Utilizaremos o método Include() para que os dados de Cadastro, inclusive o Id, sejam verificados.
+
+
+public Pedido GetPedido()
+        {
+            var pedidoId = GetPedidoId();
+            var pedido = dbSet
+                .Include(p => p.Itens)
+                    .ThenInclude(i => i.Produto)
+                                .Inclue(p =>p.Cadastro)
+                .Where(p => p.Id == pedidoId)
+                .SingleOrDefault();
+
+            if (pedido == null)
+            {
+                pedido = new Pedido();
+                dbSet.Add(pedido);
+                contexto.SaveChanges();
+                SetPedidoId(pedido.Id);
+            }
+
+            return pedido;
+        }
+Começaremos a implementar a gravação de Cadastro no banco de dados. Em CadastroRepository.cs teremos o método Updade().
+
+public Cadastro Update(int cadastroId, Cadastro novoCadastro)
+{
+    throw new NotImplementedException();
+}
+O primeiro passo é armazenarmos em uma variável local o cadastro proveniente do banco de dados, chamaremos esta variável de cadastroDB, que será um objeto de cadastro a partir de dbSet. Contudo, devemos realizar um filtro a partir do cadastroId. Para isso, escreveremos o método Where() com uma expressão lambda.
+
+Em outra linha adicionaremos o método SingeOrDefault(), para que seja trazido um cadastro ou nenhum, e caso a informação não seja encontrada, quer dizer que o objeto é nulo e precisamos tratá-lo de alguma maneira.
+
+Inseriremos a condicional If para tratarmos do objeto com valor nulo. Declararemos uma exceção ArgumentNullException(),que receberá como parâmetro "cadastro"
+
+public Cadastro Update(int cadastroId, Cadastro novoCadastro)
+{
+    var cadastroDB = dbSet.Where(c => c.Id == cadastroId)
+        .SingleOrDefault();
+
+    if (cadastroDB == null)
+    {
+        throw new ArgumentNullException("cadastro");
+    }
+}
+Prosseguiremos coletando o novoCadastro, recebido como parâmetro, para atualizar o banco de dados. Escreveremos ao final do código cadastroDB.Update(), e passaremos como parâmetro novoCadastro, que possui os novos dados. Em seguida, usaremos o método SaveChanges() para gravarmos as informações no banco. Ao final, retornaremos CadastroDB.
+
+public Cadastro Update(int cadastroId, Cadastro novoCadastro)
+{
+    var cadastroDB = dbSet.Where(c => c.Id == cadastroId)
+        .SingleOrDefault();
+
+    if (cadastroDB == null)
+    {
+        throw new ArgumentNullException("cadastro");
+    }
+}
+
+cadastroDB.Update(novoCadastro);
+contexto.SaveChanges();
+return CadastroDB;
+Contudo, não possuímos o método Update() no modelo de cadastro, isto é, não possuímos um método para atualizar informações a partir de um segundo cadastro. Iremos implementar o método Update(): com ele selecionado,pressionaremos o atalho "Ctrl + ." e escolheremos a opção "Gerar método 'Cadastro.Update'".
+
+Dessa forma, o método Updade() já foi gerado na classe Cadastro, em modelo.cs.
+
+internal void Update(Cadastro novoCadastro)
+{
+    throw new NotImplementedException();
+}
+Iremos implementar o método Update(). Inseriremos this.bairro - a primeira propriedade - como sendo igual a novoCadastro.Bairro. Faremos esse mesmo procedimento para todas as outras propriedades.
+
+internal void Update(Cadastro novoCadastro)
+        {
+            this.Bairro = novoCadastro.Bairro;
+            this.CEP = novoCadastro.CEP;
+            this.Complemento = novoCadastro.Complemento;
+            this.Email = novoCadastro.Email;
+            this.Endereco = novoCadastro.Endereco;
+            this.Municipio = novoCadastro.Municipio;
+            this.Nome = novoCadastro.Nome;
+            this.Telefone = novoCadastro.Telefone;
+            this.UF = novoCadastro.UF;
+        }
+    }
+Nas próximas aulas executaremos a aplicação para verificar se conseguimos gravar as informações no banco de dados.
+
+-- 05_A02 - Protegendo uma Action com ValidateAntiForgeryToken ----------
+
+Testaremos a gravação das informações cadastrais no banco de dados. No browser, preencheremos todos os campos obrigatórios na página de cadastro e ao final clicaremos sobre o botão "Finalizar Pedido".
+
+página de cadastro preenchida - página de cadastro com todas as propriedades preenchidas "Nome do Cliente"; "Email";"Telefone";"Endereço"; "Complemento";"Bairro";"Municipio";"UF" e "CEP". 
+Uma vez que finalizarmos o cadastro, seremos encaminhados para a view de resumo. Neste ponto, todo o processo de transferência de dados do cadastro para o repositório e gravação no banco de dados já foi realizado.
+
+ Contém informações do resumo do pedido: "Número do pedido:40013"; "Seus Dados"; "Item" e "Endereço de Entrega" 
+De volta ao Visual Studio, acessaremos os dados da tabela dbo.Cadastro para conferir os dados gravados. Essa arquivo encontra-se na pasta Tabelas do projeto. Veremos todas as informações que foram preenchidas nos campos de cadastro.
+
+Id	Bairro	CEP	Complemento	Email	Endereco	Municipio	Nome	Telefone	UF
+40009									
+40010									
+40012									
+40013	Vila Mariana	15151515151	fundos	fulano@gmail.com	Rua Vergueiro,...	sao paulo	fulado de tal	12345678	SP
+NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+Contudo devemos refletir: *será que nosso sistema está bem protegido contra acessos externos? *
+
+Marcamos a action com o acesso do tipo "POST", o que impede que qualquer usuário acesse a action de resumo por meio da URL, mas isso não é o suficiente, pois podemos sofrer um ataque conhecido como CSRF, Cros-site request forgery, em uma tradução livre "Falsificação de solicitação entre sites". Quando recebemos uma requisição proveniente de fora do nosso site, existe a possibilidade de que se trata de um agente malicioso, com interesse no furto de dados ou algo do gênero.
+
+De volta a tela de cadastro veremos a existência de vários campos, mas temos um campo oculto. Ao inspecionarmos a página de cadastro, veremos um <input> marcado com o valor hidden, isto é, "oculto". Em seguida, teremos uma informação criptografada, conhecida por token de verificação. Essa informação precisa ser validada pelo servidor, caso contrário podemos sofrer um ataque externo.
+
+<input name="__RequestVerificationToken" type="hidden" value=
+"CfDJ8DGA9YtWRddDkFJM71llQFM7JaUU49wEH-y8MjecfFu7xM9EMQTS39cHlzZDBJI5_QppOv3dSWg5fGyvg11QWqImS4IOPR6ia8QrFashYO9u3LxLGNDUQ6sQ1gc-tJU49Mp2qH5C__axg"> == $0
+Simularemos um ataque por meio de uma ferramenta chamada Postman para Chrome. Basta procurar o termo no Google e realizar o download e depois abrir o programa.
+
+instalação do programa "Postman"
+Este é um recurso bem interessante para simularmos requisições. Na página inicial do programa, inseriremos no campo "POST" - que configuramos como sendo o tipo de acesso que utilizamos - o endereço da action de resumo: http://localhost:50040/Pedido/resumo. Depois, clicaremos sobre o botão "Send".
+
+Página inicia do programa postman com botão "Send"(Enviar) em destaque
+Obteremos a resposta da action de resumo.
+
+Em PedidoController.cs inseriremos um break point na linha if (ModelState.IsValid).
+
+[HttpPost]
+public IActionResult Resumo(Cadastro cadastro)
+{
+    if (ModelState.IsValid)
+    {
+        return View(pedidoRepository.UpdateCadastro(cadastro));
+    }
+    return RedirectToAction("Cadastro");
+}
+Faremos novamente a requisição no programa Postman clicando sobre o botão "Send". Seremos redirecionados novamente para a action Resumo. Isso pode ser um agente mal intencionado querendo acessar o site. Nesses casos, devemos utilizar o token criptografado na view de cadastro para garantirmos a segurança da aplicação.
+
+Pararemos o programa e inseriremos na action o atributo ValidateAntiFogeryToken que valida o tolken no momento em que recebemos uma requisição.
+
+[HttpPost]
+[ValidateAntiFogeryToken]
+public IActionResult Resumo(Cadastro cadastro)
+{
+    if (ModelState.IsValid)
+    {
+        return View(pedidoRepository.UpdateCadastro(cadastro));
+    }
+    return RedirectToAction("Cadastro");
+}
+Pressionaremos o atalho "F5" para compilarmos a aplicação e seremos direcionados para a página principal, escolheremos um produto qualquer e preencheremos o formulário de cadastro.
+
+Iremos até o Postman e tentearemos fazer uma nova requisição. Dessa vez,o programa acusou o status da requisição como "400 Bad Request", afinal não foi permitido o acesso pelo servidor, pois não fornecemos o token por meio do Postman.
+
+bad request
+
+-- um atributo de token anti-falsificação
+ 
+Isso mesmo! O ValidateAntiForgeryToken especifica que a class ou método onde este atributo é aplicado faz uma validação do token anti-falsificação. Se esse token não estiver disponível, ou se o token for inválido, a validação irá falhar e o método da action não será executado.
+
+-- 05_A04 - Protegendo a Action do AJAX Contra Ataques Maliciosos ------------
+
+Conseguimos proteger com sucesso a action de resumo contra o ataque de algum agente malicioso, mas ainda falta um outro ponto critico da aplicação: o método que recebe a requisição da chamada ajax().
+
+Quando clicamos nos botões "+" ou "-" para alterarmos a quantidade de itens no carrinho de compras, temos na PedidoController.cs o método UpdateQuantidade() que recebe essa requisição e faz a alteração no número de itens. Precisamos proteger esse método contra ataques externos. É importante que sempre validemos o token anti-falsificação. Antes disso, simularemos um ataque feito contra o método UpdateQuantidade().
+
+Na página de carrinho aberta no browser, pressionaremos o atalho "F12" e teremos acesso às ferramentas do desenvolvedor. Selecionaremos a aba "Network", desse modo poderemos ver todas as requisições feitas dentro da página.
+
+Área que exibe uma série de ferramentes de desenvolvimento. São exibidas 9 abas, são elas: "Elements"; "Console";"Sources";"Network";"Performance";"Memory";"Application";"Security" e "Audits"
+
+Clicaremos sobre o botão "+" do carrinho para verificarmos quais são as execuções da página e qual endereço será acessado. Somos direcionados para o método UpdateQuantidade() em PedidoController.cs
+
+[Http]
+public UpdadeQuantidadeResponse UpdateQuantidade([FromBody]ItemPedido itemPedido)
+{
+    return pedidoRepository.UpdateQuantidade(itemPedido);
+}
+Pressionaremos "F5" e voltaremos ao navegador. Pressionaremos "F5" e voltaremos ao navegador. Verificaremos que a aplicação no cliente se interrompeu na linha debugger de carrinho.js.
+
+<****!****>
+
+ if (itemPedido.quantidade == 0) {
+                linhaDoItem.remove();
+            }
+
+            debugger;
+        });
+Na área de ferramentas do desenvolvedor, pressionaremos o botão "Resume Script Execution" para dar prosseguimento à execução do JavaScript.
+
+resume script
+
+Clicaremos sobre a aba "Network" , e encontraremos o endereço chamado, isto é, a URL de updatequantidade que é http://localhost:50040/pedido/updatequantidade. Clicaremos sobre a opção updatequantidade e copiraremos esta URL, para isso basta clicar com o botão direitos obre a opção e selecionar "copy > copy link address".
+
+updadequantidade
+Voltaremos ao Postman e montaremos uma nova requisição, simulando um ataque de fora da aplicação. Modificaremos o método http para "POST" e colocaremos a URL no campo correspondente. Assim feito, selecionaremos as opções "Body" - que corresponde ao corpo da requisição - e depois marcaremos a opção "raw", que se fere ao texto puro a ser enviado.
+
+body e raw
+Nesse texto puro o que será enviado? Será copiado do browser o Request Payload, que contém o texto enviado no corpo da requisição.
+
+Request Payload
+{Id: "41019", Quantidade: 4}
+    Id: "41019""
+    Quantidade:4
+Copiaremos a linha {Id: "41019", Quantidade: 4} e colaremos no campo de texto do Postman. Assim feito, modicaremos a opção "Text" para "JSON(application/json)".
+
+json(https://s3.amazonaws.com/caelum-online-public/855-Asp.Net+Core+2.0/05/5_4_5_jason.png)
+Desse modo nossa requisição está pronta e podemos pressionar o botão "Send".
+
+Seremos direcionados à PedidoController.cs e veremos que a execução se interrompeu no break point, na linha return pedidoRepository.UpdateQuantidade(itemPedido);.
+
+[HttpPost]
+public UpdadeQuantidadeResponse UpdateQuantidade([FromBody]ItemPedido)
+{
+    return pedidoRepository.UpdateQuantidade(itemPedido);
+} 
+Temos algumas informações passadas no parâmetro ItemPedido: o Id e a Quantidade. Voltaremos a requisição no Postman e alteraremos o número de Quantidade de 4 para 4000 e enviaremos a requisição.
+
+{Id: "41019", Quantidade: 4000}
+Na página no carrinho no browser, veremos que a quantidade de itens é 4000 e o valor total da compra é de 196600,00. Percebemos que Postman está conseguindo acessar a nossa aplicação e nosso trabalho é impedir esse acesso indevido, aplicando um atributo de validação do token anti-falsificação (ValidateAntiForgeryToken) em PedidoController.
+
+[HttpPost]
+[`ValidateAntiForgeryToken`]
+public UpdadeQuantidadeResponse UpdateQuantidade([FromBody]ItemPedido)
+{
+    return pedidoRepository.UpdateQuantidade(itemPedido);
+} 
+Executaremos a aplicação no browser. Escolheremos um item qualquer e seremos direcionados para a página do carrinho. No Postman enviaremos novamente a requisição {Id: "41019", Quantidade:"4000"}. Dessa vez, o acesso é impedido e a requisição recebe o status de erro "400 Bad Request".
+
+Precisamos pensar em como passar esse tolken por meio do carrinho, uma vez que nessa configuração, ao pressionarmos o botão de "+" a quantidade de itens não é alterada.
+
+Pressionaremos o atalho "F12" para acessarmos as ferramentas do desenvolvedor. Feito isso, selecionaremos a aba "Console", e verificaremos um erro Failed toload resource: the serve responded with a status of 400 (Bad Request).
+
+Ao inspecionarmos os elementos da página de carrinho, não encontraremos o token necessário para realizar a validação, como havia na tela de cadastro.
+
+O que precisamos fazer é fornecer o token para view Carrinho.cshtml. Logo depois do cabeçalho criaremos uma tag helper <form>, com a informação de método (method) que será o post. Inseriremos, ainda, a informação asp-action, ou seja, para onde o formulário irá enviar as informações, no caso inseriremos o próprio carrinho.
+
+@{ 
+
+    ViewData["Title"] = "Carrinho";
+}
+@model CarrinhoViewModel;
+
+<h3>Meu Carrinho</h3>
+
+<form method="post" asp-action="carrinho">
+</form>
+Não inseriremos mais nenhuma informação dentro do formulário, pois <form> foi criado apenas com o objetivo de fornecer para view o tolken anti-falsificação.
+
+De volta à página de carrinho e pressionaremos a telca "F5". Inspecionaremos os elementos e procuraremos o elemento <form>. Veremos que ele carrega um elemento a mais que é oculto (hidden ), mas carrega o valor do token, uma informação bastante importante.
+
+<form method="post" action="/Pedido/carrinho/035">
+input name="_RequestVerificationToken" type="hidden" value=
+"CfDJ8DGA9YtwEdDkFJM71llQFN_JsCz06wU.Iuks-
+U_8Wgi7XM8GoelLqoLkfp12_XS_4UT19AKL2dlwodoifFSFssdemmskAI92femsowdaqwb_DpC8mFYjdsIWfzjfe
+iEFIFlWOX2oDCVEFEUHWKDEI3rfjzcxfi2g"> == $0
+</form>
+Enviaremos o tolken para o servidor. Para isso, iremos para o arquivo carrinho.js e procuraremos a requisição ajax(), pois nesse monto do código nós montaremos um objeto que conterá um cabeçalho onde iremos inserir o token.
+
+Escreveremos: let headers, e este objeto de cabeçalho será vazio, e atribuiremos a ele uma chave RequestVerificationToken. Passaremos o token. Em seguida, criaremos uma variável token que será alimentada com o conteúdo do input que vimos anteriormente, cujo nome é RequestVerificationToken. O obteremos por meio de um seletor do JQuery, por isso inseriremos o caractere $. Resta incluirmos o nome do atributo, que será name.
+
+postQuantidade(Data) {
+
+let token = $('[name=__RequestVerificationToken]').val()
+
+let headers = {};
+headers['RequestVerificationToken'] = token;
+
+    $ajax({
+        url:'/pedido/updatequantidade',
+        type: 'POST',
+        data: JSON.stringify(data)
+    })done(function (response) { 
+
+<****!****>
+Em seguida, devemos acessar o valor do token, para isso incluiremos a função do JQuery val(). Desse modo pegaremos o token, o passaremos para o objeto headers e atribuiremos este objeto abaixo da linha data: JSON.stringify(data).
+
+postQuantidade(Data) {
+
+let token = $('[name=__RequestVerificationToken]')
+
+let headers = {};
+headers['RequestVerificationToken'] = token;
+
+    $ajax({
+        url:'/pedido/updatequantidade',
+        type: 'POST',
+        data: JSON.stringify(data),
+        headers: headers
+    })done(function (response) { 
+
+<****!****>
+Salvaremos as modificações e voltaremos a página de carrinho. Clicaremos sobre o botão "+" e verificaremos que as quantidades do item são alteradas e o método UpdadateQuantidade()consegue ser acessado. Dessa forma, nossa aplicação está mais segura e funcional.
+
+-- Adicionar uma tag <form> na view da página.
+ 
+Isso mesmo. A tag <form> cria um FormTagHelper, que automaticamente fornece à página um token anti-falsificação na forma de um campo <input> oculto (hidden).
+
+-- 05_A07 - Aplicando os Campos do Cadastro do Modelo na View de Resumo --
+
+Nosso projeto está quase finalizado, mas resta resolvermos a view de resumo, já que não temos dados do cadastro real do nosso cliente. Os dados concretos da página de resumo são apenas "Número do Pedido" e os itens que foram comprados. Todo o resto das informações são falsas, como "Seus Dados" e "Endereço de Entrega".
+
+Página de resumo do pedido que apresenta as informações "Número do Pedido:41022". "Seus Dados: Harry Porto, (11)1234-5678, harryporto@gmail.com.br"; "Endereço de Entrega: Rua dos Alfeneiros, número 4(embaixo da escada) - Little Whinging -Surrey- Reino Unido"; "Item: PostgreSQL"; "Quantidade:2"
+
+No arquivo Resumo.cshtml iremos substituir os campos que estão fixos no código. Começaremos com o nome do usuário Harry Porto:
+
+<div class="col-md-3">
+                <h3>Seus Dados</h3>
+                <div>Harry Porto</div>
+                <div>(11) 1234-5678</div>
+            </div>
+Acessaremos modelo utilizando @Model, pois queremos utilizar um código C# dentro da view. Utilizaremos Cadastro para acessar Nome.
+
+<div class="col-md-3">
+                <h3>Seus Dados</h3>
+                <div>@Model.Cadastro.Nome</div>
+                <div>(11) 1234-5678</div>
+            </div>
+Faremos o mesmo procedimento para o campo de telefone e email:
+
+<div class="row">
+            <div class="col-md-3">
+                <h3>Seus Dados</h3>
+                <div>@Model.Cadastro.Nome</div>
+                <div>@Model.Cadastro.Telefone</div>
+            </div>
+            <div class="col-md-3">
+                @Model.Cadastro.Email
+            </div>
+Mais abaixo teremos o campo de endereço, que é composto por múltiplas informações.
+
+<div class="col-md-6">
+                <h3>Endereço de Entrega</h3>
+                <div>Rua dos Alfeneiros, no. 4 (embaixo da escada) - Little Whinging - Surrey - Reino Unido</div>
+            </div>
+Trocaremos o nome da rua por @.Model.Cadastro.Endereco, o complemento por `@Model.Cadastro.Complemento` e seguiremos a mesma lógica para os outros dados.
+
+
+<div class="col-md-6">
+                <h3>Endereço de Entrega</h3>
+                <div>@Model.Cadastro.Endereco @Model.Cadastro.Complemento - @Model.Cadastro.Bairro - CEP: @Model.Cadastro.CEP - @Model.Cadastro.Municipio - @Model.Cadastro.UF - Brasil</div>
+            </div>
+Feitas as alterações a página de resumo do pedido conterá os dados reais do usuário, coletados a partir do cadastro.
+
+-- 05_A08 - Refatorando o Arquivo Carrinho js ----------------
+
+Para darmos um toque final à aplicação, abriremos o arquivo JavaScript carrinho.js.
+
+Iremos refatorar a classe Carrinho, trocando os nomes das viriáveis com a finalidade de deixar nossa aplicação mais clara. Vamos observá-la em seu atual estado:
+
+class Carrinho {
+    clickIncremento(btn) {
+        let data = this.getData(btn);
+        data.Quantidade++;
+        this.postQuantidade(data);
+    }
+
+    clickDecremento(btn) {
+        let data = this.getData(btn);
+        data.Quantidade--;
+        this.postQuantidade(data);
+    }
+
+    updateQuantidade(input) {
+        let data = this.getData(input);
+        this.postQuantidade(data);
+    }
+
+    getData(elemento) {
+        var linhaDoItem = $(elemento).parents('[item-id]');
+        var itemId = $(linhaDoItem).attr('item-id');
+        var novaQtde = $(linhaDoItem).find('input').val();
+
+        return {
+            Id: itemId,
+            Quantidade: novaQtde
+        };
+    }
+Em clickIncremento(), temos como parâmetro btn, mas isso não confere muita clareza ao nosso código. Tocaremos esse parâmetro pelo nome button. Faremos o mesmo procedimento para clickDecremento() e nos outras linhas de código que apresentam btn.
+
+class Carrinho {
+    clickIncremento(button) {
+        let data = this.getData(button);
+        data.Quantidade++;
+        this.postQuantidade(data);
+    }
+
+    clickDecremento(button) {
+        let data = this.getData(button);
+        data.Quantidade--;
+        this.postQuantidade(data);
+    }
+Mais abaixo teremos a função getData(), que contém algumas variáveis. Uma delas é novaQtde, também presente em return.
+
+getData(elemento) {
+        var linhaDoItem = $(elemento).parents('[item-id]');
+        var itemId = $(linhaDoItem).attr('item-id');
+        var novaQtde = $(linhaDoItem).find('input').val();
+
+        return {
+            Id: itemId,
+            Quantidade: novaQtde
+        };
+    }
+Substituiremos novaQtde por novaQuantidade.
+
+getData(elemento) {
+        var linhaDoItem = $(elemento).parents('[item-id]');
+        var itemId = $(linhaDoItem).attr('item-id');
+        var novaQuantidade = $(linhaDoItem).find('input').val();
+
+        return {
+            Id: itemId,
+            Quantidade: novaQuantidade
+        };
+    }
+Mais adiante encontraremos a chamada ajax(), e ao final veremos a linha com a instrução debugger, responsável por parar a aplicação quando o programa estive sendo depurado no browser.
+
+ $.ajax({
+            url: '/pedido/updatequantidade',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data)
+        }).done(function (response) {
+            let itemPedido = response.itemPedido;
+            let linhaDoItem = $('[item-id=' + itemPedido.id + ']')
+            linhaDoItem.find('input').val(itemPedido.quantidade);
+            linhaDoItem.find('[subtotal]').html((itemPedido.subtotal).duasCasas());
+            let carrinhoViewModel = response.carrinhoViewModel;
+            $('[numero-itens]').html('Total: ' + carrinhoViewModel.itens.length + ' itens');
+            $('[total]').html((carrinhoViewModel.total).duasCasas());
+
+            if (itemPedido.quantidade == 0) {
+                linhaDoItem.remove();
+            }
+
+            debugger;
+        });
+    }
+}
+Contudo, essa instrução não é necessária quando formos enviar o projeto para a produção, por isso retiraremos a linha debuggerdo código.
+
+<****!****>
+
+            if (itemPedido.quantidade == 0) {
+                linhaDoItem.remove();
+            }
+        });
+    }
+}
+Dessa forma, concluímos a refatoração do nosso código.
+
+-- 05_A12 - O que aprendemos? ----------------------------------
+
+Aula 5 - Recebendo e Gravando Dados de Cadastro
+Gravando Cadastro no Banco de Dados
+Protegendo uma Action com ValidateAntiForgeryToken
+Defendendo sua aplicação contra ataques CSRF
+Protegendo a Action do AJAX Contra Ataques Maliciosos
+Usando token anti-falsificação numa requisição AJAX
+Aplicando os Campos do Cadastro do Modelo na View de Resumo
+Renderizando modelo do Cadastro nos campos com Razor
+Refatorando o Arquivo Carrinho.js
+Conclusão
+
+-- 05_A13 - Conclusão --------------------------------------------------
+
+Chegamos ao final de mais um curso! Aprendemos como incrementar nosso projeto
+- que começamos a elaborar na primeira parte do curso - de e-commerce para o 
+cliente Casa do Código.
+
+Aprendemos a implementar os eventos de click nos botões "+" e "-" para alterar 
+a quantidade de itens no carrinho. Utilizamos funções do JavaScript em um evento
+de cliques em botões no html.
+
+Em seguida, aprendemos a utilizar o jQuery para selecionar os elementos html
+e obter as informações necessárias, por exemplo o id do item pedido.
+
+Descobrimos como navegar na hierarquia de elementos html para, por exemplo, 
+buscar uma linha <div> que estava mais abaixo no código, para montar uma 
+requisição e enviar dados para o servidor.
+
+Por falar em requisição, aprendemos a diferença entre uma requisição POST e
+uma GET, e aprendemos a utilizar o primeiro para enviar uma requisição ajax(), 
+passando os dados do cliente no corpo da requisição.
+
+Melhoramos a organização do código JavaScript movendo-o para um arquivo a parte,
+em seguida criamos uma nova classe que encapsulou o código JavaScript.
+
+Aprendemos, ainda, a capturar o evento de digitação do campo de quantidade de 
+itens para poder modificar a quantidade também no servidor.
+
+Preparamos o servidor por meio da PedidoController.cs para coletar informações 
+que vieram da requisição ajax()e gravá-las no banco de dados.
+
+Vimos como utilizar o padrão View Model para fornecer um modelo específico para
+a view de Carrinho. Conseguimos pegar informações da View Model no JavaScrip para 
+atualizar a view Carrinho sem necessidade de acionar o refresh da página.
+
+Aprendemos a montar o cadastro do cliente ao criarmos um formulário, com o auxílio de uma tag helper específica do Asp.NET Core que contém uma série de informações embutidas.
+
+Validamos os campos do formulário utilizando o atributo que os classifica como obrigatórios. Também aprendemos a criar nossa própria validação inserindo uma regra em "Nome do Cliente", em que o nome não pode ser menor que cinco caracteres nem maior que 50.
+
+Salvamos o cadastro do usuário no banco de dados, por fim, aprendemos como proteger nossa action e o método que recebe a requisição ajax() contra acessos indevidos. Utilizamos o programa Postman para poder fazer a simulação da aplicação.
+
+Renderizamos o cadastro do cliente na view de resumo e finalizamos essa parte do curso.
+
+Espero que você tenha gostado do curso, muito obrigado e até a próxima!
+
+
+
 
 
 

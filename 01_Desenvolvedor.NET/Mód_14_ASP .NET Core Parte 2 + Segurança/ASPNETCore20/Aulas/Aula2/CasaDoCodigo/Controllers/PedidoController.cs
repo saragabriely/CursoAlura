@@ -57,12 +57,18 @@ namespace CasaDoCodigo.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Resumo(Cadastro cadastro)
         {
-            return View(pedidoRepository.GetPedido());
+            if (ModelState.IsValid)
+            {
+                return View(pedidoRepository.UpdateCadastro(cadastro));
+            }
+            return RedirectToAction("Cadastro");
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public UpdateQuantidadeResponse UpdateQuantidade([FromBody]ItemPedido itemPedidoId) // void
         {
             return pedidoRepository.UpdateQuantidade(itemPedidoId);
