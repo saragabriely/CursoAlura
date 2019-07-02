@@ -44,9 +44,12 @@ namespace certificacao_csharp_roteiro
             // aceita negativo
 
             ushort passageirosNavio = 230; // System.UInt16
-            // não tem sinal! (unsigned) - não é possível atribuir valor negativo
+                                           // não tem sinal! (unsigned) - não é possível atribuir valor negativo
 
+            // unsigned int: um inteiro sem sinal e, portanto,
+            // não aceita valores negativos
             uint estoque = 1500; // System.UInt32
+            // não aceita negativo
 
             ulong populacaoDoMundo = 7_000_000_000; // 7 bilhões - System.UInt64
 
@@ -61,6 +64,42 @@ namespace certificacao_csharp_roteiro
             Console.WriteLine($"estoque:            {estoque}");
             Console.WriteLine($"populacaoDoMundo:   {populacaoDoMundo}");
 
+            //nivelDeAzul = 0xFFF;                  // = 65535 em decimal
+            //passageirosVoo = 230000;              // System.Int16
+            //populacao = 15000000000;              // System.Int32
+            //passageirosNavio = -15;               // System.UInt16
+            //estoque = -2300;                      // System.UInt32
+            //populacaoDoBrasil = 207_660_924.345; // não pode casas decimais
+
+            #region Identificando tipos de valor
+            /*
+             Quais dos tipos C# abaixo são tipos de valor?
+
+            ** Alternativa incorreta: 
+            string: Ops... Um tipo string armazena uma referência, e não um tipo de valor.
+
+            
+            object = Ops... Um tipo object armazena uma referência, e não um tipo de valor.
+
+            Alternativa correta
+            decimal = Isso mesmo. Um tipo decimal armazena um tipo de valor, e não uma referência.
+
+            Alternativa correta
+            int = Isso mesmo. Um tipo int armazena um tipo de valor, e não uma referência.
+
+            Alternativa correta
+            bool = Isso mesmo. Um tipo bool armazena um tipo de valor, e não uma referência.
+
+            Alternativa correta
+            float = Isso mesmo. Um tipo float armazena um tipo de valor, e não uma referência.
+
+            Alternativa incorreta
+            interface = Ops... Um tipo interface armazena uma referência, e não um tipo de valor.
+            
+            Alternativa incorreta
+            delegate = Ops... Um tipo delegate armazena uma referência, e não um tipo de valor.
+             */
+            #endregion
 
         }
     }
