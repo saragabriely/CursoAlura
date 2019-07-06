@@ -10,6 +10,16 @@ namespace certificacao_csharp_roteiro.antes
     {
         public void Executar()
         {
+            double valorProduto1 = 10;
+            double valorProduto2 = 20;
+            double subTotal      = 30;
+
+            Console.WriteLine("Descobrindo se 10 + 20 = 30");
+            Console.WriteLine((valorProduto1 + valorProduto2) == subTotal);
+            Console.WriteLine();
+            
+
+
         }
     }
 }
