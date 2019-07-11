@@ -10,6 +10,15 @@ namespace certificacao_csharp_roteiro.antes
     {
         public void Executar()
         {
+            // Booleano armazena TRUE ou FALSE! Nada mais.
+
+            bool possuiSaldo = true;
+
+            Console.WriteLine($"possuiSaldo: {possuiSaldo}");
+
+
+
+
         }
     }
 }

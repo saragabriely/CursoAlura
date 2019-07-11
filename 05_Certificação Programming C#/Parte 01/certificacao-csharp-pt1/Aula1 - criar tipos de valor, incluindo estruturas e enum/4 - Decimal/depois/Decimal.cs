@@ -67,13 +67,25 @@ namespace certificacao_csharp_roteiro
              Precisão   : (-7.9 X 10^28 a 7.9 x 10^28) 
                           28 -29 digitos             
              */
+             
+            /*
+            ** O tipo double cobre uma faixa de valores maior do que float e decimal
+            * O tipo double tem a maior faixa de cobertura entre os tipos de
+            * valor do .NET.
+            
+             O tipo decimal também é um tipo de ponto flutuante
+             
+             * O tipo decimal é um tipo de ponto flutuante, mas sua 
+             * representação é decimal, enquanto nos tipos float e double a 
+             * representação é binária.
+             
+            ** O tipo float é um tipo de ponto flutuante de simples precisão
+            * O tipo float é um tipo de ponto flutuante, mas sua precisão é 
+            * menor que a do double.
 
-
-
-
-
-
-
+            ** O tipo decimal tem precisão maior do que float e double
+            *  Um tipo decimal tem a maior entre os tipos de valor do .NET.
+             */
         }
     }
 }
