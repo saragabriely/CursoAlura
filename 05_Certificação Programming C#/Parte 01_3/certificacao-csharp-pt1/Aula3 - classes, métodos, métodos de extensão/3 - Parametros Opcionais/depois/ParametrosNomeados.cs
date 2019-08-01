@@ -10,6 +10,28 @@ namespace certificacao_csharp_roteiro
     {
         public void Executar()
         {
+            // O método pode ser chamado do jeito normal, usando argumentos posicionados
+            ImprimirDetalhesDoPedido("Maria de Fatima", 31, "Caneca Vermelha");
+            // Ordem que os parametros foram declarados no método
+
+            // Argumentos nomeados podem ser fornecidos para os parametros
+            // em qualquer ordem
+            ImprimirDetalhesDoPedido(numeroPedido:  31,
+                                    nomeProduto:    "Caneca Vermelha", 
+                                    vendedor:       "Maria de Fatima");
+
+            ImprimirDetalhesDoPedido(nomeProduto:   "Caneca Vermelha", 
+                                     vendedor:      "Maria de Fatima", 
+                                     numeroPedido:  31);
+
+            // Argumentos nomeados misturados com argumentos posicionais validos
+            ImprimirDetalhesDoPedido("Maria de Fatima", 31, nomeProduto: "Caneca Vermelha");
+
+            // As 2 linhas abaixo geravam erro de compilacao ANTES DO C# 7.2:
+            ImprimirDetalhesDoPedido(vendedor:  "Maria de Fatima", 31, 
+                                     nomeProduto: "Caneca Vermelha");
+
+            ImprimirDetalhesDoPedido("Maria de Fatima", numeroPedido: 31, "Caneca Vermelha");
 
         }
 
@@ -21,6 +43,7 @@ namespace certificacao_csharp_roteiro
             }
 
             Console.WriteLine($"Vendedor: {vendedor}, Pedido No.: {numeroPedido}, Produto: {nomeProduto}");
+            Console.WriteLine();
         }
     }
 }

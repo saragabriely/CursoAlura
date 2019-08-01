@@ -11,8 +11,12 @@ namespace certificacao_csharp_roteiro
         public void Executar()
         {
             var sala = new Sala();
-            sala.SetReserva("D01", new ClienteCinema("Maria de Souza"));
-            sala.SetReserva("D02", new ClienteCinema("José da Silva"));
+            //sala.SetReserva("D01", new ClienteCinema("Maria de Souza"));
+            //sala.SetReserva("D02", new ClienteCinema("José da Silva"));
+
+            // É possível utilizar a propriedade indexada dessa forma:
+            sala["D01"] = new ClienteCinema("Maria de Souza");
+            sala["D02"] = new ClienteCinema("José da Silva");
 
             sala.ImprimirReservas();
         }
@@ -38,14 +42,31 @@ namespace certificacao_csharp_roteiro
         private readonly IDictionary<string, ClienteCinema> reservas
             = new Dictionary<string, ClienteCinema>();
 
+        /*
         public ClienteCinema GetReserva(string codigoAssento)
         {
             return reservas[codigoAssento];
         }
 
-        public void SetReserva(string codigoAssento, ClienteCinema value)
+        public void SetReserva(string codigoAssento, ClienteCinema cliente)
         {
-            reservas[codigoAssento] = value;
+            reservas[codigoAssento] = cliente;
+        }*/ 
+
+        // Propriedade indexada: entre [] será armazenado o tipo do codigo do dicionário
+        // A propriedade indexada nãõ tem um nome!!
+        // Como será acessada?? 
+
+        public ClienteCinema this[string codigoAssento] // public ClienteCinema  Reserva
+        {
+            get
+            {
+                return reservas[codigoAssento];
+            }
+            set
+            {
+                reservas[codigoAssento] = value;
+            }
         }
 
         public void ImprimirReservas()

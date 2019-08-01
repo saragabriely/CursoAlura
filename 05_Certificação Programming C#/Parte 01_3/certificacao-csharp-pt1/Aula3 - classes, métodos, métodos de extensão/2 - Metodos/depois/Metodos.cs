@@ -34,6 +34,21 @@ namespace certificacao_csharp_roteiro
             // chamada ao método estatico da classe retangulo
             Console.WriteLine();
 
+            // Quando utilizamos o método onde são passados os argumentos 
+            // altura e largura, o tipo do método é DOUBLE! (tipo de valor)
+            // É feita uma copia do valor para passar para o método Semelhante.
+            // Neste caso, se for feita uma alteração do valor dentro do método,
+            // a alteração não irá refletir no valor original.
+
+            // E quando utilizamos o método que recebe a instancia da classe
+            // retangulo (quando passamos o objeto inteiro), o método é do tipo de 
+            // referência!
+            // É passada a referencia para o objeto declarado e atribuido a variavel
+            // Retangulo.
+            // E quando é passada a instancia da classe (referencia), e caso seja alterado
+            // algum valor dentro do metodo Semelhante, por exemplo, a alteração
+            // irá refletir na variavel declarada anteriormente.
+
             //-------------------------------------------------------
 
 
