@@ -15,27 +15,29 @@ namespace Alura.ListaLeitura.Modelos
         public TipoListaLeitura Lista { get; set; }
     }
 
+    // Ao montar o esquema XML, aparecerá 'Livro' (recurso) ao invés de 'LivroApi'(classe)
     [XmlType("Livro")]
     public class LivroApi
     {
-        public int Id { get; set; }
-        public string Titulo { get; set; }
+        public int    Id        { get; set; }
+        public string Titulo    { get; set; }
         public string Subtitulo { get; set; }
-        public string Autor { get; set; }
-        public string Resumo { get; set; }
-        public string Capa { get; set; }
-        public string Lista { get; set; }
+        public string Autor     { get; set; }
+        public string Resumo    { get; set; }
+        //public string Capa      { get; set; }
+        public string ImagemCapa { get; set; }
+        public string Lista      { get; set; } // TipoListaLeitura Lista
     }
 
     public class LivroUpload
     {
-        public int Id { get; set; }
+        public int    Id        { get; set; }
         [Required]
-        public string Titulo { get; set; }
+        public string Titulo    { get; set; }
         public string Subtitulo { get; set; }
-        public string Autor { get; set; }
-        public string Resumo { get; set; }
-        public IFormFile Capa { get; set; }
+        public string Autor     { get; set; }
+        public string Resumo    { get; set; }
+        public IFormFile Capa   { get; set; }
         public TipoListaLeitura Lista { get; set; }
     }
 }

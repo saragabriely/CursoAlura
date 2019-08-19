@@ -37,13 +37,13 @@ namespace Alura.ListaLeitura.Modelos
         {
             return new LivroApi
             {
-                Id = livro.Id,
-                Titulo = livro.Titulo,
-                Subtitulo = livro.Subtitulo,
-                Resumo = livro.Resumo,
-                Autor = livro.Autor,
-                Capa = $"/api/capas/{livro.Id}",
-                Lista = livro.Lista.ParaString()
+                Id          = livro.Id,
+                Titulo      = livro.Titulo,
+                Subtitulo   = livro.Subtitulo,
+                Resumo      = livro.Resumo,
+                Autor       = livro.Autor,
+                ImagemCapa = $"/api/livros/{livro.Id}/capa", //Capa        = $"/api/capas/{livro.Id}",
+                Lista       = livro.Lista.ParaString()  // livro.Lista
             };
         }
 

@@ -8,7 +8,10 @@ using Alura.ListaLeitura.Persistencia;
 
 namespace Alura.WebAPI.WebApp.API
 {
-    public class LivrosController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    // ControllerBase - Classe base para um CTRL MVC sem suporte a View.
+    public class LivrosController : ControllerBase
     {
         // Controlador especifico para atender a API
 
@@ -21,6 +24,16 @@ namespace Alura.WebAPI.WebApp.API
 
         #region Recuperar(int id)
         [HttpGet]
+        public IActionResult ListaDeLivros()
+        {
+            var lista = _repo.All.Select(l => l.ToApi()).ToList(); // l.ToModel()
+
+            return Ok(lista);
+        }
+        #endregion
+
+        #region Recuperar(int id)
+        [HttpGet("{id}")]
         public IActionResult Recuperar(int id)
         {
             var model = _repo.Find(id);
@@ -29,7 +42,25 @@ namespace Alura.WebAPI.WebApp.API
             {
                 return NotFound();
             }
-            return Json(model.ToModel());
+           // return Json(model.ToModel()); //- Controller
+            return Ok(model.ToApi()); // ToModel // ControllerBase
+            // retorna o codigo 200 e o objeto passado
+        }
+        #endregion
+
+        #region ImagemCapa
+        [HttpGet("{id}/capa")]
+        public IActionResult ImagemCapa(int id)
+        {
+            byte[] img = _repo.All
+                .Where(l => l.Id == id)
+                .Select(l => l.ImagemCapa)
+                .FirstOrDefault();
+            if (img != null)
+            {
+                return File(img, "image/png");
+            }
+            return File("~/images/capas/capa-vazia.png", "image/png");
         }
         #endregion
 
@@ -52,7 +83,7 @@ namespace Alura.WebAPI.WebApp.API
         #endregion
 
         #region Alterar(LivroUpload model)
-        [HttpPost]
+        [HttpPut]
         public IActionResult Alterar([FromBody]LivroUpload model)
         {
             if (ModelState.IsValid)
@@ -75,7 +106,7 @@ namespace Alura.WebAPI.WebApp.API
         #endregion
 
         #region Remover(int id)
-        [HttpPost]
+        [HttpDelete("{id}")]
         public IActionResult Remover(int id)
         {
             var model = _repo.Find(id);
